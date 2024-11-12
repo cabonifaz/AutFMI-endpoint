@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>org.app</groupId>
-    <artifactId>autfmi</artifactId>
+    <artifactId>autfmiendpoint</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>autfmiendpoint</name>
     <description>autfmiendpoint</description>

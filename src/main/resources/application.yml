@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: aut-fmi
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
+  profiles:
+    include: prod, preprod, dev
+jwt:
+  expiration: 28800000 # 8 hours in milliseconds
+  secret:

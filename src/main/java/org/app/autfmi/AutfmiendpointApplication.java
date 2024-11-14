@@ -9,5 +9,4 @@ public class AutfmiendpointApplication {
     public static void main(String[] args) {
         SpringApplication.run(AutfmiendpointApplication.class, args);
     }
-
 }

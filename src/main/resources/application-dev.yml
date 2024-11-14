@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    dev:
+      url: jdbc:sqlserver://161.132.217.169:1433;database=bdt_staging;encrypt=true;trustServerCertificate=true
+      username: autfmiStaging
+      password: Fractal$Staging123
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
+  mail:
+    host: smtp.gmail.com
+    port: 465
+    username: fractalambiente@gmail.com
+    password: zgozhroaqlhohpdt
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl.enable: true
+          ssl.trust: smtp.gmail.com
+          socketFactory.port: "465"
+          socketFactory.class: "javax.net.ssl.SSLSocketFactory"

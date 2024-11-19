@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import javax.sql.DataSource;
@@ -18,12 +19,14 @@ public class DataSourceConfig {
      */
     @Bean
     @Profile("prod")
+    @Primary
     @ConfigurationProperties("spring.datasource.prod")
     public DataSourceProperties prodDataSourceProperties() {
         return new DataSourceProperties();
     }
 
     @Bean
+    @Primary
     public HikariDataSource prodDataSource(DataSourceProperties blogDataSourceProperties) {
         return blogDataSourceProperties.initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
@@ -31,6 +34,7 @@ public class DataSourceConfig {
     }
 
     @Bean
+    @Primary
     JdbcTemplate prodJdbcTemplate(@Qualifier("prodDataSource") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }

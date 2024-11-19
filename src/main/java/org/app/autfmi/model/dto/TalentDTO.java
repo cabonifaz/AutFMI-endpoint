@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TalentDTO {
     private Integer idTalento;
-    private Integer idEmpresa;
     private String nombres;
     private String apellidos;
     private String telefono;

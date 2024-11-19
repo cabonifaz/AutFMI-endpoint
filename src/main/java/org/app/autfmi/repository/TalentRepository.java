@@ -101,7 +101,6 @@ public class TalentRepository {
 
         return new TalentDTO(
                 (Integer) talent.get("ID_USUARIO_TALENTO"),
-                (Integer) talent.get("ID_EMPRESA"),
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),
                 (String) talent.get("TELEFONO"),

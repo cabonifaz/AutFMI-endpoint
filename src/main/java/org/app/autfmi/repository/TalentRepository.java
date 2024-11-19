@@ -103,7 +103,6 @@ public class TalentRepository {
         Boolean perteneceEmpresa = ((Integer) talent.get("PERTENECE_EMPRESA")) == 1;
 
         return new TalentDTO(
-                (Integer) talent.get("ID_USUARIO_TALENTO"),
                 perteneceEmpresa,
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),

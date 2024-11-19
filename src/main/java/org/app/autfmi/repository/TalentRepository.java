@@ -34,8 +34,7 @@ public class TalentRepository {
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("TIPO_ROL", baseRequest.getTipoRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -59,7 +58,6 @@ public class TalentRepository {
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_USUARIO_TALENTO", talentRequest.getIdTalento())
-                .addValue("ID_EMPRESA", talentRequest.getIdEmpresa())
                 .addValue("TIPO_ROL", baseRequest.getTipoRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario());
@@ -101,6 +99,7 @@ public class TalentRepository {
 
         return new TalentDTO(
                 (Integer) talent.get("ID_USUARIO_TALENTO"),
+                talent.get("ID_EMPRESA") != null ? (Integer) talent.get("ID_EMPRESA") : null,
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),
                 (String) talent.get("TELEFONO"),

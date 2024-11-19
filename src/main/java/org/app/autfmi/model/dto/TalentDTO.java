@@ -8,10 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TalentDTO {
     private Integer idTalento;
-    private Integer idEmpresa;
+    private Boolean perteneceEmpresa;
     private String nombres;
     private String apellidos;
     private String telefono;
@@ -19,10 +18,13 @@ public class TalentDTO {
     private String dni;
     private Integer numTiempoContrato;
     private String strTiempoContrato;
+    private Integer idTiempoContrato;
     private String fechaInicioLabores;
     private String cargo;
     private Double remuneracion;
     private String moneda;
+    private Integer idMoneda;
     private String modalidad;
+    private Integer idModalidad;
     private String ubicacion;
 }

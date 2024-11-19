@@ -7,10 +7,10 @@ import org.app.autfmi.model.dto.TalentDTO;
 @Getter
 @Setter
 public class TalentResponse extends BaseResponse {
-    private TalentDTO talent;
+    private TalentDTO talento;
 
-    public TalentResponse(Integer idTipoMensaje, String mensaje, TalentDTO talent) {
+    public TalentResponse(Integer idTipoMensaje, String mensaje, TalentDTO talento) {
         super(idTipoMensaje, mensaje);
-        this.talent = talent;
+        this.talento = talento;
     }
 }

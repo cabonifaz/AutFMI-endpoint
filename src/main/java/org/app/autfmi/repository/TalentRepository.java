@@ -1,6 +1,7 @@
 package org.app.autfmi.repository;
 
 import org.app.autfmi.model.dto.TalentDTO;
+import org.app.autfmi.model.dto.TalentItemDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
@@ -34,7 +35,8 @@ public class TalentRepository {
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("TIPO_ROL", baseRequest.getTipoRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -60,7 +62,8 @@ public class TalentRepository {
                 .addValue("ID_USUARIO_TALENTO", talentRequest.getIdTalento())
                 .addValue("TIPO_ROL", baseRequest.getTipoRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
 
@@ -79,7 +82,7 @@ public class TalentRepository {
         return null;
     }
 
-    private TalentDTO MapToTalentDTO(Map<String, Object> talent) {
+    private TalentDTO mapToTalentDTO(Map<String, Object> talent) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // Formatear fecha
@@ -97,9 +100,11 @@ public class TalentRepository {
             remuneracion = ((BigDecimal) remuneracionObj).doubleValue();
         }
 
+        Boolean perteneceEmpresa = ((Integer) talent.get("PERTENECE_EMPRESA")) == 1;
+
         return new TalentDTO(
                 (Integer) talent.get("ID_USUARIO_TALENTO"),
-                talent.get("ID_EMPRESA") != null ? (Integer) talent.get("ID_EMPRESA") : null,
+                perteneceEmpresa,
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),
                 (String) talent.get("TELEFONO"),
@@ -107,12 +112,27 @@ public class TalentRepository {
                 (String) talent.get("DNI"),
                 (Integer) talent.get("TIEMPO_CONTRATO"),
                 (String) talent.get("STR_TIEMPO_CONTRATO"),
+                (Integer) talent.get("ID_TIPO_TIEMPO_CONTRATO"),
                 formattedDate,
                 (String) talent.get("CARGO"),
                 remuneracion,
                 (String) talent.get("MONEDA"),
+                (Integer) talent.get("ID_TIPO_MONEDA"),
                 (String) talent.get("MODALIDAD"),
+                (Integer) talent.get("ID_MODALIDAD"),
                 (String) talent.get("UBICACION")
+        );
+    }
+
+    private TalentItemDTO mapToTalentItemDTO(Map<String, Object> talent) {
+        Boolean perteneceEmpresa = ((Integer) talent.get("PERTENECE_EMPRESA")) == 1;
+
+        return new TalentItemDTO(
+                (Integer) talent.get("ID_USUARIO_TALENTO"),
+                perteneceEmpresa,
+                (String) talent.get("NOMBRES"),
+                (String) talent.get("APELLIDOS"),
+                (String) talent.get("MODALIDAD")
         );
     }
 
@@ -121,7 +141,7 @@ public class TalentRepository {
 
         if (resultSet2 != null && !resultSet2.isEmpty()) {
             Map<String, Object> talentRaw = resultSet2.get(0);
-            return new TalentResponse(idTipoMensaje, mensaje, MapToTalentDTO(talentRaw));
+            return new TalentResponse(idTipoMensaje, mensaje, mapToTalentDTO(talentRaw));
         }
         return null;
     }
@@ -129,10 +149,10 @@ public class TalentRepository {
     private TalentListResponse getTalentsList(Map<String, Object> rawData, Integer idTipoMensaje, String mensaje) {
         List<Map<String, Object>> talentsSet = (List<Map<String, Object>>) rawData.get("#result-set-2");
         if (talentsSet != null && !talentsSet.isEmpty()) {
-            List<TalentDTO> talentList = new ArrayList<>();
+            List<TalentItemDTO> talentList = new ArrayList<>();
 
             for (Map<String, Object> row : talentsSet) {
-                talentList.add(MapToTalentDTO(row));
+                talentList.add(mapToTalentItemDTO(row));
             }
             return new TalentListResponse(idTipoMensaje, mensaje, talentList);
         }

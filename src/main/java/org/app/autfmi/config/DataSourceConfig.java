@@ -1,7 +1,6 @@
 package org.app.autfmi.config;
 
 import com.zaxxer.hikari.HikariDataSource;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -13,73 +12,26 @@ import javax.sql.DataSource;
 
 @Configuration(proxyBeanMethods = false)
 public class DataSourceConfig {
-
-    /*
-     * Prod
-     */
-    @Bean
-    @Profile("prod")
-    @Primary
-    @ConfigurationProperties("spring.datasource.prod")
-    public DataSourceProperties prodDataSourceProperties() {
-        return new DataSourceProperties();
-    }
-
-    @Bean
-    @Primary
-    public HikariDataSource prodDataSource(DataSourceProperties blogDataSourceProperties) {
-        return blogDataSourceProperties.initializeDataSourceBuilder()
-                .type(HikariDataSource.class)
-                .build();
-    }
-
-    @Bean
-    @Primary
-    JdbcTemplate prodJdbcTemplate(@Qualifier("prodDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    /*
-     * Preprod
-     */
-    @Bean
-    @Profile("preprod")
-    @ConfigurationProperties("spring.datasource.preprod")
-    public DataSourceProperties preprodDataSourceProperties() {
-        return new DataSourceProperties();
-    }
-
-    @Bean
-    public HikariDataSource preprodDataSource(@Qualifier("preprodDataSourceProperties") DataSourceProperties preprodDataSourceProperties) {
-        return preprodDataSourceProperties.initializeDataSourceBuilder()
-                .type(HikariDataSource.class)
-                .build();
-    }
-
-    @Bean
-    JdbcTemplate preprodJdbcTemplate(@Qualifier("preprodDataSource") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    /*
-     * DEV
-     */
     @Bean
     @Profile("dev")
-    @ConfigurationProperties("spring.datasource.dev")
-    public DataSourceProperties devDataSourceProperties() {
+    @Primary
+    @ConfigurationProperties("spring.datasource.dev") // Set to use dev config yml
+    public DataSourceProperties dataSourceProperties() {
         return new DataSourceProperties();
     }
 
     @Bean
-    public HikariDataSource devDataSource(@Qualifier("devDataSourceProperties") DataSourceProperties devDataSourceProperties) {
+    @Primary
+    public HikariDataSource dataSource(DataSourceProperties devDataSourceProperties) {
         return devDataSourceProperties.initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
                 .build();
     }
 
     @Bean
-    JdbcTemplate devJdbcTemplate(@Qualifier("devDataSource") DataSource dataSource) {
+    @Profile("dev")
+    @Primary
+    JdbcTemplate jdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 }

@@ -1,5 +1,6 @@
 package org.app.autfmi.repository;
 
+import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.TalentDTO;
 import org.app.autfmi.model.dto.TalentItemDTO;
 import org.app.autfmi.model.request.BaseRequest;
@@ -7,7 +8,6 @@ import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.TalentListResponse;
 import org.app.autfmi.model.response.TalentResponse;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -22,12 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 @Repository
+@RequiredArgsConstructor
 public class TalentRepository {
     private final JdbcTemplate jdbcTemplate;
-
-    public TalentRepository(@Qualifier("devJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     public BaseResponse listTalents(BaseRequest baseRequest) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_TALENTOS_LST");

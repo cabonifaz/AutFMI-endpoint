@@ -15,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
                 .allowedOrigins(
-                        "http://localhost:4200",
+                        "http://localhost:3000",
                         "https://agreeable-pebble-0832a380f.5.azurestaticapps.net", // Staging
                         "https://gray-ocean-0fc1baf0f.5.azurestaticapps.net" // Preprod
                 ).allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")

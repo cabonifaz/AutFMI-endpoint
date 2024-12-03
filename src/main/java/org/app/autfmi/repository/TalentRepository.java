@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.TalentDTO;
 import org.app.autfmi.model.dto.TalentItemDTO;
 import org.app.autfmi.model.request.BaseRequest;
-import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.TalentListResponse;
 import org.app.autfmi.model.response.TalentResponse;
@@ -51,12 +50,12 @@ public class TalentRepository {
         return null;
     }
 
-    public BaseResponse getTalentById(TalentRequest talentRequest, BaseRequest baseRequest) {
+    public BaseResponse getTalentById(Integer idTalento, BaseRequest baseRequest) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_USUARIOS_TALENTOS_SEL");
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ID_USUARIO_TALENTO", talentRequest.getIdTalento())
+                .addValue("ID_USUARIO_TALENTO", idTalento)
                 .addValue("TIPO_ROL", baseRequest.getTipoRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())

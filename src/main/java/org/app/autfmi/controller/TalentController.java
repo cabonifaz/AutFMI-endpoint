@@ -2,16 +2,12 @@ package org.app.autfmi.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.service.impl.TalentService;
 import org.app.autfmi.util.JwtHelper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("fmi/talent")
@@ -36,10 +32,10 @@ public class TalentController {
     }
 
     @GetMapping("/data")
-    public ResponseEntity<BaseResponse> getTalent(@RequestBody TalentRequest talentRequest, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<BaseResponse> getTalent(@RequestParam Integer idTalento,HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = talentService.getTalent(token, talentRequest);
+            BaseResponse response = talentService.getTalent(token, idTalento);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (Exception e) {

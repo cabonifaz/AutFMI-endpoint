@@ -51,4 +51,4 @@ jobs:
           app-name: 'AutFMIBackendStaging'
           slot-name: 'Production'
           package: '*.jar'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9EE7CBF06A17421EAC5D4DF3F4E85C20 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B9ECB96935854C3EB5372716FEEF6258 }}

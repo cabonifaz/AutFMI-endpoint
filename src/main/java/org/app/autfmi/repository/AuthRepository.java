@@ -72,11 +72,11 @@ public class AuthRepository {
             // Extract the roles from #result-set-3
             List<Map<String, Object>> resultSet3 = (List<Map<String, Object>>) data.get("#result-set-3");
 
-            List<String> roles = new ArrayList<>();
+            List<Integer> roles = new ArrayList<>();
             if (resultSet3 != null && !resultSet3.isEmpty()) {
                 for (Map<String, Object> roleData : resultSet3) {
                     // El campo STRING1 contiene los roles
-                    roles.add((String) roleData.get("STRING1"));
+                    roles.add((Integer) roleData.get("NUM1"));
                 }
             }
 

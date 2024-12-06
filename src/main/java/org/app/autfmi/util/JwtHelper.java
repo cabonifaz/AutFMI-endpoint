@@ -30,7 +30,7 @@ public class JwtHelper {
         user.setIdUsuario((Integer) claims.get("id_usuario"));
         user.setIdEmpresa( (Integer) claims.get("id_empresa"));
         user.setUsuario( (String) claims.get("username"));
-        user.setRoles((List<String>) claims.get("roles"));
+        user.setRoles((List<Integer>) claims.get("roles"));
 
         return user;
     }

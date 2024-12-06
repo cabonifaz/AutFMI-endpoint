@@ -29,7 +29,7 @@ public class TalentRepository {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_TALENTOS_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
-                .addValue("TIPO_ROL", baseRequest.getTipoRol())
+                .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
@@ -56,7 +56,7 @@ public class TalentRepository {
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_USUARIO_TALENTO", idTalento)
-                .addValue("TIPO_ROL", baseRequest.getTipoRol())
+                .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa());

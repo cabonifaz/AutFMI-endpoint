@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class BaseRequest {
     private Integer idUsuario;
     private Integer idEmpresa;
-    private String tipoRol;
+    private Integer idRol;
     private String funcionalidades;
 }

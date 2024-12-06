@@ -12,5 +12,5 @@ public class UserDTO {
     private Integer idUsuario;
     private Integer idEmpresa;
     private String usuario;
-    private List<String> roles;
+    private List<Integer> roles;
 }

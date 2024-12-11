@@ -3,6 +3,7 @@ package org.app.autfmi.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.TalentRepository;
 import org.app.autfmi.service.ITalentService;
@@ -31,4 +32,14 @@ public class TalentService implements ITalentService {
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.MOSTRAR_DATOS_TALENTO);
         return talentRepository.getTalentById(idTalento, baseRequest);
     }
+
+    @Override
+    public BaseResponse saveTalent(String token, TalentRequest talent) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.ACTUALIZAR_USUARIO);
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return talentRepository.saveTalent(talent, baseRequest);
+    }
+
+
 }

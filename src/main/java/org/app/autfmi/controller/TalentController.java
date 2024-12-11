@@ -2,6 +2,7 @@ package org.app.autfmi.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.service.impl.TalentService;
 import org.app.autfmi.util.JwtHelper;
@@ -17,7 +18,7 @@ public class TalentController {
     private final TalentService talentService;
 
     @GetMapping("/list")
-    public ResponseEntity<BaseResponse> listTalents(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<BaseResponse> getTalentsList(HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = talentService.listTalents(token);
@@ -36,6 +37,21 @@ public class TalentController {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = talentService.getTalent(token, idTalento);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<BaseResponse> saveTalent(@RequestBody TalentRequest talent, HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = talentService.saveTalent(token, talent);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (Exception e) {

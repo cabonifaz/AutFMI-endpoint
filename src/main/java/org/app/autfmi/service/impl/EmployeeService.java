@@ -30,10 +30,10 @@ public class EmployeeService implements IEmployeeService {
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         EmployeeEntryResponse employeeEntryResponse = employeeRepository.saveEmployeeEntry(baseRequest, request);
 
-        if (employeeEntryResponse.getIdTipoMensaje() == 2) {
-            request.setIdUsuarioTalento(employeeEntryResponse.getIdUsuarioTalento());
-            return historyRepository.registerEntry(baseRequest, request);
-        }
+//        if (employeeEntryResponse.getIdTipoMensaje() == 2) {
+//            request.setIdUsuarioTalento(employeeEntryResponse.getIdUsuarioTalento());
+//            return historyRepository.registerEntry(baseRequest, request);
+//        }
         return employeeEntryResponse;
     }
 

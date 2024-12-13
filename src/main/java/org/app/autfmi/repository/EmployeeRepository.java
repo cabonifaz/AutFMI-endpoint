@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.EmployeeEntryResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -19,7 +20,7 @@ import java.util.Map;
 public class EmployeeRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse saveEmployee(BaseRequest baseRequest, EmployeeEntryRequest request) {
+    public EmployeeEntryResponse saveEmployeeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
@@ -47,7 +48,11 @@ public class EmployeeRepository {
 
         if (resultSet != null && !resultSet.isEmpty()) {
             Map<String, Object> row = resultSet.get(0);
-            return new BaseResponse((Integer) row.get("ID_TIPO_MENSAJE"), (String) row.get("MENSAJE"));
+            return new EmployeeEntryResponse(
+                    (Integer) row.get("ID_TIPO_MENSAJE"),
+                    (String) row.get("MENSAJE"),
+                    (Integer) row.get("ID_USUARIO_TALENTO")
+            );
         }
         return null;
     }

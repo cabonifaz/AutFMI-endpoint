@@ -3,8 +3,11 @@ package org.app.autfmi.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
+import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.EmployeeEntryResponse;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
@@ -21,16 +24,30 @@ public class EmployeeService implements IEmployeeService {
     private final JwtHelper jwt;
 
     @Override
-    public BaseResponse saveEmployee(String token, EmployeeEntryRequest request) {
+    public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.INGRESAR_EMPLEADO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        BaseResponse response = employeeRepository.saveEmployee(baseRequest, request);
+        EmployeeEntryResponse employeeEntryResponse = employeeRepository.saveEmployeeEntry(baseRequest, request);
 
-        if (response.getIdTipoMensaje() == 2) {
-            response = historyRepository.registerEntry(baseRequest, request);
+        if (employeeEntryResponse.getIdTipoMensaje() == 2) {
+            request.setIdUsuarioTalento(employeeEntryResponse.getIdUsuarioTalento());
+            return historyRepository.registerEntry(baseRequest, request);
         }
+        return employeeEntryResponse;
+    }
 
-        return response;
+    @Override
+    public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, "");
+        return historyRepository.registerMovement(baseRequest, request);
+    }
+
+    @Override
+    public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, "");
+        return historyRepository.registerContractTermination(baseRequest, request);
     }
 }

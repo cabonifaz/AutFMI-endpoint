@@ -7,7 +7,14 @@ import lombok.Data;
 @AllArgsConstructor
 public class EmployeeMovementRequest {
     private Integer idUsuarioTalento;
-    private String unidad;
+    private Integer idUnidad;
+    private Integer idMoneda;
+    private Integer idModalidad;
+    private String cargo;
+    private String fchInicioContrato;
+    private String fchTerminoContrato;
+    private String proyectoServicio;
+    private String objetoContrato;
     private String empresa;
     private Double montoBase;
     private Double montoMovilidad;

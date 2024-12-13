@@ -17,6 +17,7 @@ public class Common {
             baseRequest.setIdUsuario(userDTO.getIdUsuario());
             baseRequest.setIdEmpresa(userDTO.getIdEmpresa());
             baseRequest.setFuncionalidades(funcionalidades);
+            baseRequest.setUsername(userDTO.getUsuario());
 
             return baseRequest;
         }

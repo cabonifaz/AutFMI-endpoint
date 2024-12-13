@@ -11,6 +11,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -20,11 +23,14 @@ import java.util.function.Consumer;
 public class HistoryRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    private BaseResponse executeProcedure(BaseRequest baseRequest, Consumer<MapSqlParameterSource> parameterBuilder) {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_HISTORIAL_INS");
+    private BaseResponse executeProcedure(BaseRequest baseRequest, String SP, Consumer<MapSqlParameterSource> parameterBuilder) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName(SP);
 
         MapSqlParameterSource params = new MapSqlParameterSource();
-        params.addValue("ID_USUARIO", baseRequest.getIdUsuario());
+        params.addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("USERNAME", baseRequest.getUsername());
         parameterBuilder.accept(params);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
@@ -37,33 +43,22 @@ public class HistoryRepository {
         return null;
     }
 
-    public BaseResponse registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
-        return executeProcedure(baseRequest, params -> {
-            params.addValue("ID_TIPO_HISTORIAL", Constante.HISTORIAL_INGRESO)
-                    .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
-                    .addValue("MOTIVO", request.getMotivo())
-                    .addValue("EMPRESA", request.getEmpresa())
-                    .addValue("UNIDAD", request.getUnidad())
-                    .addValue("MONTO_BASE", request.getMontoBase())
-                    .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
-                    .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
-                    .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
-                    .addValue("PUESTO", null)
-                    .addValue("AREA", null)
-                    .addValue("JORNADA", null)
-                    .addValue("DECLARAR_SUNAT", request.getDeclararSunat())
-                    .addValue("SEDE_DECLARAR", request.getSedeDeclarar())
-                    .addValue("FCH_HISTORIAL", request.getFchHistorial());
-        });
-    }
-
     public BaseResponse registerMovement(BaseRequest baseRequest, EmployeeMovementRequest request) {
-        return executeProcedure(baseRequest, params -> {
-            params.addValue("ID_TIPO_HISTORIAL", Constante.HISTORIAL_MOVIMIENTO)
-                    .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
-                    .addValue("MOTIVO", null)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        LocalDate fchInicioContrato = LocalDate.parse(request.getFchInicioContrato(), formatter);
+        LocalDate fchTerminoContrato = LocalDate.parse(request.getFchTerminoContrato(), formatter);
+
+        return executeProcedure(baseRequest,"SP_USUARIOS_EMPLEADOS_UPD", params -> {
+            params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
+                    .addValue("ID_UNIDAD", request.getIdUnidad())
+                    .addValue("CARGO", request.getCargo())
+                    .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
+                    .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
+                    .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
+                    .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
+                    .addValue("ID_MONEDA", request.getIdMoneda())
+                    .addValue("ID_MODALIDAD", request.getIdModalidad())
                     .addValue("EMPRESA", request.getEmpresa())
-                    .addValue("UNIDAD", request.getUnidad())
                     .addValue("MONTO_BASE", request.getMontoBase())
                     .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
                     .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
@@ -71,28 +66,16 @@ public class HistoryRepository {
                     .addValue("PUESTO", request.getPuesto())
                     .addValue("AREA", request.getArea())
                     .addValue("JORNADA", request.getJornada())
-                    .addValue("DECLARAR_SUNAT", null)
-                    .addValue("SEDE_DECLARAR", null)
                     .addValue("FCH_HISTORIAL", request.getFchMovimiento());
         });
     }
 
     public BaseResponse registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
-        return executeProcedure(baseRequest, params -> {
-            params.addValue("ID_TIPO_HISTORIAL", Constante.HISTORIAL_CESE)
-                    .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
-                    .addValue("MOTIVO", request.getMotivoCese())
+        return executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_CESE", params -> {
+            params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
+                    .addValue("ID_MOTIVO", request.getIdMotivo())
                     .addValue("EMPRESA", request.getEmpresa())
-                    .addValue("UNIDAD", request.getUnidad())
-                    .addValue("MONTO_BASE", null)
-                    .addValue("MONTO_MOVILIDAD", null)
-                    .addValue("MONTO_TRIMESTRAL", null)
-                    .addValue("MONTO_SEMESTRAL", null)
-                    .addValue("PUESTO", null)
-                    .addValue("AREA", null) 
-                    .addValue("JORNADA", null)
-                    .addValue("DECLARAR_SUNAT", null)
-                    .addValue("SEDE_DECLARAR", null)
+                    .addValue("ID_UNIDAD", request.getIdUnidad())
                     .addValue("FCH_HISTORIAL", request.getFchCese());
         });
     }

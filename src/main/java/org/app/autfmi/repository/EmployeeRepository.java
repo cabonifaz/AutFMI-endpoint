@@ -20,10 +20,10 @@ import java.util.Map;
 public class EmployeeRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public EmployeeEntryResponse saveEmployeeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
+    public BaseResponse saveEmployeeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate fchInicioContrato = LocalDate.parse(request.getFchInicioContrato(), formatter);
         LocalDate fchTerminoContrato = LocalDate.parse(request.getFchTerminoContrato(), formatter);
 
@@ -39,19 +39,32 @@ public class EmployeeRepository {
                 .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
                 .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
                 .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
+                // HISTORIAL
+                .addValue("ID_MODALIDAD", request.getIdModalidad())
+                .addValue("ID_MOTIVO", request.getIdMotivo())
+                .addValue("ID_MONEDA", request.getIdMoneda())
+                .addValue("EMPRESA", request.getEmpresa())
+                .addValue("DECLARAR_SUNAT", request.getDeclararSunat())
+                .addValue("SEDE_DECLARAR", request.getSedeDeclarar())
+                .addValue("MONTO_BASE", request.getMontoBase())
+                .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
+                .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
+                .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
+                .addValue("FCH_HISTORIAL", request.getFchHistorial())
+                // VALIDAR ROL
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("USERNAME", baseRequest.getUsername());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
         if (resultSet != null && !resultSet.isEmpty()) {
             Map<String, Object> row = resultSet.get(0);
-            return new EmployeeEntryResponse(
+            return new BaseResponse(
                     (Integer) row.get("ID_TIPO_MENSAJE"),
-                    (String) row.get("MENSAJE"),
-                    (Integer) row.get("ID_USUARIO_TALENTO")
+                    (String) row.get("MENSAJE")
             );
         }
         return null;

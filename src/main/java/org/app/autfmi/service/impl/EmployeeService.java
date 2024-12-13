@@ -26,28 +26,22 @@ public class EmployeeService implements IEmployeeService {
     @Override
     public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) {
         UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.INGRESAR_EMPLEADO);
+        String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.REALIZAR_INGRESO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        EmployeeEntryResponse employeeEntryResponse = employeeRepository.saveEmployeeEntry(baseRequest, request);
-
-//        if (employeeEntryResponse.getIdTipoMensaje() == 2) {
-//            request.setIdUsuarioTalento(employeeEntryResponse.getIdUsuarioTalento());
-//            return historyRepository.registerEntry(baseRequest, request);
-//        }
-        return employeeEntryResponse;
+        return employeeRepository.saveEmployeeEntry(baseRequest, request);
     }
 
     @Override
     public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request) {
         UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, "");
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
         return historyRepository.registerMovement(baseRequest, request);
     }
 
     @Override
     public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) {
         UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, "");
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
         return historyRepository.registerContractTermination(baseRequest, request);
     }
 }

@@ -6,10 +6,7 @@ public class Constante {
     public static final String MOSTRAR_DATOS_TALENTO = "2";
     public static final String GUARDAR_USUARIO = "3";
     public static final String ACTUALIZAR_USUARIO = "4";
-    public static final String INGRESAR_EMPLEADO = "5";
-
-    // TIPO DE REGISTRO EN HISTORIAL
-    public static final Integer HISTORIAL_INGRESO = 1;
-    public static final Integer HISTORIAL_MOVIMIENTO = 2;
-    public static final Integer HISTORIAL_CESE = 3;
+    public static final String REALIZAR_INGRESO = "5";
+    public static final String REALIZAR_MOVIMIENTO = "7";
+    public static final String REALIZAR_CESE = "8";
 }

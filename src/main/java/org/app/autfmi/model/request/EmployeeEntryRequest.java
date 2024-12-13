@@ -19,9 +19,10 @@ public class EmployeeEntryRequest {
     private String proyectoServicio;
     private String objetoContrato;
     // History record
-    private String motivo;
+    private Integer idModalidad;
+    private Integer idMotivo;
+    private Integer idMoneda;
     private String empresa;
-    private String unidad;
     private Double montoBase;
     private Double montoMovilidad;
     private Double montoTrimestral;

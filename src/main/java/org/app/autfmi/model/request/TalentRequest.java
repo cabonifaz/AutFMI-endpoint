@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class TalentRequest {
-    private Integer idEmpresa;
     private Integer idTalento;
     private String nombres;
     private String apellidos;

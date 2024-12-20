@@ -12,7 +12,6 @@ public class EmployeeMovementRequest {
     private Integer idUnidad;
     private Integer idMoneda;
     private Integer idModalidad;
-    private String cargo;
     private String fchInicioContrato;
     private String fchTerminoContrato;
     private String proyectoServicio;

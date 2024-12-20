@@ -53,7 +53,6 @@ public class HistoryRepository {
                     .addValue("NOMBRES", request.getNombres())
                     .addValue("APELLIDOS", request.getApellidos())
                     .addValue("ID_UNIDAD", request.getIdUnidad())
-                    .addValue("CARGO", request.getCargo())
                     .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
                     .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
                     .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())

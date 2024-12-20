@@ -7,6 +7,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class EmployeeMovementRequest {
     private Integer idUsuarioTalento;
+    private String nombres;
+    private String apellidos;
     private Integer idUnidad;
     private Integer idMoneda;
     private Integer idModalidad;

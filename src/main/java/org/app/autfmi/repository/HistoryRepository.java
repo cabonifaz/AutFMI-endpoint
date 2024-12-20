@@ -50,6 +50,8 @@ public class HistoryRepository {
 
         return executeProcedure(baseRequest,"SP_USUARIOS_EMPLEADOS_UPD", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
+                    .addValue("NOMBRES", request.getNombres())
+                    .addValue("APELLIDOS", request.getApellidos())
                     .addValue("ID_UNIDAD", request.getIdUnidad())
                     .addValue("CARGO", request.getCargo())
                     .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)

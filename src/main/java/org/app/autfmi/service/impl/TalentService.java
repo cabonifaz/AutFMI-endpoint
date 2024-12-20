@@ -20,10 +20,10 @@ public class TalentService implements ITalentService {
     private final JwtHelper jwt;
 
     @Override
-    public BaseResponse listTalents(String token) {
+    public BaseResponse listTalents(String token, Integer nPag) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
-        return talentRepository.listTalents(baseRequest);
+        return talentRepository.listTalents(baseRequest, nPag);
     }
 
     @Override

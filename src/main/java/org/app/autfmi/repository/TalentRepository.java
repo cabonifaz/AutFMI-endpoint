@@ -21,14 +21,15 @@ import java.util.Map;
 public class TalentRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse listTalents(BaseRequest baseRequest) {
+    public BaseResponse listTalents(BaseRequest baseRequest, Integer nPag) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_TALENTOS_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("N_PAG", nPag);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

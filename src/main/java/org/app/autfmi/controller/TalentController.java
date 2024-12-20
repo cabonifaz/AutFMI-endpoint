@@ -1,5 +1,6 @@
 package org.app.autfmi.controller;
 
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.TalentRequest;
@@ -18,10 +19,12 @@ public class TalentController {
     private final TalentService talentService;
 
     @GetMapping("/list")
-    public ResponseEntity<BaseResponse> getTalentsList(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<BaseResponse> getTalentsList(
+            @RequestParam @Nullable Integer nPag,
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = talentService.listTalents(token);
+            BaseResponse response = talentService.listTalents(token,nPag);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
@@ -33,13 +36,13 @@ public class TalentController {
     }
 
     @GetMapping("/data")
-    public ResponseEntity<BaseResponse> getTalent(@RequestParam Integer idTalento,HttpServletRequest httpServletRequest) {
+    public ResponseEntity<BaseResponse> getTalent(@RequestParam Integer idTalento, HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = talentService.getTalent(token, idTalento);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR
@@ -54,7 +57,7 @@ public class TalentController {
             BaseResponse response = talentService.saveTalent(token, talent);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR

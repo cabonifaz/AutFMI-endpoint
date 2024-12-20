@@ -7,6 +7,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class EmployeeContractEndRequest {
     private Integer idUsuarioTalento;
+    private String nombres;
+    private String apellidos;
     private Integer idUnidad;
     private Integer idMotivo;
     private String empresa;

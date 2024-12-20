@@ -11,7 +11,6 @@ public class EmployeeEntryRequest {
     private String nombres;
     private String apellidos;
     private Integer idUsuarioTalento;
-    private Integer idEmpresa;
     private Integer idUnidad;
     private String cargo;
     private String fchInicioContrato;

@@ -32,7 +32,7 @@ public class EmployeeRepository {
                 .addValue("NOMBRES", request.getNombres())
                 .addValue("APELLIDOS", request.getApellidos())
                 .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
-                .addValue("ID_EMPRESA", request.getIdEmpresa())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_UNIDAD", request.getIdUnidad())
                 .addValue("CARGO", request.getCargo())
                 .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)

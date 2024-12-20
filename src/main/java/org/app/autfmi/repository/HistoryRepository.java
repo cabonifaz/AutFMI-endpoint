@@ -6,6 +6,7 @@ import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -44,9 +45,8 @@ public class HistoryRepository {
     }
 
     public BaseResponse registerMovement(BaseRequest baseRequest, EmployeeMovementRequest request) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate fchInicioContrato = LocalDate.parse(request.getFchInicioContrato(), formatter);
-        LocalDate fchTerminoContrato = LocalDate.parse(request.getFchTerminoContrato(), formatter);
+        LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
+        LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
         return executeProcedure(baseRequest,"SP_USUARIOS_EMPLEADOS_UPD", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())

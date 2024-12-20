@@ -2,6 +2,8 @@ package org.app.autfmi.util;
 
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class Common {
@@ -22,5 +24,13 @@ public class Common {
             return baseRequest;
         }
         return baseRequest;
+    }
+
+    public static LocalDate formatDate(String date) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        if (date != null && !date.isEmpty()) {
+            return LocalDate.parse(date, formatter);
+        }
+        return null;
     }
 }

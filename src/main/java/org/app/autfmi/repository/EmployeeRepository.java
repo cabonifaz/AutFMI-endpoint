@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.response.BaseResponse;
-import org.app.autfmi.model.response.EmployeeEntryResponse;
+import org.app.autfmi.util.Common;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -23,9 +22,8 @@ public class EmployeeRepository {
     public BaseResponse saveEmployeeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        LocalDate fchInicioContrato = LocalDate.parse(request.getFchInicioContrato(), formatter);
-        LocalDate fchTerminoContrato = LocalDate.parse(request.getFchTerminoContrato(), formatter);
+        LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
+        LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_TALENTO", request.getIdTalento())

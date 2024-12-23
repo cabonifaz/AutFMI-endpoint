@@ -21,7 +21,7 @@ import java.util.Map;
 public class TalentRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse listTalents(BaseRequest baseRequest, Integer nPag) {
+    public BaseResponse listTalents(BaseRequest baseRequest, Integer nPag, String busqueda) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_TALENTOS_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
@@ -29,7 +29,8 @@ public class TalentRepository {
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
-                .addValue("N_PAG", nPag);
+                .addValue("N_PAG", nPag)
+                .addValue("BUSQUEDA", busqueda);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

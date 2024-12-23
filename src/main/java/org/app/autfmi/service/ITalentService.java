@@ -4,7 +4,7 @@ import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 
 public interface ITalentService {
-    BaseResponse listTalents(String token, Integer nPag);
+    BaseResponse listTalents(String token, Integer nPag, String busqueda);
 
     BaseResponse getTalent(String token, Integer idTalento);
 

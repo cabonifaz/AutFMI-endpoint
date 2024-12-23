@@ -21,10 +21,11 @@ public class TalentController {
     @GetMapping("/list")
     public ResponseEntity<BaseResponse> getTalentsList(
             @RequestParam @Nullable Integer nPag,
+            @RequestParam @Nullable String busqueda,
             HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = talentService.listTalents(token,nPag);
+            BaseResponse response = talentService.listTalents(token,nPag, busqueda);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

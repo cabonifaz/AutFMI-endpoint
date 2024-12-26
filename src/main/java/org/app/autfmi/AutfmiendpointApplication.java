@@ -41,7 +41,33 @@ public class AutfmiendpointApplication implements CommandLineRunner {
                             "</style>" +
                         "</head>" +
                         "<body>" +
-                            "<h1>Hola, {{nombre}}!</h1>" +
+                            "<table>" +
+                                "<tr>" +
+                                    "<td>IMAGEN</td>" +
+                                    "<td>FORMULARIO DE MOVIMIENTO</td>" +
+                                    "<td>" +
+                                        "<tr>" +
+                                            "<td>Código</td>" +
+                                            "<td>FT-GTH-12</td>" +
+                                        "</tr>" +
+                                        "<tr>" +
+                                            "<td>Versión</td>" +
+                                            "<td>02</td>" +
+                                        "</tr>" +
+                                        "<tr>" +
+                                            "<td>Fecha</td>" +
+                                            "<td>{{fecha}}</td>" +
+                                        "</tr>" +
+                                    "</td>" +
+                                "</tr>" +
+                                "<tr>" +
+                                    "<td>Columna 1</td>" +
+                                    "<td>Celda 2</td>" +
+                                "</tr>" +
+                            "</table>" +
+                            "<br/>" +
+                            "<br/>" +
+                            "<h1>DATOS DEL COLABORADOR</h1>" +
                             "<p>Tu saldo es: {{saldo}}.</p>" +
                             "<table>" +
                                 "<th>Cabecera 1</th>" +

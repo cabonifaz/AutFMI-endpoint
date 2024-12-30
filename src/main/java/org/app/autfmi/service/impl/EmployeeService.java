@@ -23,6 +23,11 @@ public class EmployeeService implements IEmployeeService {
     private final JwtHelper jwt;
 
     @Override
+    public BaseResponse getEmployee(Integer idUsuarioTalento) {
+        return employeeRepository.getEmployee(idUsuarioTalento);
+    }
+
+    @Override
     public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.REALIZAR_INGRESO);

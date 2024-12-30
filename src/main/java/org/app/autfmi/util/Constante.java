@@ -9,4 +9,442 @@ public class Constante {
     public static final String REALIZAR_INGRESO = "5";
     public static final String REALIZAR_MOVIMIENTO = "7";
     public static final String REALIZAR_CESE = "8";
+
+    // FORMS
+    public static final String CHECKBOX_STATE_TRUE = "checked='checked'";
+    public static final String CHECKBOX_STATE_FALSE = "";
+    public static final String FORM_TEMPLATE_SOLICITUD = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <title>PDF de Prueba</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 12px;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    td,
+                    th {
+                        padding: 5px;
+                        text-align: left;
+                    }
+                    .label {
+                        width: 25%;
+                    }
+                    .value {
+                        width: 75%;
+                    }
+                    h1 {
+                        font-size: 20px;
+                        font-weight: bold;
+                        margin-top: 20px;
+                        padding: 4px;
+                        background-color: #2D5294;
+                        color: #fff;
+                    }
+                    @page {
+                        size: A4;
+                        margin: 10mm;
+                    }
+                </style>
+            </head>
+            <body>
+                <div>
+                    <table>
+                        <tr>
+                            <td style="width: 35%; border: 1px solid #ddd;">
+                                <img src='data:image/png;base64,{{ImgB64}}' alt='Logo 1' style="height: 5rem; width: auto;" />
+                            </td>
+                            <td style="text-align: center; width: 35%; font-weight: bold; border: 1px solid #ddd;">
+                                SOLICITUD DE CREACIÓN, MODIFICACIÓN O DESACTIVACIÓN DE USUARIOS
+                            </td>
+                            <td style="padding: 0;">
+                                <table>
+                                    <tr style="border: 1px solid #ddd;">
+                                        <th style="border: 1px solid #ddd;">Código</th>
+                                        <td style="border: 1px solid #ddd;">FT-GS-01</td>
+                                    </tr>
+                                    <tr style="border: 1px solid #ddd;">
+                                        <th style="border: 1px solid #ddd;">Versión</th>
+                                        <td style="border: 1px solid #ddd;">01</td>
+                                    </tr>
+                                    <tr style="border: 1px solid #ddd;">
+                                        <th style="border: 1px solid #ddd;">Fecha</th>
+                                        <td style="border: 1px solid #ddd;">{{fecha}}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <h1>DATOS DEL SOLICITANTE</h1>
+                    <table>
+                        <tr>
+                            <th class="label">Nombres y Apellidos:</th>
+                            <td class="value">{{nombres}} {{apellidos}}</td>
+                        </tr>
+                        <tr>
+                            <th>Área:</th>
+                            <td>{{area}}</td>
+                        </tr>
+                        <tr>
+                            <th>Anexo:</th>
+                            <td>{{area}}</td>
+                        </tr>
+                        <tr>
+                            <th>Fecha:</th>
+                            <td>{{fecha}}</td>
+                        </tr>
+                    </table>
+                    <h1>CREACIÓN DE USUARIOS</h1>
+                    <table>
+                        <tr>
+                            <th class="label">Nombres y Apellidos:</th>
+                            <td>{{nombres}} {{apellidos}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Nombre de Usuario:</th>
+                            <td>{{nombreUsuario}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Correo:</th>
+                            <td>{{crearCorreo}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Área:</th>
+                            <td>{{area}}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <form>
+                                    <label for="entrada">Entrada:</label>
+                                    <input type="checkbox" name="entrada" {{isEntrada}} />
+                                    <label for="salida">Salida:</label>
+                                    <input type="checkbox" name="salida" {{isSalida}} />
+                                </form>
+                            </td>
+                            <td>
+                                <form>
+                                    <label for="interno">Interno:</label>
+                                    <input type="checkbox" name="interno" {{isInterno}} />
+                                    <label for="externo">Externo:</label>
+                                    <input type="checkbox" name="externo" {{isExterno}} />
+                                </form>
+                            </td>
+                        </tr>
+                    </table>
+                    <h1>MODIFICACIÓN DE USUARIOS</h1>
+                    <table>
+                        <tr>
+                            <td>
+                                <form>
+                                    <label for="mod_usuario">Modificar Usuario de Red:</label>
+                                    <input type="checkbox" name="mod_usuario" {{isModificarUsuarioRed}} />
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="label">Usuario:</th>
+                            <td>{{usuario}}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #ddd;">
+                            <th class="label">Modificar por:</th>
+                            <td>{{modificador}}</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <form>
+                                    <label for="mod_email">Modificar Correo:</label>
+                                    <input type="checkbox" name="mod_email" {{isModificarCorreo}} />
+                                </form>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="label">Correo:</th>
+                            <td>{{modificarCorreo}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Modificar por:</th>
+                            <td>{{modificador}}</td>
+                        </tr>
+                    </table>
+                    <h1>DESACTIVACIÓN DE USUARIOS</h1>
+                    <table>
+                        <tr>
+                            <th class="label">Nombres y Apellidos:</th>
+                            <td>{{nombres}} {{apellidos}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Usuario:</th>
+                            <td>{{usuario}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Correo:</th>
+                            <td>{{correo}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Motivo:</th>
+                            <td>{{motivo}}</td>
+                        </tr>
+                    </table>
+                    <table style="margin-top: 50px;">
+                        <tr>
+                            <td style="width: 100%; text-align: center; ">
+                                <p style="text-decoration: underline; line-height: 0%; font-size: medium;">{{SOLICITANTE}}</p>
+                                <p style="font-weight: bold; font-size: medium;">GESTOR DEL SERVICIO</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </body>
+            </html>
+            """;
+    public static final String FORM_TEMPLATE_EMPLOYEE = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <title>PDF de Prueba</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        font-size: 12px;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    h1 {
+                        font-size: 16px;
+                        color: #333;
+                        margin: 10px 0;
+                    }
+                    p {
+                        margin: 5px 0;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    td {
+                        border: 1px solid #ddd;
+                    }
+                    .label {
+                        background-color: #e0dfdf;
+                    }
+                    th, td {
+                        width: 30%;
+                        padding: 5px;
+                        text-align: left;
+                    }
+                    table.inner-table {
+                        table-layout: fixed;
+                        width: 100%;
+                    }
+                    table.inner-table th,
+                    table.inner-table td {
+                        width: 33%;
+                        border: 1px solid #ddd;
+                        padding: 5px;
+                    }
+                    table.inner-table td {
+                        border-left: none;
+                        border-bottom: none;
+                    }
+                    .no-page-break {
+                        page-break-inside: avoid;
+                    }
+                    .no-page-break tr {
+                        page-break-inside: avoid;
+                    }
+                    .no-page-break td {
+                        page-break-inside: avoid;
+                    }
+                    @page {
+                        size: A4;
+                        margin: 10mm;
+                    }
+                    .content-container {
+                        max-width: 100%;
+                        overflow: hidden;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="content-container">
+                    <table>
+                        <tr>
+                            <td style="width: 35%; text-align: center;">
+                                <img src='data:image/png;base64,{{ImgB64}}' alt='Logo 1' style="height: 5rem; width: auto;" />
+                            </td>
+                            <td style="text-align: center; width: 35%; font-weight: bold;">FORMULARIO DE MOVIMIENTO</td>
+                            <td style='width: 35%; padding: 0;'>
+                                <table style='padding: 0; margin: 0;'>
+                                    <tr>
+                                        <td>Código</td>
+                                        <td>FT-GTH-12</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Versión</td>
+                                        <td>02</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Fecha</td>
+                                        <td>{{fecha}}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h1>DATOS DEL COLABORADOR</h1>
+                    <table class="no-page-break">
+                        <tr>
+                            <th class="label">Nombres y Apellidos</th>
+                            <td>{{nombres}} {{apellidos}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Unidad</th>
+                            <td>{{unidad}}</td>
+                        </tr>
+                    </table>
+
+                    <h1>INGRESO</h1>
+                    <table class="no-page-break">
+                        <tr>
+                            <th class="label">Modalidad</th>
+                            <td>{{modalidad}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Motivo de Ingreso</th>
+                            <td>{{motivoIngreso}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Cargo</th>
+                            <td>{{cargo}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Horario de Trabajo</th>
+                            <td>{{horarioTrabajo}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Estructura Salarial</th>
+                            <td style="padding: 0;">
+                                <table class="inner-table">
+                                    <tr>
+                                        <th>Base</th>
+                                        <th>Movilidad</th>
+                                        <th>Bono Trimestral</th>
+                                    </tr>
+                                    <tr>
+                                        <td>{{montoBaseIn}}</td>
+                                        <td>{{montoMovilidadIn}}</td>
+                                        <td>{{montoTrimestralIn}}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="label">F. Inicio contrato</th>
+                            <td>{{fechaInicioContrato}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">F. Término contrato</th>
+                            <td>{{fechaTerminoContrato}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Proyecto / servicio</th>
+                            <td>{{proyectoServicio}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Objeto del contrato</th>
+                            <td>{{objetoContrato}}</td>
+                        </tr>
+                    </table>
+
+                    <h1>DECLARACIÓN EN SUNAT (*)</h1>
+                    <table class="no-page-break">
+                        <tr>
+                            <th class="label">[1] ¿Declarado en Sunat?</th>
+                            <td>{{declaradoSunat}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">[2] Sede a declarar</th>
+                            <td>{{sedeDeclarar}}</td>
+                        </tr>
+                    </table>
+
+                    <h1>MOVIMIENTO</h1>
+                    <table class="no-page-break">
+                        <tr>
+                            <th class="label">Estructura Salarial</th>
+                            <td style="padding: 0;">
+                                <table class="inner-table">
+                                    <tr>
+                                        <th>Base</th>
+                                        <th>Movilidad</th>
+                                        <th>Bono Trimestral</th>
+                                    </tr>
+                                    <tr>
+                                        <td>{{montoBaseMov}}</td>
+                                        <td>{{montoMovilidadMov}}</td>
+                                        <td>{{montoTrimestralMov}}</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="label">Cambio de puesto</th>
+                            <td>{{puesto}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Cambio de área</th>
+                            <td>{{area}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Cambio de jornada</th>
+                            <td>{{jornada}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">F. Inicio de movimiento</th>
+                            <td>{{fechaMovimiento}}</td>
+                        </tr>
+                    </table>
+
+                    <h1>CESE</h1>
+                    <table style="margin-bottom: 50px;">
+                        <tr>
+                            <th class="label">Motivo de Cese</th>
+                            <td>{{motivoCese}}</td>
+                        </tr>
+                        <tr>
+                            <th class="label">Fecha de Cese</th>
+                            <td>{{fechaCese}}</td>
+                        </tr>
+                    </table>
+
+                    <table style="margin-bottom: 20px;">
+                        <tr style="border: none;">
+                            <td style="width: 100%; text-align: center; border: none;">
+                                <p>_________________________________________</p>
+                                <p>{{firmante}}</p>
+                                <p>Gestor de Servicios</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <p style="text-align: justify; font-size: 10px;">
+                        (*) DECLARACION EN SUNAT - En esta sección deberá informar al colaborador que se encuentra en Planilla
+                        y será declarado en SUNAT. Responda la pregunta [1], en caso su respuesta sea afirmativa, por favor
+                        responda a la pregunta [2] tener en cuenta que si la respuesta es "Oficina del Cliente" se debe
+                        contar con un contrato entre empresas.
+                    </p>
+                </div>
+            </body>
+            </html>
+            """;
 }

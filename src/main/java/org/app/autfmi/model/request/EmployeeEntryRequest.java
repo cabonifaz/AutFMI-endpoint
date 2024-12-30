@@ -13,6 +13,7 @@ public class EmployeeEntryRequest {
     private Integer idUsuarioTalento;
     private Integer idUnidad;
     private String cargo;
+    private String horarioTrabajo;
     private String fchInicioContrato;
     private String fchTerminoContrato;
     private String proyectoServicio;

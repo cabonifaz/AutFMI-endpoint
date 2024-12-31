@@ -2,6 +2,7 @@ package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.EmployeeDTO;
+import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.response.BaseResponse;
@@ -59,7 +60,7 @@ public class EmployeeRepository {
         );
     }
 
-    public BaseResponse saveEmployeeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
+    public EntryReport saveEmployeeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
 
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
@@ -73,6 +74,7 @@ public class EmployeeRepository {
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_UNIDAD", request.getIdUnidad())
                 .addValue("CARGO", request.getCargo())
+                .addValue("HORARIO_TRABAJO", request.getHorarioTrabajo())
                 .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
                 .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
                 .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
@@ -96,15 +98,43 @@ public class EmployeeRepository {
                 .addValue("USERNAME", baseRequest.getUsername());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
-        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+        List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-2");
 
-        if (resultSet != null && !resultSet.isEmpty()) {
-            Map<String, Object> row = resultSet.get(0);
-            return new BaseResponse(
-                    (Integer) row.get("ID_TIPO_MENSAJE"),
-                    (String) row.get("MENSAJE")
-            );
+        if (message != null && !message.isEmpty()) {
+            Map<String, Object> row = message.get(0);
+            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) row.get("MENSAJE");
+
+            if (idTipoMensaje == 2) {
+                List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-3");
+                Map<String, Object> reportRow = report.get(0);
+
+                return mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
+            }
         }
         return null;
+    }
+
+    private EntryReport mapToEntryReport(BaseResponse response, Map<String, Object> report) {
+        return new EntryReport(
+                response,
+                (String) report.get("NOMBRES"),
+                (String) report.get("APELLIDOS"),
+                (String) report.get("UNIDAD"),
+                (String) report.get("MODALIDAD"),
+                (String) report.get("MOTIVO"),
+                (String) report.get("CARGO"),
+                (String) report.get("JORNADA"),
+                (Double) report.get("MONTO_BASE"),
+                (Double) report.get("MONTO_MOVILIDAD"),
+                (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("FCH_INICIO_CONTRATO"),
+                (String) report.get("FCH_TERMINO_CONTRATO"),
+                (String) report.get("PROYECTO_SERVICIO"),
+                (String) report.get("OBJETO_CONTRATO"),
+                (Integer) report.get("DECLARAR_SUNAT"),
+                (String) report.get("SEDE_DECLARAR"),
+                (String) report.get("FIRMANTE")
+        );
     }
 }

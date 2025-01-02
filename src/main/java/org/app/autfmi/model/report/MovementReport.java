@@ -20,5 +20,6 @@ public class MovementReport {
     private Double montoBase;
     private Double montoMovilidad;
     private Double montoTrimestral;
+    private String correoGestor;
     private String firmante;
 }

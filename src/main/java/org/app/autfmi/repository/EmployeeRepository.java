@@ -134,6 +134,7 @@ public class EmployeeRepository {
                 (String) report.get("OBJETO_CONTRATO"),
                 (Integer) report.get("DECLARAR_SUNAT"),
                 (String) report.get("SEDE_DECLARAR"),
+                (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE")
         );
     }

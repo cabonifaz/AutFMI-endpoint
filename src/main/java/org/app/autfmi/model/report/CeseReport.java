@@ -15,5 +15,6 @@ public class CeseReport {
     private String unidad;
     private String motivo;
     private String fechaHistorial;
+    private String correoGestor;
     private String firmante;
 }

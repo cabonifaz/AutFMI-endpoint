@@ -26,5 +26,6 @@ public class EntryReport {
     private String objetoContrato;
     private Integer declararSunat;
     private String sedeDeclararSunat;
+    private String correoGestor;
     private String firmante;
 }

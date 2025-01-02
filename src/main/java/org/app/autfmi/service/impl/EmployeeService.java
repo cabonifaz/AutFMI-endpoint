@@ -44,7 +44,7 @@ public class EmployeeService implements IEmployeeService {
             String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.MOVIMIENTO);
             pdfUtils.enviarCorreoConPDF(
                     pdfUtils.replaceEntryRequestValues(template, report),
-                    "max.cardenas.cas@gmail.com",
+                    report.getCorreoGestor(),
                     "Ingreso empleado",
                     "Formulario de nuevo ingreso de empleado."
             );
@@ -63,7 +63,7 @@ public class EmployeeService implements IEmployeeService {
             String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.MOVIMIENTO);
             pdfUtils.enviarCorreoConPDF(
                     pdfUtils.replaceMovementRequestValues(template, report),
-                    "max.cardenas.cas@gmail.com",
+                    report.getCorreoGestor(),
                     "Ingreso empleado",
                     "Formulario de nuevo ingreso de empleado."
             );
@@ -82,7 +82,7 @@ public class EmployeeService implements IEmployeeService {
             String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.MOVIMIENTO);
             pdfUtils.enviarCorreoConPDF(
                     pdfUtils.replaceOutRequestValues(template, report),
-                    "max.cardenas.cas@gmail.com",
+                    report.getCorreoGestor(),
                     "Ingreso empleado",
                     "Formulario de nuevo ingreso de empleado."
             );

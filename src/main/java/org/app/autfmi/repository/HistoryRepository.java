@@ -91,6 +91,7 @@ public class HistoryRepository {
                 (Double) report.get("MONTO_BASE"),
                 (Double) report.get("MONTO_MOVILIDAD"),
                 (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE")
         );
     }
@@ -129,6 +130,7 @@ public class HistoryRepository {
                 (String) report.get("UNIDAD"),
                 (String) report.get("MOTIVO"),
                 (String) report.get("FCH_HISTORIAL"),
+                (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE")
         );
     }

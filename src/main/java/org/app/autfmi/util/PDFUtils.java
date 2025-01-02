@@ -7,19 +7,15 @@ import jakarta.mail.util.ByteArrayDataSource;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
-import org.app.autfmi.model.request.EmployeeContractEndRequest;
-import org.app.autfmi.model.request.EmployeeEntryRequest;
-import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.util.Base64;
 
@@ -38,27 +34,24 @@ public class PDFUtils {
     private String emisorCorreo;
 
     public String loadLogoPDF(int idLogo) {
-        try {
-            String rutaLogo = "";
-            if (idLogo == 1) {
-                rutaLogo = "src/main/resources/assets/logo-fractal.png";
-            } else {
-                rutaLogo = "src/main/resources/assets/logo-fractal-2.png";
-            }
-
-            File file = new File(rutaLogo);
-
-            FileInputStream fileInputStream = new FileInputStream(file);
-            byte[] imageBytes = fileInputStream.readAllBytes();
-
-            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-            fileInputStream.close();
-
-            return  base64Image;
-        } catch (IOException e) {
-            e.printStackTrace();
+        String rutaLogo = "";
+        String base64Image = "";
+        if (idLogo == 1) {
+            rutaLogo = "assets/logo-fractal.png";
+        } else {
+            rutaLogo = "assets/logo-fractal-2.png";
         }
-        return "";
+
+        Resource resource = new ClassPathResource(rutaLogo);
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            byte[] data = inputStream.readAllBytes();
+            base64Image = Base64.getEncoder().encodeToString(data);
+        } catch (IOException e) {
+            System.out.println("Error al cargar la imagen PDF con idLogo " + idLogo + ":   " + e.getMessage());
+        }
+
+        return base64Image;
     }
 
     public static byte[] crearPDF(String htmlContent) {

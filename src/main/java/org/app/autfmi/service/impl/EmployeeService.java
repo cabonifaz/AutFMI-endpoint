@@ -2,6 +2,7 @@ package org.app.autfmi.service.impl;
 
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
@@ -19,6 +20,9 @@ import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -41,9 +45,24 @@ public class EmployeeService implements IEmployeeService {
         EntryReport report = employeeRepository.saveEmployeeEntry(baseRequest, request);
 
         if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.MOVIMIENTO);
+            FileDTO fileFormulario = new FileDTO(
+                    "FT-GT-12 Formulario de Ingreso",
+                    pdfUtils.replaceEntryRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),report),
+                    null
+            );
+
+            FileDTO fileSolicitud = new FileDTO(
+                    "FT-GS-01 Solicitud de Creación de Usuario",
+                    pdfUtils.replaceEntryRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),report),
+                    null
+            );
+
+            List<FileDTO> lstfiles = new ArrayList<>();
+            lstfiles.add(fileFormulario);
+            lstfiles.add(fileSolicitud);
+
             pdfUtils.enviarCorreoConPDF(
-                    pdfUtils.replaceEntryRequestValues(template, report),
+                    lstfiles,
                     report.getCorreoGestor(),
                     "Ingreso empleado",
                     "Formulario de nuevo ingreso de empleado."
@@ -60,9 +79,24 @@ public class EmployeeService implements IEmployeeService {
         MovementReport report = historyRepository.registerMovement(baseRequest, request);
 
         if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.MOVIMIENTO);
+            List<FileDTO> lstfiles = new ArrayList<>();
+            FileDTO fileFormulario = new FileDTO(
+                    "FT-GT-12 Formulario de Movimiento",
+                    pdfUtils.replaceMovementRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), report),
+                    null
+            );
+            lstfiles.add(fileFormulario);
+
+//            FileDTO fileSolicitud = new FileDTO(
+//                    "FT-GS-01 Solicitud de Modificación de Usuario",
+//                    pdfUtils.replaceMovementRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), report),
+//                    null
+//            );
+//            lstfiles.add(fileSolicitud);
+
+
             pdfUtils.enviarCorreoConPDF(
-                    pdfUtils.replaceMovementRequestValues(template, report),
+                    lstfiles,
                     report.getCorreoGestor(),
                     "Ingreso empleado",
                     "Formulario de nuevo ingreso de empleado."
@@ -79,12 +113,27 @@ public class EmployeeService implements IEmployeeService {
         CeseReport report = historyRepository.registerContractTermination(baseRequest, request);
 
         if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.MOVIMIENTO);
+            FileDTO fileFormulario = new FileDTO(
+                    "FT-GT-12 Formulario de Cese",
+                    pdfUtils.replaceOutRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), report),
+                    null
+            );
+
+            FileDTO fileSolicitud = new FileDTO(
+                    "FT-GS-01 Solicitud de Desactivación de Usuario",
+                    pdfUtils.replaceOutRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), report),
+                    null
+            );
+
+            List<FileDTO> lstfiles = new ArrayList<>();
+            lstfiles.add(fileFormulario);
+            lstfiles.add(fileSolicitud);
+
             pdfUtils.enviarCorreoConPDF(
-                    pdfUtils.replaceOutRequestValues(template, report),
+                    lstfiles,
                     report.getCorreoGestor(),
-                    "Ingreso empleado",
-                    "Formulario de nuevo ingreso de empleado."
+                    "Cese empleado",
+                    "Formulario de cese del empleado."
             );
         }
 

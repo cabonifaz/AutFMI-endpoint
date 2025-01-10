@@ -4,6 +4,7 @@ import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
+import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
@@ -18,13 +19,14 @@ import org.springframework.stereotype.Component;
 import java.io.*;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.List;
 
 @Component
 public class PDFUtils {
 
     public enum TemplateType {
         SOLICITUD,
-        MOVIMIENTO, // PARA INGRESO MOVIMIENTO Y CESE
+        FORMULARIO, // PARA INGRESO MOVIMIENTO Y CESE
     }
 
     @Autowired
@@ -33,22 +35,16 @@ public class PDFUtils {
     @Value("${spring.mail.username}")
     private String emisorCorreo;
 
-    public String loadLogoPDF(int idLogo) {
-        String rutaLogo = "";
+    public String loadImage(String pathImage) {
         String base64Image = "";
-        if (idLogo == 1) {
-            rutaLogo = "assets/logo-fractal.png";
-        } else {
-            rutaLogo = "assets/logo-fractal-2.png";
-        }
 
-        Resource resource = new ClassPathResource(rutaLogo);
+        Resource resource = new ClassPathResource(pathImage);
 
         try (InputStream inputStream = resource.getInputStream()) {
             byte[] data = inputStream.readAllBytes();
             base64Image = Base64.getEncoder().encodeToString(data);
         } catch (IOException e) {
-            System.out.println("Error al cargar la imagen PDF con idLogo " + idLogo + ":   " + e.getMessage());
+            System.out.println("Error al cargar la imagen PDF en la ruta: " + pathImage + " :   " + e.getMessage());
         }
 
         return base64Image;
@@ -76,10 +72,11 @@ public class PDFUtils {
         }
     }
 
-    public void enviarCorreoConPDF(String htmlContent, String to, String subject, String text) throws MessagingException {
-        byte[] pdfBytes;
+    public void enviarCorreoConPDF(List<FileDTO> lstfiles, String to, String subject, String text) throws MessagingException {
         try {
-            pdfBytes = crearPDF(htmlContent);
+            for (FileDTO lstfile : lstfiles) {
+                lstfile.setByteArchivo(crearPDF(lstfile.getHtmlTemplate()));
+            }
         } catch (Exception e) {
             throw new MessagingException("Error al generar el PDF", e);
         }
@@ -92,20 +89,29 @@ public class PDFUtils {
         helper.setSubject(subject);
         helper.setText(text);
 
-        ByteArrayDataSource dataSource = new ByteArrayDataSource(pdfBytes, "application/pdf");
-        helper.addAttachment("documento.pdf", dataSource);
+        for (FileDTO objfile : lstfiles) {
+            ByteArrayDataSource dataSource = new ByteArrayDataSource(objfile.getByteArchivo(), "application/pdf");
+            helper.addAttachment(objfile.getNombreArchivo() + ".pdf", dataSource);
+        }
 
         mailSender.send(message);
         System.out.println("Correo enviado correctamente");
     }
 
     public String getHtmlTemplate(TemplateType reportType) {
-        loadLogoPDF(1);
         String imageB64 = switch (reportType) {
-            case SOLICITUD -> loadLogoPDF(2);
-            case MOVIMIENTO -> loadLogoPDF(1);
+            case SOLICITUD -> loadImage("assets/logo-fractal-2.png");
+            case FORMULARIO -> loadImage("assets/logo-fractal.png");
         };
-        return Constante.FORM_TEMPLATE_EMPLOYEE.replace("{{ImgB64}}", imageB64);
+
+        String templateHTML = switch (reportType) {
+            case SOLICITUD -> Constante.FORM_TEMPLATE_EMPLOYEE.replace("{{ImgB64}}", imageB64);
+            case FORMULARIO -> Constante.FORM_TEMPLATE_SOLICITUD.replace("{{ImgB64}}", imageB64);
+        };
+
+        templateHTML.replace("{{ImgFirma}}", loadImage("assets/signatures/CABM.png"));
+
+        return templateHTML;
     }
 
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {

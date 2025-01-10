@@ -430,6 +430,7 @@ public class Constante {
                     <table style="margin-bottom: 20px;">
                         <tr style="border: none;">
                             <td style="width: 100%; text-align: center; border: none;">
+                                <img src='data:image/png;base64,{{ImgFirma}}' alt='Logo 1' style="height: 5rem; width: auto;" />
                                 <p>_________________________________________</p>
                                 <p>{{firmante}}</p>
                                 <p>Gestor de Servicios</p>

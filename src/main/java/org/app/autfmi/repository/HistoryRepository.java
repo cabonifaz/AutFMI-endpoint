@@ -99,6 +99,8 @@ public class HistoryRepository {
     public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
         Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_CESE", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
+                    .addValue("NOMBRES", request.getNombres())
+                    .addValue("APELLIDOS", request.getApellidos())
                     .addValue("ID_MOTIVO", request.getIdMotivo())
                     .addValue("EMPRESA", request.getEmpresa())
                     .addValue("ID_UNIDAD", request.getIdUnidad())

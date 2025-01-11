@@ -7,6 +7,7 @@ import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
+import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
@@ -51,9 +52,22 @@ public class EmployeeService implements IEmployeeService {
                     null
             );
 
+            SolicitudData data = new SolicitudData();
+            data.setNombres(report.getNombres());
+            data.setApellidos(report.getApellidos());
+            data.setArea("");
+            data.setFechaSolicitud(report.getFechaInicioContrato());
+
+            data.setNombresCreacion(report.getNombres());
+            data.setApellidosCreacion(report.getApellidos());
+            data.setNombreUsuarioCreacion("Sin especificar");
+            data.setCorreoCreacion("Sin especificar");
+            data.setAreaCreacion("");
+            data.setFirmante(report.getFirmante());
+
             FileDTO fileSolicitud = new FileDTO(
                     "FT-GS-01 Solicitud de Creación de Usuario",
-                    pdfUtils.replaceEntryRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),report),
+                    pdfUtils.replaceSolicitudPDFValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
                     null
             );
 
@@ -119,9 +133,21 @@ public class EmployeeService implements IEmployeeService {
                     null
             );
 
+            SolicitudData data = new SolicitudData();
+            data.setNombres(report.getNombres());
+            data.setApellidos(report.getApellidos());
+            data.setArea("");
+            data.setFechaSolicitud(report.getFechaHistorial());
+            data.setNombresCese(report.getNombres());
+            data.setApellidosCese(report.getApellidos());
+            data.setUsuarioCese("No especifica");
+            data.setCorreoCese("No especifica");
+            data.setMotivoCese(report.getMotivo());
+            data.setFirmante(report.getFirmante());
+
             FileDTO fileSolicitud = new FileDTO(
                     "FT-GS-01 Solicitud de Desactivación de Usuario",
-                    pdfUtils.replaceOutRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), report),
+                    pdfUtils.replaceSolicitudPDFValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
                     null
             );
 

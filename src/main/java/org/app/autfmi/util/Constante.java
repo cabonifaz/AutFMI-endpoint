@@ -95,46 +95,46 @@ public class Constante {
                         </tr>
                         <tr>
                             <th>Anexo:</th>
-                            <td>{{area}}</td>
+                            <td>102</td>
                         </tr>
                         <tr>
                             <th>Fecha:</th>
-                            <td>{{fecha}}</td>
+                            <td>{{fechaSolicitud}}</td>
                         </tr>
                     </table>
                     <h1>CREACIÓN DE USUARIOS</h1>
                     <table>
                         <tr>
                             <th class="label">Nombres y Apellidos:</th>
-                            <td>{{nombres}} {{apellidos}}</td>
+                            <td>{{nombresCreacion}} {{apellidosCreacion}}</td>
                         </tr>
                         <tr>
                             <th class="label">Nombre de Usuario:</th>
-                            <td>{{nombreUsuario}}</td>
+                            <td>{{nombreUsuarioCreacion}}</td>
                         </tr>
                         <tr>
                             <th class="label">Correo:</th>
-                            <td>{{crearCorreo}}</td>
+                            <td>{{correoCreacion}}</td>
                         </tr>
                         <tr>
                             <th class="label">Área:</th>
-                            <td>{{area}}</td>
+                            <td>{{areaCreacion}}</td>
                         </tr>
                         <tr>
                             <td>
                                 <form>
                                     <label for="entrada">Entrada:</label>
-                                    <input type="checkbox" name="entrada" {{isEntrada}} />
+                                    <input type="checkbox" name="entrada"/>
                                     <label for="salida">Salida:</label>
-                                    <input type="checkbox" name="salida" {{isSalida}} />
+                                    <input type="checkbox" name="salida"/>
                                 </form>
                             </td>
                             <td>
                                 <form>
                                     <label for="interno">Interno:</label>
-                                    <input type="checkbox" name="interno" {{isInterno}} />
+                                    <input type="checkbox" name="interno"/>
                                     <label for="externo">Externo:</label>
-                                    <input type="checkbox" name="externo" {{isExterno}} />
+                                    <input type="checkbox" name="externo" />
                                 </form>
                             </td>
                         </tr>
@@ -145,58 +145,58 @@ public class Constante {
                             <td>
                                 <form>
                                     <label for="mod_usuario">Modificar Usuario de Red:</label>
-                                    <input type="checkbox" name="mod_usuario" {{isModificarUsuarioRed}} />
+                                    <input type="checkbox" name="mod_usuario"/>
                                 </form>
                             </td>
                         </tr>
                         <tr>
                             <th class="label">Usuario:</th>
-                            <td>{{usuario}}</td>
+                            <td>{{usuarioActualModificacion}}</td>
                         </tr>
                         <tr style="border-bottom: 1px solid #ddd;">
                             <th class="label">Modificar por:</th>
-                            <td>{{modificador}}</td>
+                            <td>{{usuarioNuevoModificacion}}</td>
                         </tr>
                         <tr>
                             <td>
                                 <form>
                                     <label for="mod_email">Modificar Correo:</label>
-                                    <input type="checkbox" name="mod_email" {{isModificarCorreo}} />
+                                    <input type="checkbox" name="mod_email" />
                                 </form>
                             </td>
                         </tr>
                         <tr>
                             <th class="label">Correo:</th>
-                            <td>{{modificarCorreo}}</td>
+                            <td>{{correoActualModificacion}}</td>
                         </tr>
                         <tr>
                             <th class="label">Modificar por:</th>
-                            <td>{{modificador}}</td>
+                            <td>{{correoNuevoModificacion}}</td>
                         </tr>
                     </table>
                     <h1>DESACTIVACIÓN DE USUARIOS</h1>
                     <table>
                         <tr>
                             <th class="label">Nombres y Apellidos:</th>
-                            <td>{{nombres}} {{apellidos}}</td>
+                            <td>{{nombresCese}} {{apellidosCese}}</td>
                         </tr>
                         <tr>
                             <th class="label">Usuario:</th>
-                            <td>{{usuario}}</td>
+                            <td>{{usuarioCese}}</td>
                         </tr>
                         <tr>
                             <th class="label">Correo:</th>
-                            <td>{{correo}}</td>
+                            <td>{{correoCese}}</td>
                         </tr>
                         <tr>
                             <th class="label">Motivo:</th>
-                            <td>{{motivo}}</td>
+                            <td>{{motivoCese}}</td>
                         </tr>
                     </table>
                     <table style="margin-top: 50px;">
                         <tr>
                             <td style="width: 100%; text-align: center; ">
-                                <p style="text-decoration: underline; line-height: 0%; font-size: medium;">{{SOLICITANTE}}</p>
+                                <p style="text-decoration: underline; line-height: 0%; font-size: medium;">{{firmante}}</p>
                                 <p style="font-weight: bold; font-size: medium;">GESTOR DEL SERVICIO</p>
                             </td>
                         </tr>
@@ -430,7 +430,7 @@ public class Constante {
                     <table style="margin-bottom: 20px;">
                         <tr style="border: none;">
                             <td style="width: 100%; text-align: center; border: none;">
-                                <img src='data:image/png;base64,{{ImgFirma}}' alt='Logo 1' style="height: 5rem; width: auto;" />
+                                <img src='data:image/png;base64,{{ImgFirma}}' alt='Firma' style="height: 5rem; width: auto;" />
                                 <p>_________________________________________</p>
                                 <p>{{firmante}}</p>
                                 <p>Gestor de Servicios</p>

@@ -8,6 +8,7 @@ import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
+import org.app.autfmi.model.report.SolicitudData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -95,7 +96,6 @@ public class PDFUtils {
         }
 
         mailSender.send(message);
-        System.out.println("Correo enviado correctamente");
     }
 
     public String getHtmlTemplate(TemplateType reportType) {
@@ -105,16 +105,15 @@ public class PDFUtils {
         };
 
         String templateHTML = switch (reportType) {
-            case SOLICITUD -> Constante.FORM_TEMPLATE_EMPLOYEE.replace("{{ImgB64}}", imageB64);
-            case FORMULARIO -> Constante.FORM_TEMPLATE_SOLICITUD.replace("{{ImgB64}}", imageB64);
+            case SOLICITUD -> Constante.FORM_TEMPLATE_SOLICITUD.replace("{{ImgB64}}", imageB64);
+            case FORMULARIO -> Constante.FORM_TEMPLATE_EMPLOYEE.replace("{{ImgB64}}", imageB64);
         };
-
-        templateHTML.replace("{{ImgFirma}}", loadImage("assets/signatures/CABM.png"));
 
         return templateHTML;
     }
 
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
+        String imgFirma = loadImage("assets/signatures/CABM.png");
         htmlTemplate = htmlTemplate
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
@@ -149,11 +148,14 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
+                .replace("{{ImgFirma}}", imgFirma)
                 .replace("{{firmante}}", report.getFirmante());
+
         return htmlTemplate;
     }
 
     public String replaceMovementRequestValues(String htmlTemplate, MovementReport report) {
+        String imgFirma = loadImage("assets/signatures/CABM.png");
         htmlTemplate = htmlTemplate
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
@@ -188,11 +190,13 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
+                .replace("{{ImgFirma}}", imgFirma)
                 .replace("{{firmante}}", report.getFirmante());
         return htmlTemplate;
     }
 
     public String replaceOutRequestValues(String htmlTemplate, CeseReport report) {
+        String imgFirma = loadImage("assets/signatures/CABM.png");
         htmlTemplate = htmlTemplate
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
@@ -227,7 +231,49 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", report.getMotivo())
                 .replace("{{fechaCese}}", report.getFechaHistorial())
                 // FOOTER
+                .replace("{{ImgFirma}}", imgFirma)
                 .replace("{{firmante}}", report.getFirmante());
         return htmlTemplate;
     }
+
+    public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report) {
+        htmlTemplate = htmlTemplate
+                //HEADER
+                .replace("{{fecha}}", LocalDate.now().toString())
+                //DATOS DEL SOLICITANTE
+                .replace("{{nombres}}", report.getNombres() == null ? "" : report.getNombres())
+                .replace("{{apellidos}}", report.getApellidos() == null ? "" : report.getApellidos())
+                .replace("{{area}}", report.getArea() == null ? "" : report.getArea())
+                .replace("{{fechaSolicitud}}", report.getFechaSolicitud() == null ? "" : report.getFechaSolicitud())
+
+                //CREACIÓN DE USUARIOS
+                .replace("{{nombresCreacion}}", report.getNombresCreacion() == null ? "" :  report.getNombresCreacion())
+                .replace("{{apellidosCreacion}}", report.getApellidosCreacion() == null ? "" : report.getApellidosCreacion())
+                .replace("{{nombreUsuarioCreacion}}", report.getNombreUsuarioCreacion() == null ? "" : report.getNombreUsuarioCreacion())
+                .replace("{{correoCreacion}}", report.getCorreoCreacion() == null ? "" : report.getCorreoCreacion())
+                .replace("{{areaCreacion}}", report.getAreaCreacion() == null ? "" : report.getAreaCreacion())
+
+                //MODIFICACIÓN DE USUARIOS
+                .replace("{{usuarioActualModificacion}}", report.getUsuarioActualModificacion() == null ? "" : report.getUsuarioActualModificacion())
+                .replace("{{usuarioNuevoModificacion}}", report.getUsuarioNuevoModificacion() == null ? "" : report.getUsuarioNuevoModificacion())
+                .replace("{{correoActualModificacion}}", report.getCorreoActualModificacion() == null ? "" : report.getCorreoActualModificacion())
+                .replace("{{correoNuevoModificacion}}", report.getCorreoNuevoModificacion() == null ? "" : report.getNombres())
+
+                //DESACTIVACIÓN DE USUARIOS
+                .replace("{{nombresCese}}", report.getNombresCese() == null ? "" : report.getNombresCese())
+                .replace("{{apellidosCese}}", report.getApellidosCese() == null ? "" : report.getApellidosCese())
+                .replace("{{usuarioCese}}", report.getUsuarioCese() == null ? "" : report.getUsuarioCese())
+                .replace("{{correoCese}}", report.getCorreoCese() == null ? "" : report.getCorreoCese())
+                .replace("{{motivoCese}}", report.getMotivoCese() == null ? "" : report.getMotivoCese())
+
+                // FOOTER
+                .replace("{{firmante}}", report.getFirmante() == null ? "" : report.getFirmante());
+
+        return htmlTemplate;
+    }
+
+
+
+
+
 }

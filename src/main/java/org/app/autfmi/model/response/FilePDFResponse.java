@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.app.autfmi.model.dto.FilePDFDTO;
+
+import java.util.List;
 
 @Getter
 @Setter
@@ -13,6 +16,5 @@ import lombok.Setter;
 public class FilePDFResponse {
     @JsonProperty("result")
     private BaseResponse baseResponse;
-    private String nombreArchivo;
-    private String archivoB64;
+    private List<FilePDFDTO> lstArchivos;
 }

@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+
 @RestController
 @RequestMapping("fmi/employee")
 @RequiredArgsConstructor
@@ -102,7 +104,7 @@ public class EmployeeController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (Exception e) {
             return new ResponseEntity<>(
-                    null,
+                    new FilePDFResponse(new BaseResponse(3, e.getMessage()), Collections.emptyList()),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
 

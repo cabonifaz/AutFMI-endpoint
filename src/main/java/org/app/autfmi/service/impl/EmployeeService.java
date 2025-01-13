@@ -3,6 +3,7 @@ package org.app.autfmi.service.impl;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.model.dto.FilePDFDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
@@ -171,41 +172,84 @@ public class EmployeeService implements IEmployeeService {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
         Object report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial, idUsuarioTalento);
-        String fileB64;
+        String formularioFileB64;
+        String solicitudFileB64;
         FilePDFResponse response = new FilePDFResponse();
+        List<FilePDFDTO> lstfiles = new ArrayList<>();
 
         switch (idTipoHistorial) {
             case 1: {
-                response.setNombreArchivo("FT-GT-12 Formulario de Ingreso");
-
-                fileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceEntryRequestValues(
+                formularioFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceEntryRequestValues(
                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
                         (EntryReport) report
                 )));
+
+                SolicitudData data = new SolicitudData();
+                data.setNombres(((EntryReport) report).getNombres());
+                data.setApellidos(((EntryReport) report).getApellidos());
+                data.setArea("");
+                data.setFechaSolicitud(((EntryReport) report).getFechaInicioContrato());
+
+                data.setNombresCreacion(((EntryReport) report).getNombres());
+                data.setApellidosCreacion(((EntryReport) report).getApellidos());
+                data.setNombreUsuarioCreacion("Sin especificar");
+                data.setCorreoCreacion("Sin especificar");
+                data.setAreaCreacion("");
+                data.setFirmante(((EntryReport) report).getFirmante());
+
+                solicitudFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceSolicitudPDFValues(
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data
+                )));
+
+                lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Ingreso", formularioFileB64));
+                lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Creación de Usuario", solicitudFileB64));
+
+                // response set up
                 response.setBaseResponse(((EntryReport) report).getResponse());
-                response.setArchivoB64(fileB64);
+                response.setLstArchivos(lstfiles);
                 break;
             }
             case 2: {
-                response.setNombreArchivo("FT-GT-12 Formulario de Movimiento");
-
-                fileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceMovementRequestValues(
+                formularioFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceMovementRequestValues(
                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
                         (MovementReport) report
                 )));
+
+                lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Movimiento", formularioFileB64));
+
+                // response set up
                 response.setBaseResponse(((MovementReport) report).getResponse());
-                response.setArchivoB64(fileB64);
+                response.setLstArchivos(lstfiles);
                 break;
             }
             case 3: {
-                response.setNombreArchivo("FT-GT-12 Formulario de Cese");
-
-                fileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceOutRequestValues(
+                formularioFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceOutRequestValues(
                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
                         (CeseReport) report
                 )));
+
+                SolicitudData data = new SolicitudData();
+                data.setNombres(((CeseReport) report).getNombres());
+                data.setApellidos(((CeseReport) report).getApellidos());
+                data.setArea("");
+                data.setFechaSolicitud(((CeseReport) report).getFechaHistorial());
+                data.setNombresCese(((CeseReport) report).getNombres());
+                data.setApellidosCese(((CeseReport) report).getApellidos());
+                data.setUsuarioCese("No especifica");
+                data.setCorreoCese("No especifica");
+                data.setMotivoCese(((CeseReport) report).getMotivo());
+                data.setFirmante(((CeseReport) report).getFirmante());
+
+                solicitudFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceSolicitudPDFValues(
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data
+                )));
+
+                lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Cese", formularioFileB64));
+                lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Desactivación de Usuario", solicitudFileB64));
+
+                // response set up
                 response.setBaseResponse(((CeseReport) report).getResponse());
-                response.setArchivoB64(fileB64);
+                response.setLstArchivos(lstfiles);
                 break;
             }
         }

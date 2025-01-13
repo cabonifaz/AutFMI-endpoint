@@ -6,6 +6,7 @@ import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.FilePDFResponse;
 import org.app.autfmi.service.impl.EmployeeService;
 import org.app.autfmi.util.JwtHelper;
 import org.springframework.http.HttpStatus;
@@ -82,6 +83,26 @@ public class EmployeeController {
             e.printStackTrace();
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+
+        }
+    }
+
+    @GetMapping("/lastHistory")
+    public ResponseEntity<FilePDFResponse> getLastHistory(
+            @RequestParam Integer idTipoHistorial,
+            @RequestParam Integer idUsuarioTalento,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            FilePDFResponse response = employeeService.getLastHistory(token, idTipoHistorial, idUsuarioTalento);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(
+                    null,
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
 

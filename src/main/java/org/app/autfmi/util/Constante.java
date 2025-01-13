@@ -9,6 +9,7 @@ public class Constante {
     public static final String REALIZAR_INGRESO = "5";
     public static final String REALIZAR_MOVIMIENTO = "7";
     public static final String REALIZAR_CESE = "8";
+    public static final String OBTENER_ULTIMO_REGISTRO_HISTORIAL = "10";
 
     // FORMS
     public static final String CHECKBOX_STATE_TRUE = "checked='checked'";
@@ -416,7 +417,7 @@ public class Constante {
                     </table>
 
                     <h1>CESE</h1>
-                    <table style="margin-bottom: 50px;">
+                    <table style="margin-bottom: 10px;">
                         <tr>
                             <th class="label">Motivo de Cese</th>
                             <td>{{motivoCese}}</td>
@@ -427,11 +428,11 @@ public class Constante {
                         </tr>
                     </table>
 
-                    <table style="margin-bottom: 20px;">
+                    <table style="margin-bottom: 10px;">
                         <tr style="border: none;">
                             <td style="width: 100%; text-align: center; border: none;">
                                 <img src='data:image/png;base64,{{ImgFirma}}' alt='Firma' style="height: 5rem; width: auto;" />
-                                <p>_________________________________________</p>
+                                <p style="margin-top:-10px;">_________________________________________</p>
                                 <p>{{firmante}}</p>
                                 <p>Gestor de Servicios</p>
                             </td>

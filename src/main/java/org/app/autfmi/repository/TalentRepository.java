@@ -147,6 +147,7 @@ public class TalentRepository {
         return new TalentItemDTO(
                 (Integer) talent.get("ID_USUARIO_TALENTO"),
                 (Integer) talent.get("ID_TALENTO"),
+                (Integer) talent.get("ID_TIPO_HISTORIAL"),
                 esTrabajador,
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),

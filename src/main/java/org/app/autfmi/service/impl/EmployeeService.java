@@ -13,6 +13,7 @@ import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.FilePDFResponse;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
@@ -21,7 +22,6 @@ import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class EmployeeService implements IEmployeeService {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.REALIZAR_INGRESO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        EntryReport report = employeeRepository.saveEmployeeEntry(baseRequest, request);
+        EntryReport report = historyRepository.registerEntry(baseRequest, request);
 
         if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
             FileDTO fileFormulario = new FileDTO(
@@ -164,5 +164,51 @@ public class EmployeeService implements IEmployeeService {
         }
 
         return report.getResponse();
+    }
+
+    @Override
+    public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idUsuarioTalento) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+        Object report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial, idUsuarioTalento);
+        String fileB64;
+        FilePDFResponse response = new FilePDFResponse();
+
+        switch (idTipoHistorial) {
+            case 1: {
+                response.setNombreArchivo("FT-GT-12 Formulario de Ingreso");
+
+                fileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceEntryRequestValues(
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
+                        (EntryReport) report
+                )));
+                response.setBaseResponse(((EntryReport) report).getResponse());
+                response.setArchivoB64(fileB64);
+                break;
+            }
+            case 2: {
+                response.setNombreArchivo("FT-GT-12 Formulario de Movimiento");
+
+                fileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceMovementRequestValues(
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
+                        (MovementReport) report
+                )));
+                response.setBaseResponse(((MovementReport) report).getResponse());
+                response.setArchivoB64(fileB64);
+                break;
+            }
+            case 3: {
+                response.setNombreArchivo("FT-GT-12 Formulario de Cese");
+
+                fileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceOutRequestValues(
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
+                        (CeseReport) report
+                )));
+                response.setBaseResponse(((CeseReport) report).getResponse());
+                response.setArchivoB64(fileB64);
+                break;
+            }
+        }
+        return response;
     }
 }

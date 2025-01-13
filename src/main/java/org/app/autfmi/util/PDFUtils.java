@@ -51,7 +51,7 @@ public class PDFUtils {
         return base64Image;
     }
 
-    public static byte[] crearPDF(String htmlContent) {
+    public byte[] crearPDF(String htmlContent) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try {
@@ -71,6 +71,14 @@ public class PDFUtils {
                 e.printStackTrace();
             }
         }
+    }
+
+    public String filePDFToBase64(byte[] byteArchivo) {
+        if (byteArchivo == null || byteArchivo.length == 0) {
+            throw new IllegalArgumentException("Archivo nulo");
+        }
+
+        return Base64.getEncoder().encodeToString(byteArchivo);
     }
 
     public void enviarCorreoConPDF(List<FileDTO> lstfiles, String to, String subject, String text) throws MessagingException {

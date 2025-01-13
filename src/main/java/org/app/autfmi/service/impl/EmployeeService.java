@@ -252,6 +252,10 @@ public class EmployeeService implements IEmployeeService {
                 response.setLstArchivos(lstfiles);
                 break;
             }
+            default: {
+                response.setBaseResponse(new BaseResponse(2, "El usuario no tiene registros en historial."));
+                response.setLstArchivos(lstfiles);
+            }
         }
         return response;
     }

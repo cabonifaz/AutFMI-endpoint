@@ -1,6 +1,7 @@
 package org.app.autfmi.util;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import jakarta.annotation.Nullable;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
@@ -51,10 +52,11 @@ public class PDFUtils {
         return base64Image;
     }
 
-    public byte[] crearPDF(String htmlContent) {
+    public byte[] crearPDF(String htmlContent, String title ) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try {
+            htmlContent = htmlContent.replace("{{title}}", title);
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.withHtmlContent(htmlContent, "file:///");
             builder.toStream(baos);
@@ -84,7 +86,7 @@ public class PDFUtils {
     public void enviarCorreoConPDF(List<FileDTO> lstfiles, String to, String subject, String text) throws MessagingException {
         try {
             for (FileDTO lstfile : lstfiles) {
-                lstfile.setByteArchivo(crearPDF(lstfile.getHtmlTemplate()));
+                lstfile.setByteArchivo(crearPDF(lstfile.getHtmlTemplate(), ""));
             }
         } catch (Exception e) {
             throw new MessagingException("Error al generar el PDF", e);
@@ -123,6 +125,7 @@ public class PDFUtils {
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
         String imgFirma = loadImage("assets/signatures/CABM.png");
         htmlTemplate = htmlTemplate
+                .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
                 // DATOS COLABORADOR
@@ -165,6 +168,7 @@ public class PDFUtils {
     public String replaceMovementRequestValues(String htmlTemplate, MovementReport report) {
         String imgFirma = loadImage("assets/signatures/CABM.png");
         htmlTemplate = htmlTemplate
+                .replace("{{title}}", "FT-GT-12 Formulario de Movimiento")
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
                 // DATOS COLABORADOR
@@ -206,6 +210,7 @@ public class PDFUtils {
     public String replaceOutRequestValues(String htmlTemplate, CeseReport report) {
         String imgFirma = loadImage("assets/signatures/CABM.png");
         htmlTemplate = htmlTemplate
+                .replace("{{title}}", "FT-GT-12 Formulario de Cese")
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
                 // DATOS COLABORADOR
@@ -279,9 +284,5 @@ public class PDFUtils {
 
         return htmlTemplate;
     }
-
-
-
-
 
 }

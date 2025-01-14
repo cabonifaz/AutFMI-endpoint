@@ -18,7 +18,7 @@ public class Constante {
             <!DOCTYPE html>
             <html lang="es">
             <head>
-                <title>PDF de Prueba</title>
+                <title>{{title}}</title>
                 <style>
                     body {
                         font-family: Arial, sans-serif;
@@ -210,7 +210,7 @@ public class Constante {
             <!DOCTYPE html>
             <html lang="es">
             <head>
-                <title>PDF de Prueba</title>
+                <title>{{title}}</title>
                 <style>
                     body {
                         font-family: Arial, sans-serif;

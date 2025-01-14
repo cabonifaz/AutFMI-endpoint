@@ -181,8 +181,9 @@ public class EmployeeService implements IEmployeeService {
             case 1: {
                 formularioFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceEntryRequestValues(
                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                        (EntryReport) report
-                )));
+                        (EntryReport) report),
+                        "FT-GT-12 Formulario de Ingreso")
+                );
 
                 SolicitudData data = new SolicitudData();
                 data.setNombres(((EntryReport) report).getNombres());
@@ -198,8 +199,9 @@ public class EmployeeService implements IEmployeeService {
                 data.setFirmante(((EntryReport) report).getFirmante());
 
                 solicitudFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceSolicitudPDFValues(
-                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data
-                )));
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
+                        "FT-GS-01 Solicitud de Creación de Usuario")
+                );
 
                 lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Ingreso", formularioFileB64));
                 lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Creación de Usuario", solicitudFileB64));
@@ -212,8 +214,9 @@ public class EmployeeService implements IEmployeeService {
             case 2: {
                 formularioFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceMovementRequestValues(
                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                        (MovementReport) report
-                )));
+                        (MovementReport) report),
+                        "FT-GT-12 Formulario de Movimiento")
+                );
 
                 lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Movimiento", formularioFileB64));
 
@@ -225,8 +228,9 @@ public class EmployeeService implements IEmployeeService {
             case 3: {
                 formularioFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceOutRequestValues(
                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                        (CeseReport) report
-                )));
+                        (CeseReport) report),
+                        "FT-GT-12 Formulario de Cese")
+                );
 
                 SolicitudData data = new SolicitudData();
                 data.setNombres(((CeseReport) report).getNombres());
@@ -241,8 +245,9 @@ public class EmployeeService implements IEmployeeService {
                 data.setFirmante(((CeseReport) report).getFirmante());
 
                 solicitudFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceSolicitudPDFValues(
-                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data
-                )));
+                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
+                        "FT-GS-01 Solicitud de Desactivación de Usuario")
+                );
 
                 lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Cese", formularioFileB64));
                 lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Desactivación de Usuario", solicitudFileB64));

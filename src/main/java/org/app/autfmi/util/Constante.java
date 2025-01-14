@@ -306,7 +306,7 @@ public class Constante {
                     <table class="no-page-break">
                         <tr>
                             <th class="label">Nombres y Apellidos</th>
-                            <td>{{nombre}} {{apellidos}}</td>
+                            <td>{{nombres}} {{apellidos}}</td>
                         </tr>
                         <tr>
                             <th class="label">Unidad</th>

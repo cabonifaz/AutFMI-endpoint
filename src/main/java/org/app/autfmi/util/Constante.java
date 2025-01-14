@@ -88,7 +88,7 @@ public class Constante {
                     <table>
                         <tr>
                             <th class="label">Nombres y Apellidos:</th>
-                            <td class="value">{{nombres}} {{apellidos}}</td>
+                            <td class="value">{{solicitante}}</td>
                         </tr>
                         <tr>
                             <th>Área:</th>
@@ -306,7 +306,7 @@ public class Constante {
                     <table class="no-page-break">
                         <tr>
                             <th class="label">Nombres y Apellidos</th>
-                            <td>{{nombres}} {{apellidos}}</td>
+                            <td>{{nombre}} {{apellidos}}</td>
                         </tr>
                         <tr>
                             <th class="label">Unidad</th>

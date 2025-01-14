@@ -254,8 +254,7 @@ public class PDFUtils {
                 //HEADER
                 .replace("{{fecha}}", LocalDate.now().toString())
                 //DATOS DEL SOLICITANTE
-                .replace("{{nombres}}", report.getNombres() == null ? "" : report.getNombres())
-                .replace("{{apellidos}}", report.getApellidos() == null ? "" : report.getApellidos())
+                .replace("{{solicitante}}", report.getNombres() == null ? "" : report.getFirmante())
                 .replace("{{area}}", report.getArea() == null ? "" : report.getArea())
                 .replace("{{fechaSolicitud}}", report.getFechaSolicitud() == null ? "" : report.getFechaSolicitud())
 

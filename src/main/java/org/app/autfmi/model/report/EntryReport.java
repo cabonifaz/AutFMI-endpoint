@@ -28,4 +28,5 @@ public class EntryReport {
     private String sedeDeclararSunat;
     private String correoGestor;
     private String firmante;
+    private String firma;
 }

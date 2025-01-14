@@ -95,7 +95,8 @@ public class HistoryRepository {
                 (Double) report.get("MONTO_MOVILIDAD"),
                 (Double) report.get("MONTO_TRIMESTRAL"),
                 (String) report.get("CORREO_GESTOR"),
-                (String) report.get("FIRMANTE")
+                (String) report.get("FIRMANTE"),
+                (String) report.get("FIRMA")
         );
     }
 
@@ -136,7 +137,8 @@ public class HistoryRepository {
                 (String) report.get("MOTIVO"),
                 (String) report.get("FCH_HISTORIAL"),
                 (String) report.get("CORREO_GESTOR"),
-                (String) report.get("FIRMANTE")
+                (String) report.get("FIRMANTE"),
+                (String) report.get("FIRMA")
         );
     }
 
@@ -215,7 +217,8 @@ public class HistoryRepository {
                 (Integer) report.get("DECLARAR_SUNAT"),
                 (String) report.get("SEDE_DECLARAR"),
                 (String) report.get("CORREO_GESTOR"),
-                (String) report.get("FIRMANTE")
+                (String) report.get("FIRMANTE"),
+                (String) report.get("FIRMA")
         );
     }
 

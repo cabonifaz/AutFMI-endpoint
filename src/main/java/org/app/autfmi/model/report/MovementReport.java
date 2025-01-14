@@ -22,4 +22,5 @@ public class MovementReport {
     private Double montoTrimestral;
     private String correoGestor;
     private String firmante;
+    private String firma;
 }

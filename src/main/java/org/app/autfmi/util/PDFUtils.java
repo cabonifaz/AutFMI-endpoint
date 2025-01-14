@@ -123,7 +123,7 @@ public class PDFUtils {
     }
 
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
-        String imgFirma = loadImage("assets/signatures/CABM.png");
+        String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
                 //HEADER
@@ -166,7 +166,7 @@ public class PDFUtils {
     }
 
     public String replaceMovementRequestValues(String htmlTemplate, MovementReport report) {
-        String imgFirma = loadImage("assets/signatures/CABM.png");
+        String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Movimiento")
                 //HEADER
@@ -208,7 +208,7 @@ public class PDFUtils {
     }
 
     public String replaceOutRequestValues(String htmlTemplate, CeseReport report) {
-        String imgFirma = loadImage("assets/signatures/CABM.png");
+        String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Cese")
                 //HEADER

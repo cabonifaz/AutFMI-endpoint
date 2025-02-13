@@ -76,7 +76,7 @@ public class AuthRepository {
             if (resultSet3 != null && !resultSet3.isEmpty()) {
                 for (Map<String, Object> roleData : resultSet3) {
                     // El campo STRING1 contiene los roles
-                    roles.add((Integer) roleData.get("NUM1"));
+                    roles.add((Integer) roleData.get("ID_ROL"));
                 }
             }
 

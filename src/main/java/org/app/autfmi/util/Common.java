@@ -35,4 +35,14 @@ public class Common {
         }
         return null;
     }
+
+    public static String parseDateToFormDate(String date) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        if (date != null && !date.isEmpty()) {
+            return LocalDate.parse(date, inputFormatter).format(outputFormatter);
+        }
+        return "";
+    }
 }

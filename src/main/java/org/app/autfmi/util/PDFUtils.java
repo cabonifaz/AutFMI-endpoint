@@ -1,7 +1,6 @@
 package org.app.autfmi.util;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
-import jakarta.annotation.Nullable;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
@@ -10,6 +9,8 @@ import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.SolicitudData;
+import org.app.autfmi.model.request.SolicitudEquipoRequest;
+import org.app.autfmi.model.request.SolicitudSoftwareRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
@@ -28,6 +30,7 @@ public class PDFUtils {
 
     public enum TemplateType {
         SOLICITUD,
+        SOLICITUD_EQUIPO,
         FORMULARIO, // PARA INGRESO MOVIMIENTO Y CESE
     }
 
@@ -110,24 +113,21 @@ public class PDFUtils {
 
     public String getHtmlTemplate(TemplateType reportType) {
         String imageB64 = switch (reportType) {
-            case SOLICITUD -> loadImage("assets/logo-fractal-2.png");
+            case SOLICITUD, SOLICITUD_EQUIPO -> loadImage("assets/logo-fractal-2.png");
             case FORMULARIO -> loadImage("assets/logo-fractal.png");
         };
 
-        String templateHTML = switch (reportType) {
+        return switch (reportType) {
             case SOLICITUD -> Constante.FORM_TEMPLATE_SOLICITUD.replace("{{ImgB64}}", imageB64);
             case FORMULARIO -> Constante.FORM_TEMPLATE_EMPLOYEE.replace("{{ImgB64}}", imageB64);
+            case SOLICITUD_EQUIPO -> Constante.FORM_TEMPLATE_INS_SOFTWARE.replace("{{ImgB64}}", imageB64);
         };
-
-        return templateHTML;
     }
 
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
         String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
-                //HEADER
-                .replace("{{fecha}}", LocalDate.now().toString())
                 // DATOS COLABORADOR
                 .replace("{{nombres}}", report.getNombres())
                 .replace("{{apellidos}}", report.getApellidos())
@@ -169,8 +169,6 @@ public class PDFUtils {
         String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Movimiento")
-                //HEADER
-                .replace("{{fecha}}", LocalDate.now().toString())
                 // DATOS COLABORADOR
                 .replace("{{nombres}}", report.getNombres())
                 .replace("{{apellidos}}", report.getApellidos())
@@ -211,8 +209,6 @@ public class PDFUtils {
         String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Cese")
-                //HEADER
-                .replace("{{fecha}}", LocalDate.now().toString())
                 // DATOS COLABORADOR
                 .replace("{{nombres}}", report.getNombres())
                 .replace("{{apellidos}}", report.getApellidos())
@@ -251,8 +247,6 @@ public class PDFUtils {
 
     public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report) {
         htmlTemplate = htmlTemplate
-                //HEADER
-                .replace("{{fecha}}", LocalDate.now().toString())
                 //DATOS DEL SOLICITANTE
                 .replace("{{solicitante}}", report.getNombres() == null ? "" : report.getFirmante())
                 .replace("{{area}}", report.getArea() == null ? "" : report.getArea())
@@ -284,4 +278,55 @@ public class PDFUtils {
         return htmlTemplate;
     }
 
+    public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoRequest request, String nombreGestor) {
+        String nombresApellidos = request.getNombreEmpleado() + ' ' + request.getApellidosEmpleado();
+        String checkboxCheckedSymbol = "X";
+
+        String tipoPc = request.getIdTipoEquipo() == 1 ? checkboxCheckedSymbol : "";
+        String tipoLaptop = request.getIdTipoEquipo() == 2 ? checkboxCheckedSymbol : "";
+        String anexoFijo = request.getIdAnexo() == 1 ? checkboxCheckedSymbol : "";
+        String anexoSoftphone = request.getIdAnexo() == 2 ? checkboxCheckedSymbol : "";
+        String celularSi = request.getCelular() == 1 ? checkboxCheckedSymbol : "";
+        String celularNo = request.getCelular() != 1 ? checkboxCheckedSymbol : "";
+        String internetSi = request.getInternetMovil() == 1 ? checkboxCheckedSymbol : "";
+        String internetNo = request.getInternetMovil() != 1 ? checkboxCheckedSymbol : "";
+
+        // lista de productos
+        List<String> listaProductos = new ArrayList<>();
+
+        for (SolicitudSoftwareRequest requestSoftware: request.getLstSoftware()) {
+            listaProductos.add(Constante.LIST_ITEM
+                    .replace("{{numeroItem}}", requestSoftware.getIdItem().toString())
+                    .replace("{{producto}}", requestSoftware.getProducto())
+                    .replace("{{version}}", requestSoftware.getProdVersion())
+            );
+        }
+
+        htmlTemplate = htmlTemplate
+                .replace("{{title}}", "FT-GS-03 Formulario de Requerimiento de Software y Hardware")
+                .replace("{{apellidosNombres}}", nombresApellidos)
+                .replace("{{cliente}}", request.getEmpresaCliente())
+                .replace("{{area}}", request.getArea())
+                .replace("{{cargo}}", request.getPuesto())
+                .replace("{{fechaSolicitud}}", Common.parseDateToFormDate(request.getFechaSolicitud()))
+                .replace("{{fechaEntrega}}", Common.parseDateToFormDate(request.getFechaEntrega()))
+                .replace("{{symbolPc}}", tipoPc)
+                .replace("{{symbolLaptop}}", tipoLaptop)
+                .replace("{{procesador}}", request.getProcesador())
+                .replace("{{ram}}", request.getRam())
+                .replace("{{hd}}", request.getHd())
+                .replace("{{marca}}", request.getMarca())
+                .replace("{{symbolFijo}}", anexoFijo)
+                .replace("{{symbolSoftphone}}", anexoSoftphone)
+                .replace("{{symbolCelSi}}", celularSi)
+                .replace("{{symbolCelNo}}", celularNo)
+                .replace("{{symbolIntSi}}", internetSi)
+                .replace("{{symbolIntNo}}", internetNo)
+                .replace("{{accesorios}}", request.getAccesorios())
+                .replace("{{listaProducto}}", String.join("\n", listaProductos))
+                .replace("{{nombreFirma}}", nombreGestor)
+                .replace("{{nombreGestor}}", nombreGestor);
+
+        return htmlTemplate;
+    }
 }

@@ -36,7 +36,7 @@ public class TalentService implements ITalentService {
     @Override
     public BaseResponse saveTalent(String token, TalentRequest talent) {
         UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.ACTUALIZAR_USUARIO);
+        String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.ACTUALIZAR_USUARIO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return talentRepository.saveTalent(talent, baseRequest);
     }

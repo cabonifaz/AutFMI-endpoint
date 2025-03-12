@@ -1,18 +1,13 @@
 package org.app.autfmi.service.impl;
 
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
 import org.app.autfmi.model.dto.UserDTO;
-import org.app.autfmi.model.report.CeseReport;
-import org.app.autfmi.model.report.EntryReport;
-import org.app.autfmi.model.report.MovementReport;
-import org.app.autfmi.model.report.SolicitudData;
-import org.app.autfmi.model.request.BaseRequest;
-import org.app.autfmi.model.request.EmployeeContractEndRequest;
-import org.app.autfmi.model.request.EmployeeEntryRequest;
-import org.app.autfmi.model.request.EmployeeMovementRequest;
+import org.app.autfmi.model.report.*;
+import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
 import org.app.autfmi.repository.EmployeeRepository;
@@ -42,7 +37,7 @@ public class EmployeeService implements IEmployeeService {
     @Override
     public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) throws MessagingException {
         UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = String.join(",", Constante.GUARDAR_USUARIO, Constante.REALIZAR_INGRESO);
+        String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         EntryReport report = historyRepository.registerEntry(baseRequest, request);
 
@@ -165,6 +160,36 @@ public class EmployeeService implements IEmployeeService {
         }
 
         return report.getResponse();
+    }
+
+    @Override
+    public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws MessagingException, SQLServerException {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
+        SolicitudEquipoReport solicitudEquipoReport = employeeRepository.solicitudEquipo(baseRequest, request);
+
+        if (solicitudEquipoReport != null && solicitudEquipoReport.getBaseResponse().getIdTipoMensaje() == 2) {
+            List<FileDTO> lstfiles = new ArrayList<>();
+            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+            String nombresApellidos = solicitudEquipoReport.getNombres() + ' ' + solicitudEquipoReport.getApellidos();
+
+            FileDTO fileFormulario = new FileDTO(
+                    "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
+                    pdfUtils.replaceSolicitudEquipoPDFValues(template, request, nombresApellidos),
+                    null
+            );
+
+            lstfiles.add(fileFormulario);
+
+            pdfUtils.enviarCorreoConPDF(
+                    lstfiles,
+                    solicitudEquipoReport.getCorreoGestor(),
+                    "Requerimiento de Software y Hardware",
+                    "Formulario Requerimiento de Software y Hardware."
+            );
+        }
+
+        return solicitudEquipoReport.getBaseResponse();
     }
 
     @Override

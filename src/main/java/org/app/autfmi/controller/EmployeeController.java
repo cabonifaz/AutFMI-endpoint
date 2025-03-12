@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
+import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
 import org.app.autfmi.service.impl.EmployeeService;
@@ -108,6 +109,24 @@ public class EmployeeController {
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
 
+        }
+    }
+
+    @PostMapping("solicitud/equipo")
+    public ResponseEntity<BaseResponse> solicitudEquipo(
+            @RequestBody SolicitudEquipoRequest solicitudEquipoRequest,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = employeeService.solicitudEquipo(token, solicitudEquipoRequest);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
         }
     }
 }

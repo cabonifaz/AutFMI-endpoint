@@ -286,10 +286,10 @@ public class PDFUtils {
         String tipoLaptop = request.getIdTipoEquipo() == 2 ? checkboxCheckedSymbol : "";
         String anexoFijo = request.getIdAnexo() == 1 ? checkboxCheckedSymbol : "";
         String anexoSoftphone = request.getIdAnexo() == 2 ? checkboxCheckedSymbol : "";
-        String celularSi = request.getCelular() == 1 ? checkboxCheckedSymbol : "";
-        String celularNo = request.getCelular() != 1 ? checkboxCheckedSymbol : "";
-        String internetSi = request.getInternetMovil() == 1 ? checkboxCheckedSymbol : "";
-        String internetNo = request.getInternetMovil() != 1 ? checkboxCheckedSymbol : "";
+        String celularSi = request.getCelular() ? checkboxCheckedSymbol : "";
+        String celularNo = !request.getCelular() ? checkboxCheckedSymbol : "";
+        String internetSi = request.getInternetMovil() ? checkboxCheckedSymbol : "";
+        String internetNo = !request.getInternetMovil() ? checkboxCheckedSymbol : "";
 
         // lista de productos
         List<String> listaProductos = new ArrayList<>();

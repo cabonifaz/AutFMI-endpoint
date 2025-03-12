@@ -26,8 +26,8 @@ public class SolicitudEquipoRequest {
     private String marca;
     private String anexo;
     private Integer idAnexo;
-    private Integer celular;
-    private Integer internetMovil;
+    private Boolean celular;
+    private Boolean internetMovil;
     private String accesorios;
     private List<SolicitudSoftwareRequest> lstSoftware;
 }

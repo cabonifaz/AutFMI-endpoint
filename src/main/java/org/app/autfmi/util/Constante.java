@@ -164,13 +164,13 @@ public class Constante {
                             <td>
                                 <div style="display: inline-block; margin-right: 10px;">
                                     <form>
-                                        <input type="checkbox" name="check_pc" class="checkbox" data-content="{{symbolPc}}" />
+                                        <input type="checkbox" name="check_pc" class="checkbox" readonly="true" data-content="{{symbolPc}}" />
                                         <label for="check_pc">PC</label>
                                     </form>
                                 </div>
                                 <div style="display: inline-block;">
                                     <form>
-                                        <input type="checkbox" name="check_laptop" class="checkbox" data-content="{{symbolLaptop}}" />
+                                        <input type="checkbox" name="check_laptop" class="checkbox" readonly="true" data-content="{{symbolLaptop}}" />
                                         <label for="check_laptop">Laptop</label>
                                     </form>
                                 </div>
@@ -194,13 +194,13 @@ public class Constante {
                             <td align="center">
                                 <div style="display: inline-block; margin-right: 10px;">
                                     <form>
-                                        <input type="checkbox" name="check_fijo" class="checkbox" data-content="{{symbolFijo}}" />
+                                        <input type="checkbox" name="check_fijo" class="checkbox" readonly="true" data-content="{{symbolFijo}}" />
                                         <label for="check_fijo">Fijo</label>
                                     </form>
                                 </div>
                                 <div style="display: inline-block;">
                                     <form>
-                                        <input type="checkbox" name="check_softphone" class="checkbox" data-content="{{symbolSoftphone}}" />
+                                        <input type="checkbox" name="check_softphone" class="checkbox" readonly="true" data-content="{{symbolSoftphone}}" />
                                         <label for="check_softphone">Softphone</label>
                                     </form>
                                 </div>
@@ -208,13 +208,13 @@ public class Constante {
                             <td align="center">
                                 <div style="display: inline-block; margin-right: 10px;">
                                     <form>
-                                        <input type="checkbox" name="check_cel_yes" class="checkbox" data-content="{{symbolCelSi}}" />
+                                        <input type="checkbox" name="check_cel_yes" class="checkbox" readonly="true" data-content="{{symbolCelSi}}" />
                                         <label for="check_cel_yes">Sí</label>
                                     </form>
                                 </div>
                                 <div style="display: inline-block;">
                                     <form>
-                                        <input type="checkbox" name="check_cel_no" class="checkbox" data-content="{{symbolCelNo}}" />
+                                        <input type="checkbox" name="check_cel_no" class="checkbox" readonly="true" data-content="{{symbolCelNo}}" />
                                         <label for="check_cel_no">No</label>
                                     </form>
                                 </div>
@@ -222,13 +222,13 @@ public class Constante {
                             <td align="center">
                                 <div style="display: inline-block; margin-right: 10px;">
                                     <form>
-                                        <input type="checkbox" name="check_internet_yes" class="checkbox" data-content="{{symbolIntSi}}" />
+                                        <input type="checkbox" name="check_internet_yes" class="checkbox" readonly="true" data-content="{{symbolIntSi}}" />
                                         <label for="check_internet_yes">Sí</label>
                                     </form>
                                 </div>
                                 <div style="display: inline-block;">
                                     <form>
-                                        <input type="checkbox" name="check_internet_no" class="checkbox" data-content="{{symbolIntNo}}" />
+                                        <input type="checkbox" name="check_internet_no" class="checkbox" readonly="true" data-content="{{symbolIntNo}}" />
                                         <label for="check_internet_no">No</label>
                                     </form>
                                 </div>

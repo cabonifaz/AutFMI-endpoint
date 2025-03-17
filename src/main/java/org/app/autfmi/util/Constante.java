@@ -1,6 +1,10 @@
 package org.app.autfmi.util;
 
 public class Constante {
+    //REPOSITORIO
+    public static final String RUTA_REPOSITORIO = "repositorio/";
+    public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";
+
     // FUNCIONALIDADES
     public static final String LISTAR_TALENTOS = "1";
     public static final String MOSTRAR_DATOS_TALENTO = "2";
@@ -701,4 +705,8 @@ public class Constante {
             </body>
             </html>
             """;
+
+
+    //TRAZABILIDAD
+    public static final String TXT_SEPARADOR = "=========================================";
 }

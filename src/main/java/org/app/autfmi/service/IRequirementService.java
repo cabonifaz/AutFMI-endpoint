@@ -1,5 +1,6 @@
 package org.app.autfmi.service;
 
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.response.BaseResponse;
 
@@ -11,5 +12,5 @@ public interface IRequirementService {
 
     BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles);
 
-    BaseResponse saveRequirement(String token, RequirementRequest request);
+    BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException;
 }

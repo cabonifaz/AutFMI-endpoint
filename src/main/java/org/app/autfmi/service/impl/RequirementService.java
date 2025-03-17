@@ -1,5 +1,6 @@
 package org.app.autfmi.service.impl;
 
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
@@ -36,7 +37,7 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse saveRequirement(String token, RequirementRequest request) {
+    public BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = String.join(",", Constante.GUARDAR_REQUERIMIENTO, Constante.ACTUALIZAR_REQUERIMIENTO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);

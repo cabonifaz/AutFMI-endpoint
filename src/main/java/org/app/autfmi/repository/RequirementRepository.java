@@ -1,18 +1,23 @@
 package org.app.autfmi.repository;
 
+import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
-import org.app.autfmi.model.request.BaseRequest;
-import org.app.autfmi.model.request.RequirementRequest;
+import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
+import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.FileUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -49,14 +54,13 @@ public class RequirementRepository {
 
             if (idTipoMensaje == 2) {
                 List<Map<String, Object>> requirementSet = (List<Map<String, Object>>) result.get("#result-set-2");
+                List<RequirementItemDTO> requirementList = new ArrayList<>();
                 if (requirementSet != null && !requirementSet.isEmpty()) {
-                    List<RequirementItemDTO> requirementList = new ArrayList<>();
-
                     for (Map<String, Object> requirementRow : requirementSet) {
                         requirementList.add(mapToRequirementItemDTO(requirementRow));
                     }
-                    return new RequirementListResponse(idTipoMensaje, mensaje, requirementList);
                 }
+                return new RequirementListResponse(idTipoMensaje, mensaje, requirementList);
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }
@@ -139,8 +143,10 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) {
+    public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_INS");
+        SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request, baseRequest.getIdEmpresa());
+
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("CLIENTE", request.getCliente())
@@ -149,6 +155,7 @@ public class RequirementRepository {
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
                 .addValue("VACANTES", request.getVacantes())
+                .addValue("LST_ARCHIVOS", tvpRqFiles)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -162,6 +169,10 @@ public class RequirementRepository {
             Map<String, Object> row = resultSet.get(0);
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
             String mensaje = (String) row.get("MENSAJE");
+            if (idTipoMensaje == 2) {
+                Integer idNuevoRQ = (Integer) row.get("ID_NEW_RQ");
+                guardarArchivos(request.getLstArchivos(), idNuevoRQ, baseRequest.getIdEmpresa());
+            }
 
             return new BaseResponse(idTipoMensaje, mensaje);
         }
@@ -192,4 +203,37 @@ public class RequirementRepository {
                 lstRqFiles
         );
     }
+
+    private static SQLServerDataTable loadTvpRequirementFiles(RequirementRequest request, Integer idEmpresa) throws SQLServerException {
+        SQLServerDataTable tvpRqFiles = new SQLServerDataTable();
+        tvpRqFiles.addColumnMetadata("INDICE", Types.INTEGER);
+        tvpRqFiles.addColumnMetadata("LINK", Types.VARCHAR);
+        tvpRqFiles.addColumnMetadata("NOMBRE_ARCHIVO", Types.VARCHAR);
+        tvpRqFiles.addColumnMetadata("ID_TIPO_ARCHIVO", Types.INTEGER);
+        int indice = 1;
+
+        for (FileRequest fileRequest : request.getLstArchivos()) {
+            String rutaArchivo = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS + fileRequest.getNombreArchivo() + "." + fileRequest.getExtensionArchivo();
+
+            tvpRqFiles.addRow(
+                    indice,
+                    rutaArchivo,
+                    fileRequest.getNombreArchivo(),
+                    fileRequest.getIdTipoArchivo()
+            );
+
+            indice++;
+        }
+        return tvpRqFiles;
+    }
+
+
+    @Async
+    protected void guardarArchivos(List<FileRequest> lstFiles, Integer idNewRq, Integer idEmpresa) {
+        for (FileRequest fileItem : lstFiles) {
+            String rutaRq = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idNewRq.toString()) + fileItem.getNombreArchivo() + "." + fileItem.getExtensionArchivo();
+            FileUtils.guardarArchivo(fileItem.getString64(),rutaRq);
+        }
+    }
+
 }

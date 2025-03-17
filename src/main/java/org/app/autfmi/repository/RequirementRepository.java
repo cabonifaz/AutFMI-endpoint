@@ -148,7 +148,6 @@ public class RequirementRepository {
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request, baseRequest.getIdEmpresa());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("CLIENTE", request.getCliente())
                 .addValue("CODIGO_RQ", request.getCodigoRQ())
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
@@ -174,6 +173,30 @@ public class RequirementRepository {
                 guardarArchivos(request.getLstArchivos(), idNuevoRQ, baseRequest.getIdEmpresa());
             }
 
+            return new BaseResponse(idTipoMensaje, mensaje);
+        }
+        return null;
+    }
+
+    public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) throws SQLServerException {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
+        SQLServerDataTable tvpRqTalents = loadTvpRequirementTalents(request);
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("LST_TALENTOS", tvpRqTalents)
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (resultSet != null && !resultSet.isEmpty()) {
+            Map<String, Object> row = resultSet.get(0);
+            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) row.get("MENSAJE");
             return new BaseResponse(idTipoMensaje, mensaje);
         }
         return null;
@@ -234,6 +257,41 @@ public class RequirementRepository {
             String rutaRq = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idNewRq.toString()) + fileItem.getNombreArchivo() + "." + fileItem.getExtensionArchivo();
             FileUtils.guardarArchivo(fileItem.getString64(),rutaRq);
         }
+    }
+
+
+    private static SQLServerDataTable loadTvpRequirementTalents(RequirementTalentRequest request) throws SQLServerException {
+        SQLServerDataTable tvpRqTalents = new SQLServerDataTable();
+        tvpRqTalents.addColumnMetadata("INDICE", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_REQUERIMIENTO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_TALENTO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("NOMBRES_TALENTO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("APELLIDOS_TALENTO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("DNI", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("CELULAR", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("EMAIL", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("ID_SITUACION", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_ESTADO", Types.INTEGER);
+
+        int indice = 1;
+
+        for (RequirementTalentRequestDTO talentRequest : request.getLstTalentos()) {
+            tvpRqTalents.addRow(
+                    indice,
+                    request.getIdRequerimiento(),
+                    talentRequest.getIdTalento(),
+                    talentRequest.getNombres(),
+                    talentRequest.getApellidos(),
+                    talentRequest.getDni(),
+                    talentRequest.getCelular(),
+                    talentRequest.getEmail(),
+                    talentRequest.getIdSituacion(),
+                    talentRequest.getIdEstado()
+            );
+
+            indice++;
+        }
+        return tvpRqTalents;
     }
 
 }

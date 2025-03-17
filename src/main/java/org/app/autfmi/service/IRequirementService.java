@@ -2,6 +2,7 @@ package org.app.autfmi.service;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import org.app.autfmi.model.request.RequirementRequest;
+import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 
 import java.util.Date;
@@ -13,4 +14,7 @@ public interface IRequirementService {
     BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles);
 
     BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException;
+
+    BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException;
+
 }

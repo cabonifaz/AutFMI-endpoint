@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.RequirementRequest;
+import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IRequirementService;
@@ -42,5 +43,13 @@ public class RequirementService implements IRequirementService {
         String funcionalidades = String.join(",", Constante.GUARDAR_REQUERIMIENTO, Constante.ACTUALIZAR_REQUERIMIENTO);
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.saveRequirement(request,  baseRequest);
+    }
+
+    @Override
+    public BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = String.join(",", Constante.GUARDAR_REQUERIMIENTO, Constante.ACTUALIZAR_REQUERIMIENTO);
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.saveRequirementTalents(request,  baseRequest);
     }
 }

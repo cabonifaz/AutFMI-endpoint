@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.RequirementRequest;
+import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.service.impl.RequirementService;
 import org.app.autfmi.util.JwtHelper;
@@ -68,6 +69,25 @@ public class RequirementController {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.saveRequirement(token, request);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+    @PostMapping("/talents/save")
+    public ResponseEntity<BaseResponse> saveRequirementTalents(
+            @RequestBody RequirementTalentRequest request,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.saveRequirementTalents(token, request);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

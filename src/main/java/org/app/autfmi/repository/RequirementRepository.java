@@ -158,8 +158,8 @@ public class RequirementRepository {
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
-                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -187,8 +187,8 @@ public class RequirementRepository {
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
-                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

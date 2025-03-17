@@ -63,7 +63,7 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse getRequirementById(Integer idRequerimiento, BaseRequest baseRequest) {
+    public BaseResponse getRequirementById(Integer idRequerimiento, Boolean showfiles, BaseRequest baseRequest) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_SEL");
 
@@ -112,21 +112,24 @@ public class RequirementRepository {
                         }
                     }
 
-                    List<Map<String, Object>> resultSet4 = (List<Map<String, Object>>) result.get("#result-set-4");
                     List<RequirementFileDTO> lstRqFiles = new ArrayList<>();
+                    if (showfiles) {
+                        List<Map<String, Object>> resultSet4 = (List<Map<String, Object>>) result.get("#result-set-4");
 
-                    if (resultSet4 != null && !resultSet4.isEmpty()) {
-                        for (Map<String, Object> rqFileRow : resultSet4) {
-                            RequirementFileDTO itemRqArchivo = new RequirementFileDTO(
-                                    (Integer) rqFileRow.get("ID_REQUERIMIENTO_ARCHIVO"),
-                                    (String) rqFileRow.get("LINK"),
-                                    (String) rqFileRow.get("NOMBRE_ARCHIVO"),
-                                    (Integer) rqFileRow.get("ID_TIPO_ARCHIVO")
-                            );
+                        if (resultSet4 != null && !resultSet4.isEmpty()) {
+                            for (Map<String, Object> rqFileRow : resultSet4) {
+                                RequirementFileDTO itemRqArchivo = new RequirementFileDTO(
+                                        (Integer) rqFileRow.get("ID_REQUERIMIENTO_ARCHIVO"),
+                                        (String) rqFileRow.get("LINK"),
+                                        (String) rqFileRow.get("NOMBRE_ARCHIVO"),
+                                        (Integer) rqFileRow.get("ID_TIPO_ARCHIVO")
+                                );
 
-                            lstRqFiles.add(itemRqArchivo);
+                                lstRqFiles.add(itemRqArchivo);
+                            }
                         }
                     }
+
 
                     return new RequirementResponse(idTipoMensaje, mensaje, mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles));
                 }
@@ -171,8 +174,8 @@ public class RequirementRepository {
                 (Integer) requirement.get("ID_REQUERIMIENTO"),
                 (String) requirement.get("CLIENTE"),
                 (String) requirement.get("CODIGO_RQ"),
-                (Date) requirement.get("FECHA_SOLICITUD"),
-                (Integer) requirement.get("ESTADO"),
+                (String) requirement.get("FECHA_SOLICITUD"),
+                (String) requirement.get("ESTADO"),
                 (Integer) requirement.get("VACANTES")
         );
     }

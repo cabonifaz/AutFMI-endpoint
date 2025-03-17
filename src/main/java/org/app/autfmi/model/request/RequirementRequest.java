@@ -8,7 +8,6 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 public class RequirementRequest {
-    private Integer idCliente;
     private String cliente;
     private String codigoRQ;
     private Date fechaSolicitud;

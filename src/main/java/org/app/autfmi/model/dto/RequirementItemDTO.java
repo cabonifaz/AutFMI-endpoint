@@ -13,7 +13,7 @@ public class RequirementItemDTO {
     private Integer idRequerimiento;
     private String cliente;
     private String codigoRQ;
-    private Date fechaSolicitud;
-    private Integer Estado;
+    private String fechaSolicitud;
+    private String Estado;
     private Integer Vacantes;
 }

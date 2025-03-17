@@ -9,7 +9,7 @@ public interface IRequirementService {
 
     BaseResponse listRequirements(String token, Integer nPag, Integer cPag, String cliente, String codigoRQ, Date fechaSolicitud, Integer estado);
 
-    BaseResponse getRequirement(String token, Integer idRequerimiento);
+    BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles);
 
     BaseResponse saveRequirement(String token, RequirementRequest request);
 }

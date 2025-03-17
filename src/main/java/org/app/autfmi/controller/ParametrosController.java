@@ -2,7 +2,6 @@ package org.app.autfmi.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.response.ParametrosListResponse;
-import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.service.impl.ParametrosService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

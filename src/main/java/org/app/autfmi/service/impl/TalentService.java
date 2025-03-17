@@ -41,5 +41,11 @@ public class TalentService implements ITalentService {
         return talentRepository.saveTalent(talent, baseRequest);
     }
 
+    @Override
+    public BaseResponse getTalentsToRequirementList(String token, Integer nPag, String busqueda) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
+        return talentRepository.getTalentsToRequirementList(baseRequest, nPag, busqueda);
+    }
 
 }

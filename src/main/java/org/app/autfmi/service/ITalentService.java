@@ -9,4 +9,6 @@ public interface ITalentService {
     BaseResponse getTalent(String token, Integer idTalento);
 
     BaseResponse saveTalent(String token, TalentRequest talent);
+
+    BaseResponse getTalentsToRequirementList(String token, Integer nPag, String busqueda);
 }

@@ -65,4 +65,22 @@ public class TalentController {
             );
         }
     }
+
+    @GetMapping("/requirement/list")
+    public ResponseEntity<BaseResponse> getTalentsToRequirementList(
+            @RequestParam @Nullable Integer nPag,
+            @RequestParam @Nullable String busqueda,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = talentService.getTalentsToRequirementList(token,nPag, busqueda);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

@@ -1,7 +1,6 @@
 package org.app.autfmi.model.response;
 
 import lombok.*;
-import org.app.autfmi.model.dto.TalentDTO;
 import org.app.autfmi.model.dto.TalentItemDTO;
 
 import java.util.List;

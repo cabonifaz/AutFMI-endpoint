@@ -42,14 +42,13 @@ public class TalentRepository {
 
             if (idTipoMensaje == 2) {
                 List<Map<String, Object>> talentsSet = (List<Map<String, Object>>) result.get("#result-set-2");
+                List<TalentItemDTO> talentList = new ArrayList<>();
                 if (talentsSet != null && !talentsSet.isEmpty()) {
-                    List<TalentItemDTO> talentList = new ArrayList<>();
-
                     for (Map<String, Object> talentRow : talentsSet) {
                         talentList.add(mapToTalentItemDTO(talentRow));
                     }
-                    return new TalentListResponse(idTipoMensaje, mensaje, talentList);
                 }
+                return new TalentListResponse(idTipoMensaje, mensaje, talentList);
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }

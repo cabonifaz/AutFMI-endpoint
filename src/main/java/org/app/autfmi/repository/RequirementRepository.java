@@ -148,6 +148,7 @@ public class RequirementRepository {
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request, baseRequest.getIdEmpresa());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_CLIENTE", request.getIdCliente())
                 .addValue("CLIENTE", request.getCliente())
                 .addValue("CODIGO_RQ", request.getCodigoRQ())
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())

@@ -52,4 +52,13 @@ public class RequirementService implements IRequirementService {
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.saveRequirementTalents(request,  baseRequest);
     }
+
+    @Override
+    public BaseResponse removeRequirementFile(String token, Integer idRqFile) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.removeRequirementFile(baseRequest, idRqFile);
+    }
+
 }

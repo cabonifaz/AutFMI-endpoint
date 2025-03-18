@@ -94,7 +94,7 @@ public class FileUtils {
 
     }
 
-    public static boolean eliminarArchivo(String archivoRutaPre) {
+    public static void eliminarArchivo(String archivoRutaPre) {
         try {
             logger.info(Constante.TXT_SEPARADOR);
             logger.info("Inicio Utilitarios - EliminarArchivo");
@@ -107,15 +107,13 @@ public class FileUtils {
 
             if (!archivo.exists()) {
                 logger.warn("El archivo no existe: " + archivo.getAbsolutePath());
-                return true;
+                return;
             }
 
             if (archivo.delete()) {
                 logger.info("Archivo eliminado exitosamente: " + archivo.getAbsolutePath());
-                return true;
             } else {
                 logger.error("No se pudo eliminar el archivo: " + archivo.getAbsolutePath());
-                return false;
             }
         } catch (IOException e) {
             logger.error("Error al normalizar la ruta del archivo: " + e.getMessage());
@@ -125,6 +123,5 @@ public class FileUtils {
             logger.info("Fin Utilitarios - EliminarArchivo");
             logger.info(Constante.TXT_SEPARADOR);
         }
-        return false;
     }
 }

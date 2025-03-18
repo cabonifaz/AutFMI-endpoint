@@ -15,11 +15,11 @@ public class Constante {
     public static final String REALIZAR_CESE = "8";
     public static final String OBTENER_ULTIMO_REGISTRO_HISTORIAL = "10";
     public static final String REALIZAR_SOLICITUD_EQUIPO = "14";
-
-    public static final String LISTAR_REQUERIMIENTOS = "11";
-    public static final String GUARDAR_REQUERIMIENTO = "13";
-    public static final String ACTUALIZAR_REQUERIMIENTO = "14";
-    public static final String DETALLE_REQUERIMIENTO = "12";
+    public static final String LISTAR_REQUERIMIENTOS = "16";
+    public static final String GUARDAR_REQUERIMIENTO = "18";
+    public static final String ACTUALIZAR_REQUERIMIENTO = "19";
+    public static final String DETALLE_REQUERIMIENTO = "17";
+    public static final String LISTAR_CLIENTES = "20";
 
     // FORMS
     public static final String LIST_ITEM = """

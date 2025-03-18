@@ -1,5 +1,6 @@
 package org.app.autfmi.repository;
 
+import ch.qos.logback.core.util.FileUtil;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
@@ -124,7 +125,7 @@ public class RequirementRepository {
                             for (Map<String, Object> rqFileRow : resultSet4) {
                                 RequirementFileDTO itemRqArchivo = new RequirementFileDTO(
                                         (Integer) rqFileRow.get("ID_REQUERIMIENTO_ARCHIVO"),
-                                        (String) rqFileRow.get("LINK"),
+                                        FileUtils.cargarArchivo((String) rqFileRow.get("LINK")),
                                         (String) rqFileRow.get("NOMBRE_ARCHIVO"),
                                         (Integer) rqFileRow.get("ID_TIPO_ARCHIVO")
                                 );
@@ -133,7 +134,6 @@ public class RequirementRepository {
                             }
                         }
                     }
-
 
                     return new RequirementResponse(idTipoMensaje, mensaje, mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles));
                 }
@@ -202,6 +202,37 @@ public class RequirementRepository {
         return null;
     }
 
+    public BaseResponse removeRequirementFile(BaseRequest baseRequest, Integer idRqFile) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_DEL");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_REQUERIMIENTO_ARCHIVO", idRqFile)
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+
+        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (resultSet != null && !resultSet.isEmpty()) {
+            Map<String, Object> row = resultSet.get(0);
+            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) row.get("MENSAJE");
+
+            if (idTipoMensaje == 2) {
+                List<Map<String, Object>> resultSet2 = (List<Map<String, Object>>) result.get("#result-set-2");
+                Map<String, Object> fileToDelete = resultSet2.get(0);
+                String rutaPre = (String) fileToDelete.get("LINK");
+                FileUtils.eliminarArchivo(rutaPre);
+            }
+            return new BaseResponse(idTipoMensaje, mensaje);
+        }
+        return null;
+    }
 
     private RequirementItemDTO mapToRequirementItemDTO(Map<String, Object> requirement) {
         return new RequirementItemDTO(

@@ -17,4 +17,7 @@ public interface IRequirementService {
 
     BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException;
 
+
+    BaseResponse removeRequirementFile(String token, Integer idRqFile);
+
 }

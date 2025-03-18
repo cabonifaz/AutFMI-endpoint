@@ -79,7 +79,6 @@ public class RequirementController {
         }
     }
 
-
     @PostMapping("/talents/save")
     public ResponseEntity<BaseResponse> saveRequirementTalents(
             @RequestBody RequirementTalentRequest request,
@@ -88,6 +87,26 @@ public class RequirementController {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.saveRequirementTalents(token, request);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
+
+    @DeleteMapping("/file/remove")
+    public ResponseEntity<BaseResponse> removeRequirementFile(
+            @RequestParam Integer idRqFile,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.removeRequirementFile(token, idRqFile);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

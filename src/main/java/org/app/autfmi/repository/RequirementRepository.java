@@ -1,6 +1,5 @@
 package org.app.autfmi.repository;
 
-import ch.qos.logback.core.util.FileUtil;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +28,12 @@ import java.util.Map;
 public class RequirementRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, String cliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_LST");
+    public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
-                .addValue("CLIENTE", cliente)
+                .addValue("ID_CLIENTE", idCliente)
                 .addValue("CODIGO_RQ", codigoRQ)
                 .addValue("FECHA_SOLICITUD", fechaSolicitud)
                 .addValue("ESTADO", estado)
@@ -179,6 +179,38 @@ public class RequirementRepository {
         return null;
     }
 
+    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_UPD");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+                .addValue("ID_CLIENTE", request.getIdCliente())
+                .addValue("CLIENTE", request.getCliente())
+                .addValue("CODIGO_RQ", request.getCodigoRQ())
+                .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
+                .addValue("DESCRIPCION", request.getDescripcion())
+                .addValue("ESTADO", request.getEstado())
+                .addValue("VACANTES", request.getVacantes())
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (resultSet != null && !resultSet.isEmpty()) {
+            Map<String, Object> row = resultSet.get(0);
+            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) row.get("MENSAJE");
+
+            return new BaseResponse(idTipoMensaje, mensaje);
+        }
+        return null;
+    }
+
     public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
         SQLServerDataTable tvpRqTalents = loadTvpRequirementTalents(request);
@@ -248,6 +280,7 @@ public class RequirementRepository {
 
     private RequirementDTO mapToRequirementDTO(Map<String, Object> requerimiento, List<RequirementTalentDTO> lstRqTalents, List<RequirementFileDTO> lstRqFiles) {
         return new RequirementDTO(
+                (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
                 (String) requerimiento.get("CODIGO_RQ"),
                 (Date) requerimiento.get("FECHA_SOLICITUD"),
@@ -287,7 +320,7 @@ public class RequirementRepository {
     protected void guardarArchivos(List<FileRequest> lstFiles, Integer idNewRq, Integer idEmpresa) {
         for (FileRequest fileItem : lstFiles) {
             String rutaRq = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idNewRq.toString()) + fileItem.getNombreArchivo() + "." + fileItem.getExtensionArchivo();
-            FileUtils.guardarArchivo(fileItem.getString64(),rutaRq);
+            FileUtils.guardarArchivo(fileItem.getString64(), rutaRq);
         }
     }
 

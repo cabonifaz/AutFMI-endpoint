@@ -9,11 +9,13 @@ import java.util.Date;
 
 public interface IRequirementService {
 
-    BaseResponse listRequirements(String token, Integer nPag, Integer cPag, String cliente, String codigoRQ, Date fechaSolicitud, Integer estado);
+    BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado);
 
     BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles);
 
     BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException;
+
+    BaseResponse updateRequirement(String token, RequirementRequest request);
 
     BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException;
 

@@ -24,14 +24,14 @@ public class RequirementController {
     public ResponseEntity<BaseResponse> getRequirementsList(
             @RequestParam @Nullable Integer nPag,
             @RequestParam @Nullable Integer cPag,
-            @RequestParam @Nullable String cliente,
+            @RequestParam @Nullable Integer idCliente,
             @RequestParam @Nullable String codigoRQ,
             @RequestParam @Nullable Date fechaSolicitud,
             @RequestParam @Nullable Integer estado,
             HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = requirementService.listRequirements(token, nPag, cPag, cliente, codigoRQ, fechaSolicitud, estado);
+            BaseResponse response = requirementService.listRequirements(token, nPag, cPag, idCliente, codigoRQ, fechaSolicitud, estado);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
@@ -69,6 +69,24 @@ public class RequirementController {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.saveRequirement(token, request);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<BaseResponse> updateRequirement(
+            @RequestBody RequirementRequest request,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.updateRequirement(token, request);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

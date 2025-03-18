@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RequirementDTO {
+    private Integer idCliente;
     private String cliente;
     private String codigoRQ;
     private Date fechaSolicitud;

@@ -24,10 +24,10 @@ public class RequirementService implements IRequirementService {
     private final JwtHelper jwt;
 
     @Override
-    public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, String cliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
+    public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
-        return requirementRepository.listRequirements(baseRequest, nPag, cPag, cliente, codigoRQ, fechaSolicitud, estado);
+        return requirementRepository.listRequirements(baseRequest, nPag, cPag, idCliente, codigoRQ, fechaSolicitud, estado);
     }
 
     @Override
@@ -40,9 +40,17 @@ public class RequirementService implements IRequirementService {
     @Override
     public BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException {
         UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = String.join(",", Constante.GUARDAR_REQUERIMIENTO, Constante.ACTUALIZAR_REQUERIMIENTO);
+        String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.saveRequirement(request,  baseRequest);
+    }
+
+    @Override
+    public BaseResponse updateRequirement(String token, RequirementRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.updateRequirement(request,  baseRequest);
     }
 
     @Override

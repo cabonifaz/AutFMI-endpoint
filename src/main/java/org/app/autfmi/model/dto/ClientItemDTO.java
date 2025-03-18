@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class ClientItemDTO {
     private Integer idCliente;
     private String razonSocial;
+    private Integer total;
 }

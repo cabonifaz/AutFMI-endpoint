@@ -59,7 +59,8 @@ public class ClientRepository {
     private ClientItemDTO mapClientItemDTO(Map<String, Object> client) {
         return new ClientItemDTO(
                 (Integer) client.get("ID_CLIENTE"),
-                (String) client.get("RAZON_SOCIAL")
+                (String) client.get("RAZON_SOCIAL"),
+                (Integer) client.get("TOTAL")
         );
     }
 

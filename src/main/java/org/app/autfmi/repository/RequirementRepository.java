@@ -8,6 +8,7 @@ import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
+import org.app.autfmi.model.response.TalentRequirementDataResponse;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -234,6 +235,57 @@ public class RequirementRepository {
         }
         return null;
     }
+
+    public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_TALENTO_REQUERIMIENTO_SEL");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_TALENTO", idTalento)
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+
+        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (resultSet != null && !resultSet.isEmpty()) {
+            Map<String, Object> row = resultSet.get(0);
+            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) row.get("MENSAJE");
+
+            if (idTipoMensaje == 2) {
+                List<Map<String, Object>> resultSet2 = (List<Map<String, Object>>) result.get("#result-set-2");
+
+                if (resultSet2 != null && !resultSet2.isEmpty()) {
+                    Map<String, Object> talentRequirementData = resultSet2.get(0);
+
+                    return new TalentRequirementDataResponse(idTipoMensaje, mensaje, mapTalentRequirementDataDTO(talentRequirementData));
+                }
+            }
+            return new BaseResponse(idTipoMensaje, mensaje);
+        }
+        return null;
+    }
+
+    public static TalentRequirementDataDTO mapTalentRequirementDataDTO(Map<String, Object> talentoRQ) {
+        return new TalentRequirementDataDTO(
+                (Integer) talentoRQ.get("ID_TALENTO"),
+                (String) talentoRQ.get("NOMBRES"),
+                (String) talentoRQ.get("APELLIDOS"),
+                (String) talentoRQ.get("DNI"),
+                (String) talentoRQ.get("CELULAR"),
+                (String) talentoRQ.get("EMAIL"),
+                (Integer) talentoRQ.get("ID_SITUACION"),
+                (String) talentoRQ.get("SITUACION"),
+                (Integer) talentoRQ.get("ID_ESTADO"),
+                (String) talentoRQ.get("ESTADO")
+        );
+    }
+
 
     public BaseResponse removeRequirementFile(BaseRequest baseRequest, Integer idRqFile) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)

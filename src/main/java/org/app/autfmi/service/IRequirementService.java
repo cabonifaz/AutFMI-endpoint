@@ -17,8 +17,10 @@ public interface IRequirementService {
 
     BaseResponse updateRequirement(String token, RequirementRequest request);
 
+
     BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException;
 
+    BaseResponse getRequirementTalentData(String token, Integer idTalento);
 
     BaseResponse removeRequirementFile(String token, Integer idRqFile);
 

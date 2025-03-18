@@ -115,6 +115,25 @@ public class RequirementController {
         }
     }
 
+    @GetMapping("/talents/data")
+    public ResponseEntity<BaseResponse> getRequirementTalentData(
+            @RequestParam Integer idTalento,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.getRequirementTalentData(token, idTalento);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+
 
 
     @DeleteMapping("/file/remove")
@@ -134,4 +153,7 @@ public class RequirementController {
             );
         }
     }
+
+
+
 }

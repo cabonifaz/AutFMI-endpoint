@@ -69,7 +69,7 @@ public class RequirementService implements IRequirementService {
 
 
     @Override
-    public BaseResponse saveRequirementFile(String token, RequirementFilerRequest request) throws SQLServerException {
+    public BaseResponse saveRequirementFile(String token, RequirementFileRequest request) throws SQLServerException {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = Constante.GUARDAR_ARCHIVOS;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);

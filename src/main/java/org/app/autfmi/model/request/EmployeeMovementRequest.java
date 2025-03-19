@@ -8,7 +8,8 @@ import lombok.Data;
 public class EmployeeMovementRequest {
     private Integer idUsuarioTalento;
     private String nombres;
-    private String apellidos;
+    private String apellidoPaterno;
+    private String apellidoMaterno;
     private Integer idUnidad;
     private Integer idMoneda;
     private Integer idModalidad;

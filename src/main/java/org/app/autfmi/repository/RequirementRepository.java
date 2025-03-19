@@ -289,7 +289,7 @@ public class RequirementRepository {
 
 
 
-    public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFilerRequest request) throws SQLServerException {
+    public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFileRequest request) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_INS");
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());

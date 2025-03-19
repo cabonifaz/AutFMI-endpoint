@@ -56,14 +56,17 @@ public class EmployeeRepository {
     private EmployeeDTO mapToEmployeeDTO(Map<String, Object> employeeRaw) {
         return new EmployeeDTO(
                 (String) employeeRaw.get("NOMBRES"),
-                (String) employeeRaw.get("APELLIDOS"),
+                (String) employeeRaw.get("APELLIDO_PATERNO"),
+                (String) employeeRaw.get("APELLIDO_MATERNO"),
                 (Integer) employeeRaw.get("ID_UNIDAD"),
                 (Double) employeeRaw.get("REMUNERACION")
         );
     }
 
     public SolicitudEquipoReport solicitudEquipo(BaseRequest baseRequestequest, SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_EQUIPO_SOLICITUD_INS");
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_EQUIPO_SOLICITUD_INS");
+
         SolicitudEquipoReport solicitudEquipoReport = new SolicitudEquipoReport();
         BaseResponse baseResponse = new BaseResponse();
 
@@ -72,7 +75,8 @@ public class EmployeeRepository {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_USUARIO_EMPLEADO", solicitudEquipoRequest.getIdUsuarioEmpleado())
                 .addValue("NOMBRE_EMPLEADO", solicitudEquipoRequest.getNombreEmpleado())
-                .addValue("APELLIDOS_EMPLEADO", solicitudEquipoRequest.getApellidosEmpleado())
+                .addValue("APELLIDO_PATERNO_EMPLEADO", solicitudEquipoRequest.getApellidoPaternoEmpleado())
+                .addValue("APELLIDO_MATERNO_EMPLEADO", solicitudEquipoRequest.getApellidoMaternoEmpleado())
                 .addValue("EMPRESA_CLIENTE", solicitudEquipoRequest.getEmpresaCliente())
                 .addValue("AREA", solicitudEquipoRequest.getArea())
                 .addValue("PUESTO", solicitudEquipoRequest.getPuesto())

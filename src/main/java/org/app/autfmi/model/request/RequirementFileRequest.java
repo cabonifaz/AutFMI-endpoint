@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
-public class RequirementFilerRequest {
+public class RequirementFileRequest {
     private Integer idRequerimiento;
     private List<FileRequest> lstArchivos;
 }

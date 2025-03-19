@@ -8,7 +8,8 @@ import lombok.Data;
 public class TalentRequest {
     private Integer idTalento;
     private String nombres;
-    private String apellidos;
+    private String apellidoPaterno;
+    private String apellidoMaterno;
     private String telefono;
     private String email;
     private String dni;

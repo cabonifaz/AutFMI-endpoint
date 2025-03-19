@@ -45,7 +45,8 @@ public class HistoryRepository {
         Map<String, Object> result = executeProcedure(baseRequest,"SP_USUARIOS_EMPLEADOS_UPD", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
                     .addValue("NOMBRES", request.getNombres())
-                    .addValue("APELLIDOS", request.getApellidos())
+                    .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
+                    .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
                     .addValue("ID_UNIDAD", request.getIdUnidad())
                     .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
                     .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
@@ -143,7 +144,8 @@ public class HistoryRepository {
     }
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
 
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
@@ -151,7 +153,8 @@ public class HistoryRepository {
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_TALENTO", request.getIdTalento())
                 .addValue("NOMBRES", request.getNombres())
-                .addValue("APELLIDOS", request.getApellidos())
+                .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
+                .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
                 .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_UNIDAD", request.getIdUnidad())

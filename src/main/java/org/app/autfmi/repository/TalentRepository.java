@@ -94,7 +94,8 @@ public class TalentRepository {
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_TALENTO", talent.getIdTalento())
                 .addValue("NOMBRES", talent.getNombres())
-                .addValue("APELLIDOS", talent.getApellidos())
+                .addValue("APELLIDO_PATERNO", talent.getApellidoPaterno())
+                .addValue("APELLIDO_MATERNO", talent.getApellidoMaterno())
                 .addValue("TELEFONO", talent.getTelefono())
                 .addValue("DNI", talent.getDni())
                 .addValue("EMAIL", talent.getEmail())
@@ -162,7 +163,8 @@ public class TalentRepository {
     private TalentDTO mapToTalentDTO(Map<String, Object> talent) {
         return new TalentDTO(
                 (String) talent.get("NOMBRES"),
-                (String) talent.get("APELLIDOS"),
+                (String) talent.get("APELLIDO_PATERNO"),
+                (String) talent.get("APELLIDO_MATERNO"),
                 (String) talent.get("TELEFONO"),
                 (String) talent.get("EMAIL"),
                 (String) talent.get("DNI"),

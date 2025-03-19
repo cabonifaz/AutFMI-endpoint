@@ -9,7 +9,8 @@ public class EmployeeEntryRequest {
     // Employee record
     private Integer idTalento;
     private String nombres;
-    private String apellidos;
+    private String apellidoPaterno;
+    private String apellidoMaterno;
     private Integer idUsuarioTalento;
     private Integer idUnidad;
     private String cargo;

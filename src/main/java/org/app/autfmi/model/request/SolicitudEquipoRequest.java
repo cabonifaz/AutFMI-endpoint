@@ -12,7 +12,8 @@ import java.util.List;
 public class SolicitudEquipoRequest {
     private Integer idUsuarioEmpleado;
     private String nombreEmpleado;
-    private String apellidosEmpleado;
+    private String apellidoPaternoEmpleado;
+    private String apellidoMaternoEmpleado;
     private String empresaCliente;
     private String area;
     private String puesto;

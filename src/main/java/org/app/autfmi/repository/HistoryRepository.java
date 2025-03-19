@@ -105,7 +105,8 @@ public class HistoryRepository {
         Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_CESE", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
                     .addValue("NOMBRES", request.getNombres())
-                    .addValue("APELLIDOS", request.getApellidos())
+                    .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
+                    .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
                     .addValue("ID_MOTIVO", request.getIdMotivo())
                     .addValue("EMPRESA", request.getEmpresa())
                     .addValue("ID_UNIDAD", request.getIdUnidad())

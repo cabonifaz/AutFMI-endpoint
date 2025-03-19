@@ -21,6 +21,12 @@ public class Constante {
     public static final String DETALLE_REQUERIMIENTO = "17";
     public static final String LISTAR_CLIENTES = "20";
 
+    public static final String GUARDAR_ARCHIVOS = "21";
+    public static final String ACTUALIZAR_ARCHIVOS = "22";
+    public static final String LISTAR_ARCHIVOS = "23";
+    public static final String CARGAR_ARCHIVOS = "24";
+    public static final String ELIMINAR_ARCHIVOS = "25";
+
     // FORMS
     public static final String LIST_ITEM = """
             <tr>

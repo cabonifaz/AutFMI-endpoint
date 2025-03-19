@@ -3,6 +3,8 @@ package org.app.autfmi.controller;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.app.autfmi.model.request.FileRequest;
+import org.app.autfmi.model.request.RequirementFilerRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
 
 @RestController
 @RequestMapping("fmi/requirement")
@@ -135,6 +138,23 @@ public class RequirementController {
 
 
 
+    @PostMapping("/file/save")
+    public ResponseEntity<BaseResponse> saveRequirementFile(
+            @RequestBody RequirementFilerRequest request,
+            HttpServletRequest httpServletRequest
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.saveRequirementFile(token, request);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 
     @DeleteMapping("/file/remove")
     public ResponseEntity<BaseResponse> removeRequirementFile(

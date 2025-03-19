@@ -3,9 +3,7 @@ package org.app.autfmi.service.impl;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
-import org.app.autfmi.model.request.BaseRequest;
-import org.app.autfmi.model.request.RequirementRequest;
-import org.app.autfmi.model.request.RequirementTalentRequest;
+import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IRequirementService;
@@ -56,7 +54,7 @@ public class RequirementService implements IRequirementService {
     @Override
     public BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException {
         UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = String.join(",", Constante.GUARDAR_REQUERIMIENTO, Constante.ACTUALIZAR_REQUERIMIENTO);
+        String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.saveRequirementTalents(request,  baseRequest);
     }
@@ -71,9 +69,17 @@ public class RequirementService implements IRequirementService {
 
 
     @Override
+    public BaseResponse saveRequirementFile(String token, RequirementFilerRequest request) throws SQLServerException {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.GUARDAR_ARCHIVOS;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.saveRequirementFile(baseRequest, request);
+    }
+
+    @Override
     public BaseResponse removeRequirementFile(String token, Integer idRqFile) {
         UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+        String funcionalidades = Constante.ELIMINAR_ARCHIVOS;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.removeRequirementFile(baseRequest, idRqFile);
     }

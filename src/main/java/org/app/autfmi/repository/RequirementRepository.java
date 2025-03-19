@@ -146,7 +146,7 @@ public class RequirementRepository {
 
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_INS");
-        SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request, baseRequest.getIdEmpresa());
+        SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", request.getIdCliente())
@@ -287,6 +287,41 @@ public class RequirementRepository {
     }
 
 
+
+
+    public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFilerRequest request) throws SQLServerException {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_INS");
+        SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
+
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+                .addValue("LST_ARCHIVOS", tvpRqFiles)
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+
+        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (resultSet != null && !resultSet.isEmpty()) {
+            Map<String, Object> row = resultSet.get(0);
+            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) row.get("MENSAJE");
+
+            if (idTipoMensaje == 2) {
+                guardarArchivos(request.getLstArchivos(), request.getIdRequerimiento(), baseRequest.getIdEmpresa());
+            }
+            return new BaseResponse(idTipoMensaje, mensaje);
+        }
+        return null;
+    }
+
+
     public BaseResponse removeRequirementFile(BaseRequest baseRequest, Integer idRqFile) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_DEL");
@@ -344,7 +379,7 @@ public class RequirementRepository {
         );
     }
 
-    private static SQLServerDataTable loadTvpRequirementFiles(RequirementRequest request, Integer idEmpresa) throws SQLServerException {
+    private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa) throws SQLServerException {
         SQLServerDataTable tvpRqFiles = new SQLServerDataTable();
         tvpRqFiles.addColumnMetadata("INDICE", Types.INTEGER);
         tvpRqFiles.addColumnMetadata("LINK", Types.VARCHAR);
@@ -352,7 +387,7 @@ public class RequirementRepository {
         tvpRqFiles.addColumnMetadata("ID_TIPO_ARCHIVO", Types.INTEGER);
         int indice = 1;
 
-        for (FileRequest fileRequest : request.getLstArchivos()) {
+        for (FileRequest fileRequest : lstArchivos) {
             String rutaArchivo = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS + fileRequest.getNombreArchivo() + "." + fileRequest.getExtensionArchivo();
 
             tvpRqFiles.addRow(

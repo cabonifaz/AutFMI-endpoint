@@ -52,7 +52,9 @@ public class TalentController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<BaseResponse> saveTalent(@RequestBody TalentRequest talent, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<BaseResponse> saveTalent(
+            @RequestBody TalentRequest talent,
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = talentService.saveTalent(token, talent);

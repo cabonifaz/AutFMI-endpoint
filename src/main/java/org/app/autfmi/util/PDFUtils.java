@@ -279,7 +279,7 @@ public class PDFUtils {
     }
 
     public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoRequest request, String nombreGestor) {
-        String nombresApellidos = request.getNombreEmpleado() + ' ' + request.getApellidosEmpleado();
+        String nombresApellidos = request.getNombreEmpleado() + ' ' + request.getApellidoPaternoEmpleado() + ' ' + request.getApellidoMaternoEmpleado();
         String checkboxCheckedSymbol = "X";
 
         String tipoPc = request.getIdTipoEquipo() == 1 ? checkboxCheckedSymbol : "";

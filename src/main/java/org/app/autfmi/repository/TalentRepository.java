@@ -89,7 +89,9 @@ public class TalentRepository {
     }
 
     public BaseResponse saveTalent(TalentRequest talent, BaseRequest baseRequest) {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_USUARIOS_TALENTOS_INS");
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_USUARIOS_TALENTOS_INS");
+
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_TALENTO", talent.getIdTalento())

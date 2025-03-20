@@ -72,11 +72,13 @@ public class AuthRepository {
             // Extract the roles from #result-set-3
             List<Map<String, Object>> resultSet3 = (List<Map<String, Object>>) data.get("#result-set-3");
 
-            List<Integer> roles = new ArrayList<>();
+            List<Integer> idRoles = new ArrayList<>();
+            List<String> nameRoles = new ArrayList<>();
             if (resultSet3 != null && !resultSet3.isEmpty()) {
                 for (Map<String, Object> roleData : resultSet3) {
                     // El campo STRING1 contiene los roles
-                    roles.add((Integer) roleData.get("ID_ROL"));
+                    idRoles.add((Integer) roleData.get("ID_ROL"));
+                    nameRoles.add((String) roleData.get("ROL"));
                 }
             }
 
@@ -84,7 +86,10 @@ public class AuthRepository {
                     (Integer) userData.get("ID_USUARIO"),   // From result-set-2
                     (Integer) userData.get("ID_EMPRESA"),
                     (String) userData.get("USUARIO"),
-                    roles
+                    (String) userData.get("NOMBRES"),
+                    (String) userData.get("APELLIDOS"),
+                    idRoles,
+                    nameRoles
             );
         }
         return null;

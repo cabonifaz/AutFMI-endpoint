@@ -12,8 +12,8 @@ public class Common {
     public static BaseRequest createBaseRequest(UserDTO userDTO, String funcionalidades) {
         BaseRequest baseRequest = new BaseRequest();
         if (userDTO != null) {
-            if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
-                List<Integer> roles = userDTO.getRoles();
+            if (userDTO.getIdRoles() != null && !userDTO.getIdRoles().isEmpty()) {
+                List<Integer> roles = userDTO.getIdRoles();
                 Integer idRol = roles.get(0);
                 baseRequest.setIdRol(idRol);
             }

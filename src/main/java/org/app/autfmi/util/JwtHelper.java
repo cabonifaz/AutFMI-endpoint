@@ -30,7 +30,7 @@ public class JwtHelper {
         user.setIdUsuario((Integer) claims.get("id_usuario"));
         user.setIdEmpresa( (Integer) claims.get("id_empresa"));
         user.setUsuario( (String) claims.get("username"));
-        user.setRoles((List<Integer>) claims.get("roles"));
+        user.setIdRoles((List<Integer>) claims.get("id_roles"));
 
         return user;
     }
@@ -38,7 +38,9 @@ public class JwtHelper {
     public String generateToken(UserDTO user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("username", user.getUsuario());
+        claims.put("fullname", user.getNombres() + " " + user.getApellidos());
         claims.put("roles", user.getRoles());
+        claims.put("id_roles", user.getIdRoles());
         claims.put("id_usuario", user.getIdUsuario());
         claims.put("id_empresa", user.getIdEmpresa());
 

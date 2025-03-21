@@ -16,8 +16,9 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "http://localhost:3000",
-                        "https://agreeable-pebble-0832a380f.5.azurestaticapps.net", // Staging
-                        "https://gray-ocean-0fc1baf0f.5.azurestaticapps.net" // Preprod
+                        "https://agreeable-pebble-0832a380f.5.azurestaticapps.net", // FMI Staging
+                        "https://gray-ocean-0fc1baf0f.5.azurestaticapps.net", // FMI Preprod
+                        "https://calm-water-0f8491110.4.azurestaticapps.net" // BDT Staging
                 ).allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("Authorization", "Content-Type", "Accept")
                 .exposedHeaders("Authorization")

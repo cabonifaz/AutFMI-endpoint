@@ -18,4 +18,5 @@ public class CeseReport {
     private String correoGestor;
     private String firmante;
     private String firma;
+    private String usernameEmpleado;
 }

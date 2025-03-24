@@ -140,7 +140,8 @@ public class HistoryRepository {
                 (String) report.get("FCH_HISTORIAL"),
                 (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE"),
-                (String) report.get("FIRMA")
+                (String) report.get("FIRMA"),
+                (String) report.get("USERNAME_EMPLEADO")
         );
     }
 
@@ -222,7 +223,8 @@ public class HistoryRepository {
                 (String) report.get("SEDE_DECLARAR"),
                 (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE"),
-                (String) report.get("FIRMA")
+                (String) report.get("FIRMA"),
+                (String) report.get("USERNAME_EMPLEADO")
         );
     }
 

@@ -3,6 +3,7 @@ package org.app.autfmi.service.impl;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.bcel.Const;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
 import org.app.autfmi.model.dto.UserDTO;
@@ -17,7 +18,6 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
-import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -221,14 +221,14 @@ public class EmployeeService implements IEmployeeService {
                 SolicitudData data = new SolicitudData();
                 data.setNombres(((EntryReport) report).getNombres());
                 data.setApellidos(((EntryReport) report).getApellidos());
-                data.setArea("");
+                data.setArea(((EntryReport) report).getUnidad());
                 data.setFechaSolicitud(((EntryReport) report).getFechaInicioContrato());
 
                 data.setNombresCreacion(((EntryReport) report).getNombres());
                 data.setApellidosCreacion(((EntryReport) report).getApellidos());
-                data.setNombreUsuarioCreacion("Sin especificar");
-                data.setCorreoCreacion("Sin especificar");
-                data.setAreaCreacion("");
+                data.setNombreUsuarioCreacion(((EntryReport) report).getUsernameEmpleado());
+                data.setCorreoCreacion(((EntryReport) report).getUsernameEmpleado() + Constante.DOMINIO_CORREO);
+                data.setAreaCreacion(((EntryReport) report).getUnidad());
                 data.setFirmante(((EntryReport) report).getFirmante());
 
                 solicitudFileB64 = pdfUtils.filePDFToBase64(pdfUtils.crearPDF(pdfUtils.replaceSolicitudPDFValues(
@@ -268,12 +268,12 @@ public class EmployeeService implements IEmployeeService {
                 SolicitudData data = new SolicitudData();
                 data.setNombres(((CeseReport) report).getNombres());
                 data.setApellidos(((CeseReport) report).getApellidos());
-                data.setArea("");
+                data.setArea(((CeseReport) report).getUnidad());
                 data.setFechaSolicitud(((CeseReport) report).getFechaHistorial());
                 data.setNombresCese(((CeseReport) report).getNombres());
                 data.setApellidosCese(((CeseReport) report).getApellidos());
-                data.setUsuarioCese("No especifica");
-                data.setCorreoCese("No especifica");
+                data.setUsuarioCese(((CeseReport) report).getUsernameEmpleado());
+                data.setCorreoCese(((CeseReport) report).getUsernameEmpleado() + Constante.DOMINIO_CORREO);
                 data.setMotivoCese(((CeseReport) report).getMotivo());
                 data.setFirmante(((CeseReport) report).getFirmante());
 

@@ -29,4 +29,5 @@ public class EntryReport {
     private String correoGestor;
     private String firmante;
     private String firma;
+    private String usernameEmpleado;
 }

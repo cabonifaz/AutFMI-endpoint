@@ -135,17 +135,14 @@ public class EmployeeService implements IEmployeeService {
             );
 
             SolicitudData data = new SolicitudData();
-            String usernameUsuarioCese = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
-            String correoUsuarioCese = usernameUsuarioCese + Constante.DOMINIO_CORREO;
-
             data.setNombres(report.getNombres());
             data.setApellidos(report.getApellidos());
             data.setArea(report.getUnidad());
             data.setFechaSolicitud(report.getFechaHistorial());
             data.setNombresCese(report.getNombres());
             data.setApellidosCese(report.getApellidos());
-            data.setUsuarioCese(usernameUsuarioCese);
-            data.setCorreoCese(correoUsuarioCese);
+            data.setUsuarioCese(report.getUsernameEmpleado());
+            data.setCorreoCese(report.getEmailEmpleado());
             data.setMotivoCese(report.getMotivo());
             data.setFirmante(report.getFirmante());
 
@@ -222,12 +219,12 @@ public class EmployeeService implements IEmployeeService {
                 data.setNombres(((EntryReport) report).getNombres());
                 data.setApellidos(((EntryReport) report).getApellidos());
                 data.setArea(((EntryReport) report).getUnidad());
-                data.setFechaSolicitud(((EntryReport) report).getFechaInicioContrato());
+                data.setFechaSolicitud(((EntryReport) report).getFechaHistorial());
 
                 data.setNombresCreacion(((EntryReport) report).getNombres());
                 data.setApellidosCreacion(((EntryReport) report).getApellidos());
                 data.setNombreUsuarioCreacion(((EntryReport) report).getUsernameEmpleado());
-                data.setCorreoCreacion(((EntryReport) report).getUsernameEmpleado() + Constante.DOMINIO_CORREO);
+                data.setCorreoCreacion(((EntryReport) report).getEmailEmpleado());
                 data.setAreaCreacion(((EntryReport) report).getUnidad());
                 data.setFirmante(((EntryReport) report).getFirmante());
 
@@ -273,7 +270,7 @@ public class EmployeeService implements IEmployeeService {
                 data.setNombresCese(((CeseReport) report).getNombres());
                 data.setApellidosCese(((CeseReport) report).getApellidos());
                 data.setUsuarioCese(((CeseReport) report).getUsernameEmpleado());
-                data.setCorreoCese(((CeseReport) report).getUsernameEmpleado() + Constante.DOMINIO_CORREO);
+                data.setCorreoCese(((CeseReport) report).getEmailEmpleado());
                 data.setMotivoCese(((CeseReport) report).getMotivo());
                 data.setFirmante(((CeseReport) report).getFirmante());
 

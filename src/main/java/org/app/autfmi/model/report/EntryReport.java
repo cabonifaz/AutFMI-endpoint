@@ -13,6 +13,7 @@ public class EntryReport {
     private String nombres;
     private String apellidos;
     private String unidad;
+    private String fechaHistorial;
     private String modalidad;
     private String motivo;
     private String cargo;
@@ -30,4 +31,5 @@ public class EntryReport {
     private String firmante;
     private String firma;
     private String usernameEmpleado;
+    private String emailEmpleado;
 }

@@ -10,11 +10,13 @@ import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.util.Common;
+import org.app.autfmi.util.Constante;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,10 @@ public class HistoryRepository {
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
-        Map<String, Object> result = executeProcedure(baseRequest,"SP_USUARIOS_EMPLEADOS_UPD", params -> {
+        String usernameUsuarioMovimiento = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
+        String correoUsuarioMovimiento = usernameUsuarioMovimiento + Constante.DOMINIO_CORREO;
+
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_UPD", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
                     .addValue("NOMBRES", request.getNombres())
                     .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
@@ -62,7 +67,9 @@ public class HistoryRepository {
                     .addValue("PUESTO", request.getPuesto())
                     .addValue("AREA", request.getArea())
                     .addValue("JORNADA", request.getJornada())
-                    .addValue("FCH_HISTORIAL", request.getFchMovimiento());
+                    .addValue("FCH_HISTORIAL", request.getFchMovimiento())
+                    .addValue("USERNAME_EMPLEADO", usernameUsuarioMovimiento)
+                    .addValue("EMAIL_EMPLEADO", correoUsuarioMovimiento);
         });
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-2");
@@ -97,11 +104,16 @@ public class HistoryRepository {
                 (Double) report.get("MONTO_TRIMESTRAL"),
                 (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE"),
-                (String) report.get("FIRMA")
+                (String) report.get("FIRMA"),
+                (String) report.get("USERNAME_EMPLEADO"),
+                (String) report.get("EMAIL_EMPLEADO")
         );
     }
 
     public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
+        String usernameUsuarioCese = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
+        String correoUsuarioCese = usernameUsuarioCese + Constante.DOMINIO_CORREO;
+
         Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_CESE", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
                     .addValue("NOMBRES", request.getNombres())
@@ -110,7 +122,9 @@ public class HistoryRepository {
                     .addValue("ID_MOTIVO", request.getIdMotivo())
                     .addValue("EMPRESA", request.getEmpresa())
                     .addValue("ID_UNIDAD", request.getIdUnidad())
-                    .addValue("FCH_HISTORIAL", request.getFchCese());
+                    .addValue("FCH_HISTORIAL", request.getFchCese())
+                    .addValue("USERNAME_EMPLEADO", usernameUsuarioCese)
+                    .addValue("EMAIL_EMPLEADO", correoUsuarioCese);
         });
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -141,7 +155,8 @@ public class HistoryRepository {
                 (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
-                (String) report.get("USERNAME_EMPLEADO")
+                (String) report.get("USERNAME_EMPLEADO"),
+                (String) report.get("EMAIL_EMPLEADO")
         );
     }
 
@@ -151,6 +166,9 @@ public class HistoryRepository {
 
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
+
+        String usernameUsuarioIngreso = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
+        String correoUsuarioIngreso = usernameUsuarioIngreso + Constante.DOMINIO_CORREO;
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_TALENTO", request.getIdTalento())
@@ -178,6 +196,8 @@ public class HistoryRepository {
                 .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
                 .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
                 .addValue("FCH_HISTORIAL", request.getFchHistorial())
+                .addValue("USERNAME_EMPLEADO", usernameUsuarioIngreso)
+                .addValue("EMAIL_EMPLEADO", correoUsuarioIngreso)
                 // VALIDAR ROL
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
@@ -208,6 +228,7 @@ public class HistoryRepository {
                 (String) report.get("NOMBRES"),
                 (String) report.get("APELLIDOS"),
                 (String) report.get("UNIDAD"),
+                (String) report.get("FCH_HISTORIAL"),
                 (String) report.get("MODALIDAD"),
                 (String) report.get("MOTIVO"),
                 (String) report.get("CARGO"),
@@ -224,7 +245,8 @@ public class HistoryRepository {
                 (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
-                (String) report.get("USERNAME_EMPLEADO")
+                (String) report.get("USERNAME_EMPLEADO"),
+                (String) report.get("EMAIL_EMPLEADO")
         );
     }
 
@@ -247,9 +269,15 @@ public class HistoryRepository {
                 Map<String, Object> reportRow = reportData.get(0);
 
                 switch (idTipoHistorial) {
-                    case 1: report = mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow); break;
-                    case 2: report = mapToMovementReport(new BaseResponse(idTipoMensaje, mensaje), reportRow); break;
-                    case 3: report = mapToCeseReport(new BaseResponse(idTipoMensaje, mensaje), reportRow); break;
+                    case 1:
+                        report = mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
+                        break;
+                    case 2:
+                        report = mapToMovementReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
+                        break;
+                    case 3:
+                        report = mapToCeseReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
+                        break;
                 }
                 return report;
             }

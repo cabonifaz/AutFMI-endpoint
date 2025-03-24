@@ -17,6 +17,7 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,16 +50,20 @@ public class EmployeeService implements IEmployeeService {
             );
 
             SolicitudData data = new SolicitudData();
+
+            String usernameNuevoUsuario = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
+            String correoNuevoUsuario = usernameNuevoUsuario + Constante.DOMINIO_CORREO;
+
             data.setNombres(report.getNombres());
             data.setApellidos(report.getApellidos());
-            data.setArea("");
+            data.setArea(report.getUnidad());
             data.setFechaSolicitud(report.getFechaInicioContrato());
 
             data.setNombresCreacion(report.getNombres());
             data.setApellidosCreacion(report.getApellidos());
-            data.setNombreUsuarioCreacion("Sin especificar");
-            data.setCorreoCreacion("Sin especificar");
-            data.setAreaCreacion("");
+            data.setNombreUsuarioCreacion(usernameNuevoUsuario);
+            data.setCorreoCreacion(correoNuevoUsuario);
+            data.setAreaCreacion(report.getUnidad());
             data.setFirmante(report.getFirmante());
 
             FileDTO fileSolicitud = new FileDTO(
@@ -130,14 +135,17 @@ public class EmployeeService implements IEmployeeService {
             );
 
             SolicitudData data = new SolicitudData();
+            String usernameUsuarioCese = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
+            String correoUsuarioCese = usernameUsuarioCese + Constante.DOMINIO_CORREO;
+
             data.setNombres(report.getNombres());
             data.setApellidos(report.getApellidos());
-            data.setArea("");
+            data.setArea(report.getUnidad());
             data.setFechaSolicitud(report.getFechaHistorial());
             data.setNombresCese(report.getNombres());
             data.setApellidosCese(report.getApellidos());
-            data.setUsuarioCese("No especifica");
-            data.setCorreoCese("No especifica");
+            data.setUsuarioCese(usernameUsuarioCese);
+            data.setCorreoCese(correoUsuarioCese);
             data.setMotivoCese(report.getMotivo());
             data.setFirmante(report.getFirmante());
 

@@ -27,6 +27,9 @@ public class Constante {
     public static final String CARGAR_ARCHIVOS = "24";
     public static final String ELIMINAR_ARCHIVOS = "25";
 
+
+    public static final String DOMINIO_CORREO = "@fractalservicios.pe";
+
     // FORMS
     public static final String LIST_ITEM = """
             <tr>

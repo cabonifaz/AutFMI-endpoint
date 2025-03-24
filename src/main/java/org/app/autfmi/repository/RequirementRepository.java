@@ -360,6 +360,7 @@ public class RequirementRepository {
                 (String) requirement.get("CLIENTE"),
                 (String) requirement.get("CODIGO_RQ"),
                 (String) requirement.get("FECHA_SOLICITUD"),
+                (Integer) requirement.get("ID_ESTADO"),
                 (String) requirement.get("ESTADO"),
                 (Integer) requirement.get("VACANTES")
         );

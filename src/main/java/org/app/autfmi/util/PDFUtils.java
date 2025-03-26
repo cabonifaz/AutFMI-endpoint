@@ -270,7 +270,7 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", report.getMotivoCese() == null ? "" : report.getMotivoCese())
 
                 // FOOTER
-                .replace("{{firmante}}", report.getFirmante() == null ? "" : report.getFirmante());
+                .replace("{{nombreFirma}}", report.getFirmante() == null ? "" : report.getFirmante());
 
         return htmlTemplate;
     }

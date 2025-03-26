@@ -125,7 +125,6 @@ public class PDFUtils {
     }
 
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
-        String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
                 // DATOS COLABORADOR
@@ -159,14 +158,13 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
-                .replace("{{ImgFirma}}", imgFirma)
+                .replace("{{nombreFirma}}", report.getFirmante())
                 .replace("{{firmante}}", report.getFirmante());
 
         return htmlTemplate;
     }
 
     public String replaceMovementRequestValues(String htmlTemplate, MovementReport report) {
-        String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Movimiento")
                 // DATOS COLABORADOR
@@ -200,13 +198,12 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
-                .replace("{{ImgFirma}}", imgFirma)
+                .replace("{{nombreFirma}}", report.getFirmante())
                 .replace("{{firmante}}", report.getFirmante());
         return htmlTemplate;
     }
 
     public String replaceOutRequestValues(String htmlTemplate, CeseReport report) {
-        String imgFirma = loadImage(report.getFirma());
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Cese")
                 // DATOS COLABORADOR
@@ -240,7 +237,7 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", report.getMotivo())
                 .replace("{{fechaCese}}", report.getFechaHistorial())
                 // FOOTER
-                .replace("{{ImgFirma}}", imgFirma)
+                .replace("{{nombreFirma}}", report.getFirmante())
                 .replace("{{firmante}}", report.getFirmante());
         return htmlTemplate;
     }

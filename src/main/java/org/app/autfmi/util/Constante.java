@@ -267,7 +267,7 @@ public class Constante {
             
                     <div style="height: 100px;"></div>
                     <div style="text-align: center;">
-                        <p style="font-weight: bold;">{{nombreFirma}}</p>
+                        <p style="font-weight: bold; text-decoration: underline;">{{nombreFirma}}</p>
                         <div style="height: 1px; width: 280px; background-color: #83a9e9; margin: auto;"></div>
                         <p style="font-weight: bold;">{{nombreGestor}}</p>
                         <p style="font-weight: bold;">Gestor de Servicio</p>
@@ -462,7 +462,8 @@ public class Constante {
                     <table style="margin-top: 50px;">
                         <tr>
                             <td style="width: 100%; text-align: center; ">
-                                <p style="text-decoration: underline; line-height: 0%; font-size: medium;">{{firmante}}</p>
+                                <p style="font-weight: bold; text-decoration: underline;">{{nombreFirma}}</p>
+                                <div style="height: 1px; width: 280px; background-color: #83a9e9; margin: auto;"></div>
                                 <p style="font-weight: bold; font-size: medium;">GESTOR DEL SERVICIO</p>
                             </td>
                         </tr>
@@ -696,8 +697,8 @@ public class Constante {
                     <table style="margin-bottom: 10px;">
                         <tr style="border: none;">
                             <td style="width: 100%; text-align: center; border: none;">
-                                <img src='data:image/png;base64,{{ImgFirma}}' alt='Firma' style="height: 5rem; width: auto;" />
-                                <p style="margin-top:-10px;">_________________________________________</p>
+                                <p style="font-weight: bold; text-decoration: underline;">{{nombreFirma}}</p>
+                                <div style="height: 1px; width: 280px; background-color: #83a9e9; margin: auto;"></div>
                                 <p>{{firmante}}</p>
                                 <p>Gestor de Servicios</p>
                             </td>

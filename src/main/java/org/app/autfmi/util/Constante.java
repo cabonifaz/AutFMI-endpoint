@@ -719,4 +719,50 @@ public class Constante {
 
     //TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";
+
+    // CORREO
+    public static final String CUERPO_CORREO = """
+            <!DOCTYPE html>
+            <html lang="es">
+            
+            <head>
+            </head>
+            
+            <body>
+                <div>
+                    Estimado [GESTOR],
+                </div>
+                <br>
+                <div>
+                    Comunicarte que se está gestionando el ingreso de un nuevo talento para el equipo [CLIENTE].
+                </div>
+                <div>
+                    Comparto sus datos para la elaboración del Formulario de [TIPO_FORMULARIO] y la solicitud de creación de usuario.
+                </div>
+                <div>
+                    Comentarte que el talento [SI_NO_EQUIPO] cuenta con equipo propio para iniciar sus labores.
+                </div>
+                <br>
+                <ul>
+                  <li>Nombres: [NOMBRES]</li>
+                  <li>Apellidos: [APELLIDO_PATERNO] [APELLIDO_MATERNO]</li>
+                  <li>Documento de Identidad: [DOC_IDENTIDAD]</li>
+                  <li>Contacto: [CELULAR]</li>
+                  <li>Correo personal: [CORREO]</li>
+                  <li>Inicio de labores: [FCH_INI_LABORES]</li>
+                  <li>Tiempo de contrato: [TIEMPO_CONTRATO] (inicialmente)</li>
+                  <li>Cargo: [CARGO]</li>
+                  <li>Remuneración: [REMUNERACION]</li>
+                  <li>Modalidad: [MODALIDAD]</li>
+                </ul>
+                <br>
+                <div>
+                    Saludos,
+                </div>
+                <br>
+                <br>
+            </body>
+            
+            </html>
+            """;
 }

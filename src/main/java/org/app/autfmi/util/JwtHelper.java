@@ -4,9 +4,11 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
+import org.app.autfmi.model.dto.LinkTokenDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +30,8 @@ public class JwtHelper {
 
         UserDTO user = new UserDTO();
         user.setIdUsuario((Integer) claims.get("id_usuario"));
-        user.setIdEmpresa( (Integer) claims.get("id_empresa"));
-        user.setUsuario( (String) claims.get("username"));
+        user.setIdEmpresa((Integer) claims.get("id_empresa"));
+        user.setUsuario((String) claims.get("username"));
         user.setIdRoles((List<Integer>) claims.get("id_roles"));
 
         return user;
@@ -60,4 +62,22 @@ public class JwtHelper {
         }
         return authorizationHeader.split(" ")[1];
     }
+
+
+    public LinkTokenDTO decodeLinkToken(String token) {
+        LinkTokenDTO dataToken = new LinkTokenDTO();
+        Claims claims = Jwts.parser()
+                .setSigningKey(secret)
+                .parseClaimsJws(token)
+                .getBody();
+
+        String authToken = (String) claims.get("authToken");
+        UserDTO userData = decodeToken(authToken);
+
+        dataToken.setUserData(userData);
+        dataToken.setLstrRequerimientos((List<Integer>) claims.get("lst_rq"));
+
+        return dataToken;
+    }
+
 }

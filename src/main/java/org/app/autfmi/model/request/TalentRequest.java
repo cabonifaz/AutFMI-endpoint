@@ -21,4 +21,5 @@ public class TalentRequest {
     private Integer idMoneda;
     private Integer idModalidad;
     private String ubicacion;
+    private boolean tieneEquipo;
 }

@@ -109,6 +109,7 @@ public class TalentRepository {
                 .addValue("ID_TIPO_MONEDA", talent.getIdMoneda())
                 .addValue("ID_MODALIDAD", talent.getIdModalidad())
                 .addValue("UBICACION", talent.getUbicacion())
+                .addValue("TIENE_EQUIPO", talent.isTieneEquipo())
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario());

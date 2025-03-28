@@ -59,7 +59,7 @@ public class PostulantRepository {
                     List<Map<String, Object>> resultSet3 = (List<Map<String, Object>>) result.get("#result-set-3");
                     if (resultSet2 != null && !resultSet2.isEmpty() && resultSet3 != null && !resultSet3.isEmpty()) {
                         List<GestorRqDTO> lstGestores = new ArrayList<>();
-                        for (Map<String, Object> gestorRqRow : resultSet3) {
+                        for (Map<String, Object> gestorRqRow : resultSet2) {
                             GestorRqDTO gestor = new GestorRqDTO(
                                     (String) gestorRqRow.get("NOMBRES"),
                                     (String) gestorRqRow.get("APELLIDOS"),
@@ -79,7 +79,7 @@ public class PostulantRepository {
                             System.out.println(Constante.TXT_SEPARADOR);
 
                             System.out.println("REEMPLAZANDO DATOS EN HTML BODY");
-                            String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, mapPostulantDTO(resultSet2));
+                            String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, mapPostulantDTO(resultSet3));
                             //Envio de correo asincrono
                             System.out.println("CORREO:::");
                             System.out.println(mensajeCorreo);
@@ -99,6 +99,10 @@ public class PostulantRepository {
 
     private static PostulantDTO mapPostulantDTO(List<Map<String, Object>> resultSet) {
         Map<String, Object> postulanteRow = resultSet.get(0);
+        System.out.println("MAPEO DE POSTULANTE");
+        System.out.println(postulanteRow);
+        System.out.println(Constante.TXT_SEPARADOR);
+
         return new PostulantDTO(
                 (String) postulanteRow.get("NOMBRES"),
                 (String) postulanteRow.get("APELLIDO_PATERNO"),

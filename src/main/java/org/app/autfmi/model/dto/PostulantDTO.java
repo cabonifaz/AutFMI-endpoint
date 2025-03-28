@@ -3,6 +3,8 @@ package org.app.autfmi.model.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 public class PostulantDTO {
@@ -15,6 +17,6 @@ public class PostulantDTO {
     private String tiempoContrato;
     private String fechaInicioLabores;
     private String cargo;
-    private Double remuneracion;
+    private BigDecimal remuneracion;
     private String modalidad;
 }

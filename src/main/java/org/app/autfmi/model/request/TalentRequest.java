@@ -1,5 +1,6 @@
 package org.app.autfmi.model.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -21,5 +22,6 @@ public class TalentRequest {
     private Integer idMoneda;
     private Integer idModalidad;
     private String ubicacion;
+    @JsonProperty()
     private boolean tieneEquipo;
 }

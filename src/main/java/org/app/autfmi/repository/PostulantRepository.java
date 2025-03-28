@@ -2,6 +2,7 @@ package org.app.autfmi.repository;
 
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+import com.zaxxer.hikari.util.SuspendResumeLock;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.PostulantDTO;
@@ -70,6 +71,8 @@ public class PostulantRepository {
                             lstGestores.add(gestor);
                             String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, mapPostulantDTO(resultSet2));
                             //Envio de correo asincrono
+                            System.out.println("CORREO:::");
+                            System.out.println(mensajeCorreo);
                             mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mensajeCorreo);
                         }
                     }

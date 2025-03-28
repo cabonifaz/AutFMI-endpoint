@@ -70,10 +70,10 @@ public class PostulantRepository {
                                     (String) gestorRqRow.get("TIENE_EQUIPO")
                             );
                             lstGestores.add(gestor);
-
-                            //Envio de correo asincrono
-                            mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mapPostulantDTO(resultSet3));
                         }
+
+                        //Envio de correo asincrono
+                        mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mapPostulantDTO(resultSet3));
                     }
                 }
             }

@@ -32,6 +32,8 @@ public class MailUtils {
             helper.setTo(gestor.getCorreo());
             helper.setSubject(asunto);
             helper.setText(correoBody, true);
+
+            mailSender.send(message);
         }
     }
 }

@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,21 +71,8 @@ public class PostulantRepository {
                             );
                             lstGestores.add(gestor);
 
-                            System.out.println("DATOS DE RESULSET 2");
-                            System.out.println(resultSet2);
-                            System.out.println(Constante.TXT_SEPARADOR);
-
-                            System.out.println("DATOS DE RESULSET 3");
-                            System.out.println(resultSet3);
-                            System.out.println(Constante.TXT_SEPARADOR);
-
-                            System.out.println("REEMPLAZANDO DATOS EN HTML BODY");
-                            String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, mapPostulantDTO(resultSet3));
                             //Envio de correo asincrono
-                            System.out.println("CORREO:::");
-                            System.out.println(mensajeCorreo);
-                            System.out.println(Constante.TXT_SEPARADOR);
-                            mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mensajeCorreo);
+                            mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mapPostulantDTO(resultSet3));
                         }
                     }
                 }
@@ -99,9 +87,6 @@ public class PostulantRepository {
 
     private static PostulantDTO mapPostulantDTO(List<Map<String, Object>> resultSet) {
         Map<String, Object> postulanteRow = resultSet.get(0);
-        System.out.println("MAPEO DE POSTULANTE");
-        System.out.println(postulanteRow);
-        System.out.println(Constante.TXT_SEPARADOR);
 
         return new PostulantDTO(
                 (String) postulanteRow.get("NOMBRES"),
@@ -113,7 +98,7 @@ public class PostulantRepository {
                 (String) postulanteRow.get("TIEMPO_CONTRATO"),
                 (String) postulanteRow.get("FCH_INICIO_LABORES"),
                 (String) postulanteRow.get("CARGO"),
-                (Double) postulanteRow.get("REMUNERACION"),
+                (BigDecimal) postulanteRow.get("REMUNERACION"),
                 (String) postulanteRow.get("MODALIDAD")
         );
     }
@@ -142,21 +127,5 @@ public class PostulantRepository {
         return tvpRqFiles;
     }
 
-    private String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, PostulantDTO postulante) {
-        return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
-                .replace("[CLIENTE]", gestor.getCliente())
-                .replace("[TIPO_FORMULARIO]", gestor.getTipoFormulario())
-                .replace("[SI_NO_EQUIPO]", gestor.getTieneEquipo())
-                .replace("[NOMBRES]", postulante.getNombres())
-                .replace("[APELLIDO_PATERNO]", postulante.getApellidoPaterno())
-                .replace("[APELLIDO_MATERNO]", postulante.getApellidoMaterno())
-                .replace("[DOC_IDENTIDAD]", postulante.getDni())
-                .replace("[CELULAR]", postulante.getCelular())
-                .replace("[CORREO]", postulante.getEmail())
-                .replace("[FCH_INI_LABORES]", postulante.getFechaInicioLabores())
-                .replace("[TIEMPO_CONTRATO]", postulante.getTiempoContrato())
-                .replace("[CARGO]", postulante.getCargo())
-                .replace("[REMUNERACION]", postulante.getRemuneracion().toString())
-                .replace("[MODALIDAD]", postulante.getModalidad());
-    }
+
 }

@@ -2,6 +2,7 @@ package org.app.autfmi.util;
 
 import jakarta.mail.internet.MimeMessage;
 import org.app.autfmi.model.dto.GestorRqDTO;
+import org.app.autfmi.model.dto.PostulantDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,16 +22,18 @@ public class MailUtils {
     private JavaMailSender mailSender;
 
     @Async
-    public void sendRequirementPostulantMail(List<GestorRqDTO> lstGestores, String asunto, String correoBody) {
+    public void sendRequirementPostulantMail(List<GestorRqDTO> lstGestores, String asunto, PostulantDTO postulante) {
         try {
             for (GestorRqDTO gestor : lstGestores) {
+                String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, postulante);
+
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
                 helper.setFrom(emisorCorreo);
                 helper.setTo(gestor.getCorreo());
                 helper.setSubject(asunto);
-                helper.setText(correoBody, true);
+                helper.setText(mensajeCorreo, true);
 
                 mailSender.send(message);
             }
@@ -38,6 +41,23 @@ public class MailUtils {
             System.err.println("ERROR AL ENVIAR CORREO");
             System.err.println(e.getMessage());
         }
+    }
 
+    private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, PostulantDTO postulante){
+        return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
+                .replace("[CLIENTE]", gestor.getCliente())
+                .replace("[TIPO_FORMULARIO]", gestor.getTipoFormulario())
+                .replace("[SI_NO_EQUIPO]", gestor.getTieneEquipo())
+                .replace("[NOMBRES]", postulante.getNombres())
+                .replace("[APELLIDO_PATERNO]", postulante.getApellidoPaterno())
+                .replace("[APELLIDO_MATERNO]", postulante.getApellidoMaterno())
+                .replace("[DOC_IDENTIDAD]", postulante.getDni())
+                .replace("[CELULAR]", postulante.getCelular())
+                .replace("[CORREO]", postulante.getEmail())
+                .replace("[FCH_INI_LABORES]", postulante.getFechaInicioLabores())
+                .replace("[TIEMPO_CONTRATO]", postulante.getTiempoContrato())
+                .replace("[CARGO]", postulante.getCargo())
+                .replace("[REMUNERACION]", postulante.getRemuneracion().toString())
+                .replace("[MODALIDAD]", postulante.getModalidad());
     }
 }

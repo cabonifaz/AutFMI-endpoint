@@ -69,21 +69,32 @@ public class PostulantRepository {
                                     (String) gestorRqRow.get("TIENE_EQUIPO")
                             );
                             lstGestores.add(gestor);
+
+                            System.out.println("DATOS DE RESULSET 2");
+                            System.out.println(resultSet2);
+                            System.out.println(Constante.TXT_SEPARADOR);
+
+                            System.out.println("DATOS DE RESULSET 3");
+                            System.out.println(resultSet3);
+                            System.out.println(Constante.TXT_SEPARADOR);
+
+                            System.out.println("REEMPLAZANDO DATOS EN HTML BODY");
                             String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, mapPostulantDTO(resultSet2));
                             //Envio de correo asincrono
                             System.out.println("CORREO:::");
                             System.out.println(mensajeCorreo);
+                            System.out.println(Constante.TXT_SEPARADOR);
                             mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mensajeCorreo);
                         }
                     }
                 }
             }
+            return baseResponse;
         } catch (Exception e) {
             System.err.println("Error en Repository RegisterPostulant");
             System.err.println(e.getMessage());
+            return new BaseResponse(3, e.getMessage());
         }
-
-        return baseResponse;
     }
 
     private static PostulantDTO mapPostulantDTO(List<Map<String, Object>> resultSet) {

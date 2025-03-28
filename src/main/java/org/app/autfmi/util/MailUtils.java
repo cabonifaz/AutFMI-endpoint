@@ -1,6 +1,5 @@
 package org.app.autfmi.util;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,18 +21,23 @@ public class MailUtils {
     private JavaMailSender mailSender;
 
     @Async
-    public void sendRequirementPostulantMail(List<GestorRqDTO> lstGestores, String asunto, String correoBody) throws MessagingException {
+    public void sendRequirementPostulantMail(List<GestorRqDTO> lstGestores, String asunto, String correoBody) {
+        try {
+            for (GestorRqDTO gestor : lstGestores) {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        for (GestorRqDTO gestor : lstGestores) {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+                helper.setFrom(emisorCorreo);
+                helper.setTo(gestor.getCorreo());
+                helper.setSubject(asunto);
+                helper.setText(correoBody, true);
 
-            helper.setFrom(emisorCorreo);
-            helper.setTo(gestor.getCorreo());
-            helper.setSubject(asunto);
-            helper.setText(correoBody, true);
-
-            mailSender.send(message);
+                mailSender.send(message);
+            }
+        } catch (Exception e) {
+            System.err.println("ERROR AL ENVIAR CORREO");
+            System.err.println(e.getMessage());
         }
+
     }
 }

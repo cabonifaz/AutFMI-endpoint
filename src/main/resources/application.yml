@@ -13,5 +13,5 @@ spring:
   profiles:
     include: prod, preprod, dev
 jwt:
-  expiration: 28800000 # 8 hours in milliseconds
+  expiration: 172800000 # 48 hours in milliseconds
   secret: JMvkOzKGhZF4jN71iEJBpNWTTyz7NLakjQ0A7VhaV4ogcz03MrDUwRtz6VA9itk5fTyN/NhbPNSAJHN8d5AByQ==

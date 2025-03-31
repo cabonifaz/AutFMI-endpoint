@@ -18,4 +18,5 @@ public class RequirementTalentDTO {
     private String situacion;
     private Integer idEstado;
     private String estado;
+    private boolean confirmado;
 }

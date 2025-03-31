@@ -467,7 +467,6 @@ public class RequirementRepository {
         for (RequirementTalentRequestDTO talentRequest : request.getLstTalentos()) {
             tvpRqTalents.addRow(
                     indice,
-                    request.getIdRequerimiento(),
                     talentRequest.getIdTalento(),
                     talentRequest.getNombres(),
                     talentRequest.getApellidos(),

@@ -233,6 +233,10 @@ public class RequirementRepository {
             String mensaje = (String) row.get("MENSAJE");
             return new BaseResponse(idTipoMensaje, mensaje);
         }
+
+        //ENVIAR CORREO
+
+
         return null;
     }
 
@@ -373,7 +377,8 @@ public class RequirementRepository {
                 (String) requerimiento.get("CODIGO_RQ"),
                 (Date) requerimiento.get("FECHA_SOLICITUD"),
                 (String) requerimiento.get("DESCRIPCION"),
-                (Integer) requerimiento.get("ESTADO"),
+                (Integer) requerimiento.get("ID_ESTADO"),
+                (String) requerimiento.get("ESTADO"),
                 (Integer) requerimiento.get("VACANTES"),
                 lstRqTalents,
                 lstRqFiles

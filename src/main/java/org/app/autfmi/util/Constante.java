@@ -720,12 +720,50 @@ public class Constante {
     //TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";
 
+
+
+
     // CORREO
+    public static final String LIST_TALENT_ROW = """
+        <tr>
+            <td>{{numFila}}</td>
+            <td>{{nombres}}</td>
+            <td>{{apellidos}}</td>
+            <td>{{docIdentidad}}</td>
+            <td>{{numCelular}}</td>
+            <td>{{correo}}</td>
+            <td>{{fchInicioLabores}}</td>
+            <td>{{tiempoContrato}} (inicialmente)</td>
+            <td>{{cargo}}</td>
+            <td>{{remuneracion}}</td>
+            <td>{{modalidad}}</td>
+            <td>{{tieneEquipo}}</td>
+        </tr>
+    """;
     public static final String CUERPO_CORREO = """
             <!DOCTYPE html>
             <html lang="es">
             
             <head>
+                <style>
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+            
+                    td,
+                    th {
+                        padding: 5px;
+                        text-align: left;
+                        text-align: center;
+                    }
+            
+                    .table-header {
+                        background-color: #2D5294;
+                        color: #fff;
+                        text-align: center;
+                    }
+                </style>
             </head>
             
             <body>
@@ -739,22 +777,27 @@ public class Constante {
                 <div>
                     Comparto sus datos para la elaboración del Formulario de [TIPO_FORMULARIO] y la solicitud de creación de usuario.
                 </div>
-                <div>
-                    Comentarte que el talento [SI_NO_EQUIPO] cuenta con equipo propio para iniciar sus labores.
-                </div>
                 <br>
-                <ul>
-                  <li>Nombres: [NOMBRES]</li>
-                  <li>Apellidos: [APELLIDO_PATERNO] [APELLIDO_MATERNO]</li>
-                  <li>Documento de Identidad: [DOC_IDENTIDAD]</li>
-                  <li>Contacto: [CELULAR]</li>
-                  <li>Correo personal: [CORREO]</li>
-                  <li>Inicio de labores: [FCH_INI_LABORES]</li>
-                  <li>Tiempo de contrato: [TIEMPO_CONTRATO] (inicialmente)</li>
-                  <li>Cargo: [CARGO]</li>
-                  <li>Remuneración: [REMUNERACION]</li>
-                  <li>Modalidad: [MODALIDAD]</li>
-                </ul>
+                <br>
+                
+                <table border="1">
+                    <tr>
+                        <th class="table-header">Item</th>
+                        <th class="table-header">Nombres</th>
+                        <th class="table-header">Apellidos</th>
+                        <th class="table-header">Doc. Identidad</th>
+                        <th class="table-header">Celular</th>
+                        <th class="table-header">Correo</th>
+                        <th class="table-header">Inicio de Labores</th>
+                        <th class="table-header">Tiempo de Contrato</th>
+                        <th class="table-header">Cargo</th>
+                        <th class="table-header">Remuneración</th>
+                        <th class="table-header">Modalidad</th>
+                        <th class="table-header">Equipo Propio</th>
+                    </tr>
+                    {{listaTalentos}}
+                </table>
+                
                 <br>
                 <div>
                     Saludos,

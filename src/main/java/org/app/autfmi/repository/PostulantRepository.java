@@ -53,30 +53,8 @@ public class PostulantRepository {
 
                 baseResponse.setIdTipoMensaje((Integer) row.get("ID_TIPO_MENSAJE"));
                 baseResponse.setMensaje((String) row.get("MENSAJE"));
-
-
-                if (baseResponse.getIdTipoMensaje() == 2) {
-                    List<Map<String, Object>> resultSet2 = (List<Map<String, Object>>) result.get("#result-set-2");
-                    List<Map<String, Object>> resultSet3 = (List<Map<String, Object>>) result.get("#result-set-3");
-                    if (resultSet2 != null && !resultSet2.isEmpty() && resultSet3 != null && !resultSet3.isEmpty()) {
-                        List<GestorRqDTO> lstGestores = new ArrayList<>();
-                        for (Map<String, Object> gestorRqRow : resultSet2) {
-                            GestorRqDTO gestor = new GestorRqDTO(
-                                    (String) gestorRqRow.get("NOMBRES"),
-                                    (String) gestorRqRow.get("APELLIDOS"),
-                                    (String) gestorRqRow.get("CORREO"),
-                                    (String) gestorRqRow.get("CLIENTE"),
-                                    "Ingreso",
-                                    (String) gestorRqRow.get("TIENE_EQUIPO")
-                            );
-                            lstGestores.add(gestor);
-                        }
-
-                        //Envio de correo asincrono
-                        mailUtils.sendRequirementPostulantMail(lstGestores, "Ingreso de nuevo talento", mapPostulantDTO(resultSet3));
-                    }
-                }
             }
+
             return baseResponse;
         } catch (Exception e) {
             System.err.println("Error en Repository RegisterPostulant");
@@ -84,25 +62,6 @@ public class PostulantRepository {
             return new BaseResponse(3, e.getMessage());
         }
     }
-
-    private static PostulantDTO mapPostulantDTO(List<Map<String, Object>> resultSet) {
-        Map<String, Object> postulanteRow = resultSet.get(0);
-
-        return new PostulantDTO(
-                (String) postulanteRow.get("NOMBRES"),
-                (String) postulanteRow.get("APELLIDO_PATERNO"),
-                (String) postulanteRow.get("APELLIDO_MATERNO"),
-                (String) postulanteRow.get("CELULAR"),
-                (String) postulanteRow.get("EMAIL"),
-                (String) postulanteRow.get("DNI"),
-                (String) postulanteRow.get("TIEMPO_CONTRATO"),
-                (String) postulanteRow.get("FCH_INICIO_LABORES"),
-                (String) postulanteRow.get("CARGO"),
-                (BigDecimal) postulanteRow.get("REMUNERACION"),
-                (String) postulanteRow.get("MODALIDAD")
-        );
-    }
-
     private static SQLServerDataTable loadTvpRequirementIds(List<Integer> lstRequerimientos) throws SQLServerException {
         SQLServerDataTable tvpRqFiles = new SQLServerDataTable();
 

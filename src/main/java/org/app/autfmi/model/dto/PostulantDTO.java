@@ -9,8 +9,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class PostulantDTO {
     private String nombres;
-    private String apellidoPaterno;
-    private String apellidoMaterno;
+    private String apellidos;
     private String celular;
     private String email;
     private String dni;
@@ -19,4 +18,5 @@ public class PostulantDTO {
     private String cargo;
     private BigDecimal remuneracion;
     private String modalidad;
+    private String tieneEquipo;
 }

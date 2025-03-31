@@ -11,6 +11,7 @@ import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
+import org.app.autfmi.util.MailUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -18,6 +19,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,6 +30,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RequirementRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final MailUtils mailUtils;
 
     public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -212,32 +215,61 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) throws SQLServerException {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
-        SQLServerDataTable tvpRqTalents = loadTvpRequirementTalents(request);
+    public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) {
+        try {
+            BaseResponse baseResponse = new BaseResponse();
+            SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
 
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("LST_TALENTOS", tvpRqTalents)
-                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
-                .addValue("ID_ROL", baseRequest.getIdRol())
-                .addValue("USUARIO", baseRequest.getUsername())
-                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+            SQLServerDataTable tvpRqTalents = loadTvpRequirementTalents(request);
 
-        Map<String, Object> result = simpleJdbcCall.execute(params);
-        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+                    .addValue("LST_TALENTOS", tvpRqTalents)
+                    .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                    .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                    .addValue("ID_ROL", baseRequest.getIdRol())
+                    .addValue("USUARIO", baseRequest.getUsername())
+                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
-        if (resultSet != null && !resultSet.isEmpty()) {
-            Map<String, Object> row = resultSet.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
-            return new BaseResponse(idTipoMensaje, mensaje);
+            Map<String, Object> result = simpleJdbcCall.execute(params);
+            List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+            if (resultSet != null && !resultSet.isEmpty()) {
+                Map<String, Object> row = resultSet.get(0);
+                baseResponse.setIdTipoMensaje((Integer) row.get("ID_TIPO_MENSAJE"));
+                baseResponse.setMensaje((String) row.get("MENSAJE"));
+
+                if (baseResponse.getIdTipoMensaje() == 2) {
+                    List<Map<String, Object>> gestorSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
+                    List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS CONFIRMADOS
+
+                    if (postulantsSet != null && !postulantsSet.isEmpty() && gestorSet != null && !gestorSet.isEmpty()) {
+                        Map<String, Object> gestorRqRow = resultSet.get(0);
+                        GestorRqDTO gestor = new GestorRqDTO(
+                                (String) gestorRqRow.get("NOMBRES"),
+                                (String) gestorRqRow.get("APELLIDOS"),
+                                (String) gestorRqRow.get("CORREO"),
+                                (String) gestorRqRow.get("CLIENTE"),
+                                "Ingreso"
+                        );
+
+                        List<PostulantDTO> postulantList = new ArrayList<>();
+                        if (!postulantsSet.isEmpty()) {
+                            for (Map<String, Object> postulantRow : postulantsSet) {
+                                postulantList.add(mapListPostulantDTO(postulantRow));
+                            }
+                        }
+
+                        //ENVIAR CORREO
+                        mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList);
+                    }
+                }
+            }
+            return baseResponse;
+        } catch (Exception e) {
+            return new BaseResponse(3, e.getMessage());
         }
-
-        //ENVIAR CORREO
-
-
-        return null;
     }
 
     public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento) {
@@ -289,8 +321,6 @@ public class RequirementRepository {
                 (String) talentoRQ.get("ESTADO")
         );
     }
-
-
 
 
     public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFileRequest request) throws SQLServerException {
@@ -421,7 +451,6 @@ public class RequirementRepository {
     private static SQLServerDataTable loadTvpRequirementTalents(RequirementTalentRequest request) throws SQLServerException {
         SQLServerDataTable tvpRqTalents = new SQLServerDataTable();
         tvpRqTalents.addColumnMetadata("INDICE", Types.INTEGER);
-        tvpRqTalents.addColumnMetadata("ID_REQUERIMIENTO", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("ID_TALENTO", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("NOMBRES_TALENTO", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("APELLIDOS_TALENTO", Types.VARCHAR);
@@ -430,6 +459,7 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("EMAIL", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("ID_SITUACION", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("ID_ESTADO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("CONFIRMADO", Types.BIT);
 
         int indice = 1;
 
@@ -444,12 +474,30 @@ public class RequirementRepository {
                     talentRequest.getCelular(),
                     talentRequest.getEmail(),
                     talentRequest.getIdSituacion(),
-                    talentRequest.getIdEstado()
+                    talentRequest.getIdEstado(),
+                    talentRequest.isConfirmado()? 1 : 0
             );
 
             indice++;
         }
         return tvpRqTalents;
+    }
+
+
+    private static PostulantDTO mapListPostulantDTO(Map<String, Object> postulanteRow) {
+        return new PostulantDTO(
+                (String) postulanteRow.get("NOMBRES"),
+                (String) postulanteRow.get("APELLIDOS"),
+                (String) postulanteRow.get("CELULAR"),
+                (String) postulanteRow.get("EMAIL"),
+                (String) postulanteRow.get("DNI"),
+                (String) postulanteRow.get("TIEMPO_CONTRATO"),
+                (String) postulanteRow.get("FCH_INICIO_LABORES"),
+                (String) postulanteRow.get("CARGO"),
+                (BigDecimal) postulanteRow.get("REMUNERACION"),
+                (String) postulanteRow.get("MODALIDAD"),
+                (String) postulanteRow.get("TIENE_EQUIPO")
+        );
     }
 
 }

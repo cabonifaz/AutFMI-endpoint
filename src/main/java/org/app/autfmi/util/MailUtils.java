@@ -10,6 +10,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -22,42 +23,50 @@ public class MailUtils {
     private JavaMailSender mailSender;
 
     @Async
-    public void sendRequirementPostulantMail(List<GestorRqDTO> lstGestores, String asunto, PostulantDTO postulante) {
+    public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes) {
         try {
-            for (GestorRqDTO gestor : lstGestores) {
-                String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, postulante);
+            // lista de talentos al RQ
+            List<String> listaTalentosRQ = new ArrayList<>();
+            int indice = 1;
 
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-                helper.setFrom(emisorCorreo);
-                helper.setTo(gestor.getCorreo());
-                helper.setSubject(asunto);
-                helper.setText(mensajeCorreo, true);
-
-                mailSender.send(message);
+            for (PostulantDTO postulante: lstPostulantes) {
+                listaTalentosRQ.add(Constante.LIST_TALENT_ROW
+                        .replace("{{numFila}}", indice + "")
+                        .replace("{{nombres}}", postulante.getNombres())
+                        .replace("{{apellidos}}", postulante.getApellidos())
+                        .replace("{{docIdentidad}}", postulante.getDni())
+                        .replace("{{numCelular}}", postulante.getCelular())
+                        .replace("{{correo}}", postulante.getEmail())
+                        .replace("{{fchInicioLabores}}", postulante.getFechaInicioLabores())
+                        .replace("{{tiempoContrato}}", postulante.getTiempoContrato())
+                        .replace("{{cargo}}", postulante.getCargo())
+                        .replace("{{remuneracion}}", postulante.getRemuneracion().toString())
+                        .replace("{{modalidad}}", postulante.getModalidad())
+                        .replace("{{tieneEquipo}}", postulante.getTieneEquipo())
+                );
+                indice++;
             }
+
+            String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, listaTalentosRQ);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(emisorCorreo);
+            helper.setTo(gestor.getCorreo());
+            helper.setSubject(asunto);
+            helper.setText(mensajeCorreo, true);
+
+            mailSender.send(message);
         } catch (Exception e) {
             System.err.println("ERROR AL ENVIAR CORREO");
             System.err.println(e.getMessage());
         }
     }
 
-    private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, PostulantDTO postulante){
+    private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos){
         return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
                 .replace("[CLIENTE]", gestor.getCliente())
-                .replace("[TIPO_FORMULARIO]", gestor.getTipoFormulario())
-                .replace("[SI_NO_EQUIPO]", gestor.getTieneEquipo())
-                .replace("[NOMBRES]", postulante.getNombres())
-                .replace("[APELLIDO_PATERNO]", postulante.getApellidoPaterno())
-                .replace("[APELLIDO_MATERNO]", postulante.getApellidoMaterno())
-                .replace("[DOC_IDENTIDAD]", postulante.getDni())
-                .replace("[CELULAR]", postulante.getCelular())
-                .replace("[CORREO]", postulante.getEmail())
-                .replace("[FCH_INI_LABORES]", postulante.getFechaInicioLabores())
-                .replace("[TIEMPO_CONTRATO]", postulante.getTiempoContrato())
-                .replace("[CARGO]", postulante.getCargo())
-                .replace("[REMUNERACION]", postulante.getRemuneracion().toString())
-                .replace("[MODALIDAD]", postulante.getModalidad());
+                .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 }

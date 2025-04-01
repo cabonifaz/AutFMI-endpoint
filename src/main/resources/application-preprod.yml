@@ -2,8 +2,8 @@ spring:
   datasource:
     preprod:
       url: jdbc:sqlserver://161.132.217.169:1433;database=bdt_preprod;encrypt=true;trustServerCertificate=true
-      username: autfmiPreprod
-      password: Fractal$Preprod123
+      username: sa
+      password: Fractal$952
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     database-platform: org.hibernate.dialect.SQLServerDialect

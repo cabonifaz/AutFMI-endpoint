@@ -52,20 +52,20 @@ public class HistoryRepository {
                     .addValue("NOMBRES", request.getNombres())
                     .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
                     .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
-                    .addValue("ID_UNIDAD", request.getIdUnidad())
+                    .addValue("ID_UNIDAD", request.getIdArea())
                     .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
                     .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
                     .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
                     .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
                     .addValue("ID_MONEDA", request.getIdMoneda())
                     .addValue("ID_MODALIDAD", request.getIdModalidad())
-                    .addValue("EMPRESA", request.getEmpresa())
+                    .addValue("EMPRESA", request.getIdCliente())
                     .addValue("MONTO_BASE", request.getMontoBase())
                     .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
                     .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
                     .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
                     .addValue("PUESTO", request.getPuesto())
-                    .addValue("AREA", request.getArea())
+                    .addValue("AREA", request.getIdMovArea())
                     .addValue("JORNADA", request.getJornada())
                     .addValue("FCH_HISTORIAL", request.getFchMovimiento())
                     .addValue("USERNAME_EMPLEADO", usernameUsuarioMovimiento)
@@ -120,8 +120,8 @@ public class HistoryRepository {
                     .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
                     .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
                     .addValue("ID_MOTIVO", request.getIdMotivo())
-                    .addValue("EMPRESA", request.getEmpresa())
-                    .addValue("ID_UNIDAD", request.getIdUnidad())
+                    .addValue("EMPRESA", request.getIdCliente())
+                    .addValue("ID_UNIDAD", request.getIdArea())
                     .addValue("FCH_HISTORIAL", request.getFchCese())
                     .addValue("USERNAME_EMPLEADO", usernameUsuarioCese)
                     .addValue("EMAIL_EMPLEADO", correoUsuarioCese);
@@ -167,28 +167,29 @@ public class HistoryRepository {
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
-        String usernameUsuarioIngreso = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
-        String correoUsuarioIngreso = usernameUsuarioIngreso + Constante.DOMINIO_CORREO;
+        String usernameUsuarioIngreso = request.getNombres().charAt(0) + request.getApellidoPaterno().trim();
+        String correoUsuarioIngreso = usernameUsuarioIngreso.toLowerCase() + Constante.DOMINIO_CORREO;
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_TALENTO", request.getIdTalento())
                 .addValue("NOMBRES", request.getNombres())
                 .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
                 .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
+                // USUARIO EMPLEADO
                 .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
-                .addValue("ID_UNIDAD", request.getIdUnidad())
+                .addValue("ID_AREA", request.getIdArea())
                 .addValue("CARGO", request.getCargo())
+                .addValue("ID_CLIENTE", request.getIdCliente())
                 .addValue("HORARIO_TRABAJO", request.getHorarioTrabajo())
                 .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
                 .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
                 .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
                 .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
                 // HISTORIAL
-                .addValue("ID_MODALIDAD", request.getIdModalidad())
                 .addValue("ID_MOTIVO", request.getIdMotivo())
                 .addValue("ID_MONEDA", request.getIdMoneda())
-                .addValue("EMPRESA", request.getEmpresa())
+                .addValue("ID_MODALIDAD", request.getIdModalidad())
+                .addValue("CLIENTE", request.getCliente())
                 .addValue("DECLARAR_SUNAT", request.getDeclararSunat())
                 .addValue("SEDE_DECLARAR", request.getSedeDeclarar())
                 .addValue("MONTO_BASE", request.getMontoBase())
@@ -199,10 +200,11 @@ public class HistoryRepository {
                 .addValue("USERNAME_EMPLEADO", usernameUsuarioIngreso)
                 .addValue("EMAIL_EMPLEADO", correoUsuarioIngreso)
                 // VALIDAR ROL
-                .addValue("ID_ROL", baseRequest.getIdRol())
-                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
-                .addValue("USERNAME", baseRequest.getUsername());
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-2");

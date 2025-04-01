@@ -11,6 +11,7 @@ public class EmployeeDTO {
     private String nombres;
     private String apellidoPaterno;
     private String apellidoMaterno;
-    private Integer idUnidad;
+    private Integer idArea;
     private Double remuneracion;
+    private Integer idCliente;
 }

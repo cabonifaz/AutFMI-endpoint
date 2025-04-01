@@ -20,7 +20,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -302,7 +301,7 @@ public class PDFUtils {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GS-03 Formulario de Requerimiento de Software y Hardware")
                 .replace("{{apellidosNombres}}", nombresApellidos)
-                .replace("{{cliente}}", request.getEmpresaCliente())
+                .replace("{{cliente}}", request.getCliente())
                 .replace("{{area}}", request.getArea())
                 .replace("{{cargo}}", request.getPuesto())
                 .replace("{{fechaSolicitud}}", Common.parseDateToFormDate(request.getFechaSolicitud()))

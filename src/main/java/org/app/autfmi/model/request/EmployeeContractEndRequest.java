@@ -10,8 +10,8 @@ public class EmployeeContractEndRequest {
     private String nombres;
     private String apellidoPaterno;
     private String apellidoMaterno;
-    private Integer idUnidad;
+    private Integer idArea;
     private Integer idMotivo;
-    private String empresa;
+    private String idCliente;
     private String fchCese;
 }

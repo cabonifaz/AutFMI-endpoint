@@ -10,20 +10,20 @@ public class EmployeeMovementRequest {
     private String nombres;
     private String apellidoPaterno;
     private String apellidoMaterno;
-    private Integer idUnidad;
+    private Integer idArea;
     private Integer idMoneda;
     private Integer idModalidad;
     private String fchInicioContrato;
     private String fchTerminoContrato;
     private String proyectoServicio;
     private String objetoContrato;
-    private String empresa;
+    private Integer idCliente;
     private Double montoBase;
     private Double montoMovilidad;
     private Double montoTrimestral;
     private Double montoSemestral;
     private String puesto;
-    private String area;
+    private Integer idMovArea;
     private String jornada;
     private String fchMovimiento;
 }

@@ -14,7 +14,9 @@ public class SolicitudEquipoRequest {
     private String nombreEmpleado;
     private String apellidoPaternoEmpleado;
     private String apellidoMaternoEmpleado;
-    private String empresaCliente;
+    private Integer idCliente;
+    private String cliente;
+    private Integer idArea;
     private String area;
     private String puesto;
     private String fechaSolicitud;

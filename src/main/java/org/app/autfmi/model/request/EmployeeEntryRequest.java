@@ -12,7 +12,7 @@ public class EmployeeEntryRequest {
     private String apellidoPaterno;
     private String apellidoMaterno;
     private Integer idUsuarioTalento;
-    private Integer idUnidad;
+    private Integer idArea;
     private String cargo;
     private String horarioTrabajo;
     private String fchInicioContrato;
@@ -23,7 +23,8 @@ public class EmployeeEntryRequest {
     private Integer idModalidad;
     private Integer idMotivo;
     private Integer idMoneda;
-    private String empresa;
+    private Integer idCliente;
+    private String cliente;
     private Double montoBase;
     private Double montoMovilidad;
     private Double montoTrimestral;

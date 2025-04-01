@@ -58,8 +58,9 @@ public class EmployeeRepository {
                 (String) employeeRaw.get("NOMBRES"),
                 (String) employeeRaw.get("APELLIDO_PATERNO"),
                 (String) employeeRaw.get("APELLIDO_MATERNO"),
-                (Integer) employeeRaw.get("ID_UNIDAD"),
-                (Double) employeeRaw.get("REMUNERACION")
+                (Integer) employeeRaw.get("ID_AREA"),
+                (Double) employeeRaw.get("REMUNERACION"),
+                (Integer) employeeRaw.get("ID_CLIENTE")
         );
     }
 
@@ -77,8 +78,8 @@ public class EmployeeRepository {
                 .addValue("NOMBRE_EMPLEADO", solicitudEquipoRequest.getNombreEmpleado())
                 .addValue("APELLIDO_PATERNO_EMPLEADO", solicitudEquipoRequest.getApellidoPaternoEmpleado())
                 .addValue("APELLIDO_MATERNO_EMPLEADO", solicitudEquipoRequest.getApellidoMaternoEmpleado())
-                .addValue("EMPRESA_CLIENTE", solicitudEquipoRequest.getEmpresaCliente())
-                .addValue("AREA", solicitudEquipoRequest.getArea())
+                .addValue("EMPRESA_CLIENTE", solicitudEquipoRequest.getIdCliente())
+                .addValue("AREA", solicitudEquipoRequest.getIdArea())
                 .addValue("PUESTO", solicitudEquipoRequest.getPuesto())
                 .addValue("FECHA_SOLICITUD", solicitudEquipoRequest.getFechaSolicitud())
                 .addValue("FECHA_ENTREGA", solicitudEquipoRequest.getFechaEntrega())

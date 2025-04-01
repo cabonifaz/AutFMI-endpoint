@@ -5,9 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class AutfmiendpointApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(AutfmiendpointApplication.class, args);
     }
-
 }

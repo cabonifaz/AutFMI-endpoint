@@ -54,7 +54,7 @@ public class MailUtils {
 
             helper.setFrom(emisorCorreo);
             helper.setTo(gestor.getCorreo());
-            helper.setSubject(asunto);
+            helper.setSubject(asunto + " | " + gestor.getCodigoRQ() + " | " + gestor.getCliente());
             helper.setText(mensajeCorreo, true);
 
             mailSender.send(message);
@@ -67,6 +67,7 @@ public class MailUtils {
     private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos){
         return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
                 .replace("[CLIENTE]", gestor.getCliente())
+                .replace("[TIPO_FORMULARIO]", gestor.getTipoFormulario())
                 .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 }

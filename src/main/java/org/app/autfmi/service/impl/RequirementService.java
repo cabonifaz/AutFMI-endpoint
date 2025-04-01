@@ -52,11 +52,16 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException {
-        UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
-        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        return requirementRepository.saveRequirementTalents(request,  baseRequest);
+    public BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) {
+        try {
+            UserDTO user = jwt.decodeToken(token);
+            String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
+            BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+            return requirementRepository.saveRequirementTalents(request,  baseRequest);
+        } catch (Exception e) {
+            return  new BaseResponse(3, e.getMessage());
+        }
+
     }
 
     @Override

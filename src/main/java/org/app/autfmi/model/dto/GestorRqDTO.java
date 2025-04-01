@@ -11,6 +11,7 @@ public class GestorRqDTO {
     private String nombres;
     private String apellidos;
     private String correo;
+    private String codigoRQ;
     private String cliente;
     private String tipoFormulario;
 }

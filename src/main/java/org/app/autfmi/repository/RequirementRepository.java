@@ -246,11 +246,12 @@ public class RequirementRepository {
                     List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS CONFIRMADOS
 
                     if (postulantsSet != null && !postulantsSet.isEmpty() && gestorSet != null && !gestorSet.isEmpty()) {
-                        Map<String, Object> gestorRqRow = resultSet.get(0);
+                        Map<String, Object> gestorRqRow = gestorSet.get(0);
                         GestorRqDTO gestor = new GestorRqDTO(
                                 (String) gestorRqRow.get("NOMBRES"),
                                 (String) gestorRqRow.get("APELLIDOS"),
                                 (String) gestorRqRow.get("CORREO"),
+                                (String) gestorRqRow.get("CODIGO_RQ"),
                                 (String) gestorRqRow.get("CLIENTE"),
                                 "Ingreso"
                         );

@@ -117,8 +117,8 @@ public class HistoryRepository {
     }
 
     public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
-        String usernameUsuarioCese = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
-        String correoUsuarioCese = usernameUsuarioCese + Constante.DOMINIO_CORREO;
+        String usernameUsuarioCese = request.getNombres().charAt(0) + request.getApellidoPaterno().trim();
+        String correoUsuarioCese = usernameUsuarioCese.toLowerCase() + Constante.DOMINIO_CORREO;
 
         Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_CESE", params -> {
             params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
@@ -130,7 +130,7 @@ public class HistoryRepository {
                     .addValue("CLIENTE", request.getCliente())
                     .addValue("ID_AREA", request.getIdArea())
                     .addValue("FCH_HISTORIAL", request.getFchCese())
-                    .addValue("USERNAME_EMPLEADO", usernameUsuarioCese)
+                    .addValue("USERNAME_EMPLEADO", usernameUsuarioCese.toLowerCase())
                     .addValue("EMAIL_EMPLEADO", correoUsuarioCese);
         });
 

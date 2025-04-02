@@ -11,6 +11,7 @@ public class EmployeeMovementRequest {
     private String apellidoPaterno;
     private String apellidoMaterno;
     private Integer idArea;
+    private String area;
     private Integer idMoneda;
     private Integer idModalidad;
     private String fchInicioContrato;
@@ -25,6 +26,7 @@ public class EmployeeMovementRequest {
     private Double montoSemestral;
     private String puesto;
     private Integer idMovArea;
+    private String movArea;
     private String jornada;
     private String fchMovimiento;
 }

@@ -50,8 +50,8 @@ public class EmployeeService implements IEmployeeService {
 
             SolicitudData data = new SolicitudData();
 
-            String usernameNuevoUsuario = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
-            String correoNuevoUsuario = usernameNuevoUsuario + Constante.DOMINIO_CORREO;
+            String usernameNuevoUsuario = request.getNombres().charAt(0) + request.getApellidoPaterno().trim();
+            String correoNuevoUsuario = usernameNuevoUsuario.toLowerCase() + Constante.DOMINIO_CORREO;
 
             data.setNombres(report.getNombres());
             data.setApellidos(report.getApellidos());

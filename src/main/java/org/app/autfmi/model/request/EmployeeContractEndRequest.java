@@ -12,6 +12,7 @@ public class EmployeeContractEndRequest {
     private String apellidoMaterno;
     private Integer idArea;
     private Integer idMotivo;
-    private String idCliente;
+    private Integer idCliente;
+    private String cliente;
     private String fchCese;
 }

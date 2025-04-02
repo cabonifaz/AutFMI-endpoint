@@ -79,7 +79,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
-                    "Ingreso empleado",
+                    "Ingreso de empleado",
                     "Formulario de nuevo ingreso de empleado."
             );
         }
@@ -113,8 +113,8 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
-                    "Ingreso empleado",
-                    "Formulario de nuevo ingreso de empleado."
+                    "Movimiento de empleado",
+                    "Formulario de movimiento de empleado."
             );
         }
 
@@ -159,7 +159,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
-                    "Cese empleado",
+                    "Cese de empleado",
                     "Formulario de cese del empleado."
             );
         }

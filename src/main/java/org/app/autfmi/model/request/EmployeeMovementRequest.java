@@ -18,6 +18,7 @@ public class EmployeeMovementRequest {
     private String proyectoServicio;
     private String objetoContrato;
     private Integer idCliente;
+    private String cliente;
     private Double montoBase;
     private Double montoMovilidad;
     private Double montoTrimestral;

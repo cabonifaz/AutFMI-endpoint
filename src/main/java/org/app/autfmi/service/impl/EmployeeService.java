@@ -60,7 +60,7 @@ public class EmployeeService implements IEmployeeService {
 
             data.setNombresCreacion(report.getNombres());
             data.setApellidosCreacion(report.getApellidos());
-            data.setNombreUsuarioCreacion(usernameNuevoUsuario);
+            data.setNombreUsuarioCreacion(usernameNuevoUsuario.toLowerCase());
             data.setCorreoCreacion(correoNuevoUsuario);
             data.setAreaCreacion(report.getUnidad());
             data.setFirmante(report.getFirmante());

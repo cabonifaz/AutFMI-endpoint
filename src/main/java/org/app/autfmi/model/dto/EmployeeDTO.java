@@ -14,4 +14,5 @@ public class EmployeeDTO {
     private Integer idArea;
     private Double remuneracion;
     private Integer idCliente;
+    private String cargo;
 }

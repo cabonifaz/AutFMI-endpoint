@@ -60,7 +60,8 @@ public class EmployeeRepository {
                 (String) employeeRaw.get("APELLIDO_MATERNO"),
                 (Integer) employeeRaw.get("ID_AREA"),
                 (Double) employeeRaw.get("REMUNERACION"),
-                (Integer) employeeRaw.get("ID_CLIENTE")
+                (Integer) employeeRaw.get("ID_CLIENTE"),
+                (String) employeeRaw.get("CARGO")
         );
     }
 

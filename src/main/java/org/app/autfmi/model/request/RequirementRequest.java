@@ -3,7 +3,6 @@ package org.app.autfmi.model.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-
 import java.util.Date;
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class RequirementRequest {
     private String descripcion;
     private Integer estado;
     private Boolean autogenRQ;
-    private Integer vacantes;
+    private List<vacanteRequirement> lstVacantes;
     @JsonProperty()
     private List<FileRequest> lstArchivos;
 }

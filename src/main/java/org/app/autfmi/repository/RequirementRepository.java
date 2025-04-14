@@ -151,6 +151,7 @@ public class RequirementRepository {
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_INS");
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
+        SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantes(request.getLstVacantes());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", request.getIdCliente())
@@ -160,7 +161,7 @@ public class RequirementRepository {
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
                 .addValue("AUTOGEN_RQ", request.getAutogenRQ())
-                .addValue("VACANTES", request.getVacantes())
+                .addValue("LST_VACANTES", tvpRqVacantes)
                 .addValue("LST_ARCHIVOS", tvpRqFiles)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
@@ -197,7 +198,6 @@ public class RequirementRepository {
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
-                .addValue("VACANTES", request.getVacantes())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -439,6 +439,21 @@ public class RequirementRepository {
             indice++;
         }
         return tvpRqFiles;
+    }
+
+    private static SQLServerDataTable loadTvpRequirementVacantes(List<vacanteRequirement> lstVacantes) throws SQLServerException {
+        SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
+        tvpRqVacantes.addColumnMetadata("PERFIL_PROFESIONAL", Types.VARCHAR);
+        tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
+
+        for (vacanteRequirement vacanteRequirement : lstVacantes) {
+            tvpRqVacantes.addRow(
+                    vacanteRequirement.getPerfilProfesional(),
+                    vacanteRequirement.getCantidad()
+            );
+        }
+
+        return tvpRqVacantes;
     }
 
 

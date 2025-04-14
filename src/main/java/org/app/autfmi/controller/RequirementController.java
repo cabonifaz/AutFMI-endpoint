@@ -47,11 +47,12 @@ public class RequirementController {
     public ResponseEntity<BaseResponse> getRequirement(
             @RequestParam Integer idRequerimiento,
             @RequestParam Boolean showfiles,
+            @RequestParam Boolean showVacantesList,
             HttpServletRequest httpServletRequest
     ) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = requirementService.getRequirement(token, idRequerimiento, showfiles);
+            BaseResponse response = requirementService.getRequirement(token, idRequerimiento, showfiles, showVacantesList);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

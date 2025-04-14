@@ -72,7 +72,7 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse getRequirementById(Integer idRequerimiento, Boolean showfiles, BaseRequest baseRequest) {
+    public BaseResponse getRequirementById(Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList, BaseRequest baseRequest) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_SEL");
 
@@ -140,7 +140,24 @@ public class RequirementRepository {
                         }
                     }
 
-                    return new RequirementResponse(idTipoMensaje, mensaje, mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles));
+                    List<RequirementVacanteDTO> lstRqVacantes = new ArrayList<>();
+                    if (showVacantesList) {
+                        List<Map<String, Object>> resultSet5 = (List<Map<String, Object>>) result.get("#result-set-5");
+
+                        if (resultSet5 != null && !resultSet5.isEmpty()) {
+                            for (Map<String, Object> vacante : resultSet5) {
+                                RequirementVacanteDTO itemRqVacante = new RequirementVacanteDTO(
+                                        (Integer) vacante.get("ID_REQUERIMIENTO_VACANTE"),
+                                        (String) vacante.get("PERFIL_PROFESIONAL"),
+                                        (Integer) vacante.get("CANTIDAD")
+                                );
+
+                                lstRqVacantes.add(itemRqVacante);
+                            }
+                        }
+                    }
+
+                    return new RequirementResponse(idTipoMensaje, mensaje, mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes));
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -403,7 +420,7 @@ public class RequirementRepository {
         );
     }
 
-    private RequirementDTO mapToRequirementDTO(Map<String, Object> requerimiento, List<RequirementTalentDTO> lstRqTalents, List<RequirementFileDTO> lstRqFiles) {
+    private RequirementDTO mapToRequirementDTO(Map<String, Object> requerimiento, List<RequirementTalentDTO> lstRqTalents, List<RequirementFileDTO> lstRqFiles, List<RequirementVacanteDTO> lstRqVacantes) {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
@@ -412,7 +429,7 @@ public class RequirementRepository {
                 (String) requerimiento.get("DESCRIPCION"),
                 (Integer) requerimiento.get("ID_ESTADO"),
                 (String) requerimiento.get("ESTADO"),
-                (Integer) requerimiento.get("VACANTES"),
+                lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles
         );

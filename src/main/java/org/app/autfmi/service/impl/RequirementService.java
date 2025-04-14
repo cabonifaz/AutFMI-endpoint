@@ -29,10 +29,10 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles) {
+    public BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.DETALLE_REQUERIMIENTO);
-        return requirementRepository.getRequirementById(idRequerimiento, showfiles, baseRequest);
+        return requirementRepository.getRequirementById(idRequerimiento, showfiles, showVacantesList, baseRequest);
     }
 
     @Override

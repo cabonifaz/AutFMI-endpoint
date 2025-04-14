@@ -159,6 +159,7 @@ public class RequirementRepository {
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
+                .addValue("AUTOGEN_RQ", request.getAutogenRQ())
                 .addValue("VACANTES", request.getVacantes())
                 .addValue("LST_ARCHIVOS", tvpRqFiles)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())

@@ -18,6 +18,7 @@ public class RequirementRequest {
     private Date fechaSolicitud;
     private String descripcion;
     private Integer estado;
+    private Boolean autogenRQ;
     private Integer vacantes;
     @JsonProperty()
     private List<FileRequest> lstArchivos;

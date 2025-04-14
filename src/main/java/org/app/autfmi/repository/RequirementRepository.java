@@ -458,14 +458,14 @@ public class RequirementRepository {
         return tvpRqFiles;
     }
 
-    private static SQLServerDataTable loadTvpRequirementVacantes(List<vacanteRequirement> lstVacantes) throws SQLServerException {
+    private static SQLServerDataTable loadTvpRequirementVacantes(List<VacanteRequirement> lstVacantes) throws SQLServerException {
         SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
-        tvpRqVacantes.addColumnMetadata("PERFIL_PROFESIONAL", Types.VARCHAR);
+        tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
 
-        for (vacanteRequirement vacanteRequirement : lstVacantes) {
+        for (VacanteRequirement vacanteRequirement : lstVacantes) {
             tvpRqVacantes.addRow(
-                    vacanteRequirement.getPerfilProfesional(),
+                    vacanteRequirement.getIdPerfil(),
                     vacanteRequirement.getCantidad()
             );
         }

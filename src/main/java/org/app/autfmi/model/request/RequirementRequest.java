@@ -18,7 +18,7 @@ public class RequirementRequest {
     private String descripcion;
     private Integer estado;
     private Boolean autogenRQ;
-    private List<vacanteRequirement> lstVacantes;
+    private List<VacanteRequirement> lstVacantes;
     @JsonProperty()
     private List<FileRequest> lstArchivos;
 }

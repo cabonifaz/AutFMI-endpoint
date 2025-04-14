@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class vacanteRequirement {
-    private String perfilProfesional;
+public class VacanteRequirement {
+    private Integer idPerfil;
     private Integer cantidad;
 }

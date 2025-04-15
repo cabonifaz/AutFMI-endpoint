@@ -429,6 +429,7 @@ public class RequirementRepository {
                 (String) requerimiento.get("DESCRIPCION"),
                 (Integer) requerimiento.get("ID_ESTADO"),
                 (String) requerimiento.get("ESTADO"),
+                (Integer) requerimiento.get("VACANTES"),
                 lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles

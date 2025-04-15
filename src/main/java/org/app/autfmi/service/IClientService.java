@@ -4,4 +4,5 @@ import org.app.autfmi.model.response.BaseResponse;
 
 public interface IClientService {
     BaseResponse listClients (String token);
+    BaseResponse listClientContacts(String token, Integer idCliente);
 }

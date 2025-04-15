@@ -25,4 +25,11 @@ public class ClientService implements IClientService {
         return clientRepository.listClients(baseRequest);
     }
 
+    @Override
+    public BaseResponse listClientContacts(String token, Integer idCliente) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_CLIENTES);
+        return clientRepository.listClientContacts(baseRequest, idCliente);
+    }
+
 }

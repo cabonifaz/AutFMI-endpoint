@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -26,6 +27,21 @@ public class ClientController {
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/listContacts")
+    public ResponseEntity<BaseResponse> listContacts(HttpServletRequest httpServletRequest, @RequestParam Integer idCliente) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = clientService.listClientContacts(token, idCliente);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR

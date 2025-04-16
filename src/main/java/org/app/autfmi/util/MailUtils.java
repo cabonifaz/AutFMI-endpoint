@@ -23,7 +23,7 @@ public class MailUtils {
     private JavaMailSender mailSender;
 
     @Async
-    public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes) {
+    public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes, List<String> lstEmails) {
         try {
             // lista de talentos al RQ
             List<String> listaTalentosRQ = new ArrayList<>();
@@ -54,6 +54,11 @@ public class MailUtils {
 
             helper.setFrom(emisorCorreo);
             helper.setTo(gestor.getCorreo());
+
+            if (lstEmails != null && !lstEmails.isEmpty()) {
+                helper.setCc(lstEmails.toArray(new String[0]));
+            }
+
             helper.setSubject(asunto + " | " + gestor.getCodigoRQ() + " | " + gestor.getCliente());
             helper.setText(mensajeCorreo, true);
 

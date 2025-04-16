@@ -178,6 +178,7 @@ public class RequirementRepository {
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
                 .addValue("AUTOGEN_RQ", request.getAutogenRQ())
+                .addValue("LST_CONTACTOS", request.getLstContactos())
                 .addValue("LST_VACANTES", tvpRqVacantes)
                 .addValue("LST_ARCHIVOS", tvpRqFiles)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
@@ -262,6 +263,7 @@ public class RequirementRepository {
                 if (baseResponse.getIdTipoMensaje() == 2) {
                     List<Map<String, Object>> gestorSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
                     List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS CONFIRMADOS
+                    List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
 
                     if (postulantsSet != null && !postulantsSet.isEmpty() && gestorSet != null && !gestorSet.isEmpty()) {
                         Map<String, Object> gestorRqRow = gestorSet.get(0);
@@ -281,8 +283,17 @@ public class RequirementRepository {
                             }
                         }
 
+                        List<String> contactosList = new ArrayList<>();
+                        if (contactosSet != null && !contactosSet.isEmpty()) {
+                            for (Map<String, Object> contactoRow : contactosSet) {
+                                contactosList.add(
+                                    (String) contactoRow.get("CORREO")
+                                );
+                            }
+                        }
+
                         //ENVIAR CORREO
-                        mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList);
+                        mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
                     }
                 }
             }

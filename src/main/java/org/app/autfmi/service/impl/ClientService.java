@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.ContactRegisterRequest;
+import org.app.autfmi.model.request.ContactUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.ClientRepository;
 import org.app.autfmi.repository.RequirementRepository;
@@ -30,6 +32,20 @@ public class ClientService implements IClientService {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_CLIENTES);
         return clientRepository.listClientContacts(baseRequest, idCliente);
+    }
+
+    @Override
+    public BaseResponse saveContact(String token, ContactRegisterRequest contacto) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.ACTUALIZAR_REQUERIMIENTO);
+        return clientRepository.saveContact(baseRequest, contacto);
+    }
+
+    @Override
+    public BaseResponse updateContact(String token, ContactUpdateRequest contacto) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.ACTUALIZAR_REQUERIMIENTO);
+        return clientRepository.updateContact(baseRequest, contacto);
     }
 
 }

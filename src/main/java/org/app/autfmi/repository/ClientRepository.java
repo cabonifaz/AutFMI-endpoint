@@ -5,6 +5,8 @@ import org.app.autfmi.model.dto.ClientContactItemDTO;
 import org.app.autfmi.model.dto.ClientItemDTO;
 import org.app.autfmi.model.dto.RequirementItemDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.ContactRegisterRequest;
+import org.app.autfmi.model.request.ContactUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.ClientContactListResponse;
 import org.app.autfmi.model.response.ClientListResponse;
@@ -107,5 +109,80 @@ public class ClientRepository {
             return new BaseResponse(idTipoMensaje, mensaje);
         }
         return new BaseResponse(3, "Error al conectarse a base datos");
+    }
+
+    public BaseResponse saveContact(BaseRequest baseRequest, ContactRegisterRequest contacto) {
+        try {
+            SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_CLIENTE_CONTACTO_INS");
+
+            SqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("ID_CLIENTE", contacto.getIdCliente())
+                    .addValue("NOMBRES",contacto.getNombres())
+                    .addValue("APELLIDO_PATERNO",contacto.getApellidoPaterno())
+                    .addValue("APELLIDO_MATERNO",contacto.getApellidoMaterno())
+                    .addValue("CARGO",contacto.getCargo())
+                    .addValue("TELEFONO",contacto.getTelefono())
+                    .addValue("CORREO",contacto.getCorreo())
+
+                    .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                    .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                    .addValue("USUARIO", baseRequest.getUsername())
+                    .addValue("ID_ROL", baseRequest.getIdRol())
+                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+
+                    .addValue("FLAG_CONFIRMAR", contacto.getFlagConfirmar())
+                    .addValue("ID_RQ", contacto.getIdRq());
+
+            Map<String, Object> result = simpleJdbcCall.execute(params);
+
+            List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+            if (resultSet != null && !resultSet.isEmpty()) {
+                Map<String, Object> row = resultSet.get(0);
+                Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+                String mensaje = (String) row.get("MENSAJE");
+
+                return new BaseResponse(idTipoMensaje, mensaje);
+            }
+            return new BaseResponse(3, "Ocurrió un problema al ejecutar el servicio");
+        } catch (Exception e) {
+            return new BaseResponse(3, "Error al conectarse a base datos");
+        }
+    }
+
+    public BaseResponse updateContact(BaseRequest baseRequest, ContactUpdateRequest contacto) {
+        try {
+            SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_CLIENTE_CONTACTO_UPD");
+
+            SqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("ID_CLIENTE_CONTACTO", contacto.getIdClienteContacto())
+                    .addValue("NOMBRES",contacto.getNombres())
+                    .addValue("APELLIDO_PATERNO",contacto.getApellidoPaterno())
+                    .addValue("APELLIDO_MATERNO",contacto.getApellidoMaterno())
+                    .addValue("CARGO",contacto.getCargo())
+                    .addValue("TELEFONO",contacto.getTelefono())
+                    .addValue("CORREO",contacto.getCorreo())
+
+                    .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                    .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                    .addValue("USUARIO", baseRequest.getUsername())
+                    .addValue("ID_ROL", baseRequest.getIdRol())
+                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+            Map<String, Object> result = simpleJdbcCall.execute(params);
+
+            List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+            if (resultSet != null && !resultSet.isEmpty()) {
+                Map<String, Object> row = resultSet.get(0);
+                Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+                String mensaje = (String) row.get("MENSAJE");
+
+                return new BaseResponse(idTipoMensaje, mensaje);
+            }
+            return new BaseResponse(3, "Ocurrió un problema al ejecutar el servicio");
+        } catch (Exception e) {
+            return new BaseResponse(3, "Error al conectarse a base datos");
+        }
     }
 }

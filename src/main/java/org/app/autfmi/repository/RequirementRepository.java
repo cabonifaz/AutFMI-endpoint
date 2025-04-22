@@ -148,6 +148,7 @@ public class RequirementRepository {
                             for (Map<String, Object> vacante : resultSet5) {
                                 RequirementVacanteDTO itemRqVacante = new RequirementVacanteDTO(
                                         (Integer) vacante.get("ID_REQUERIMIENTO_VACANTE"),
+                                        (Integer) vacante.get("ID_PERFIL"),
                                         (String) vacante.get("PERFIL_PROFESIONAL"),
                                         (Integer) vacante.get("CANTIDAD")
                                 );

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RequirementVacanteDTO {
     private Integer idRequerimientoVacante;
+    private Integer idPerfil;
     private String perfilProfesional;
     private Integer cantidad;
 }

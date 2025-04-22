@@ -14,5 +14,6 @@ public class RequirementTalentRequestDTO {
     private String email;
     private Integer idSituacion;
     private Integer idEstado;
+    private Integer idPerfil;
     private boolean confirmado;
 }

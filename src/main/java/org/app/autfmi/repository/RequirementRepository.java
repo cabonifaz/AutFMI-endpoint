@@ -506,6 +506,7 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("EMAIL", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("ID_SITUACION", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("ID_ESTADO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("CONFIRMADO", Types.BIT);
 
         int indice = 1;

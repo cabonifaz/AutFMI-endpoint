@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -17,4 +17,5 @@ public class RequirementItemDTO {
     private Integer idEstado;
     private String estado;
     private Integer vacantes;
+    private List<RequirementPerfilItemDTO> lstPerfiles;
 }

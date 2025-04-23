@@ -1,5 +1,9 @@
 package org.app.autfmi.repository;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +68,8 @@ public class RequirementRepository {
                     for (Map<String, Object> requirementRow : requirementSet) {
                         requirementList.add(mapToRequirementItemDTO(requirementRow));
                     }
+
+                    System.out.println(requirementList);
                 }
                 return new RequirementListResponse(idTipoMensaje, mensaje, requirementList);
             }
@@ -423,6 +429,23 @@ public class RequirementRepository {
     }
 
     private RequirementItemDTO mapToRequirementItemDTO(Map<String, Object> requirement) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        List<RequirementPerfilItemDTO> perfiles = new ArrayList<>();
+        String jsonPerfiles = (String) requirement.get("LST_PERFILES");
+
+        if (jsonPerfiles != null && !jsonPerfiles.isEmpty()) {
+            try {
+                perfiles = objectMapper.readValue(
+                        jsonPerfiles,
+                        new TypeReference<>() {
+                        }
+                );
+            } catch (JsonProcessingException e) {
+                e.printStackTrace();
+            }
+        }
+
         return new RequirementItemDTO(
                 (Integer) requirement.get("ID_REQUERIMIENTO"),
                 (String) requirement.get("CLIENTE"),
@@ -430,7 +453,8 @@ public class RequirementRepository {
                 (String) requirement.get("FECHA_SOLICITUD"),
                 (Integer) requirement.get("ID_ESTADO"),
                 (String) requirement.get("ESTADO"),
-                (Integer) requirement.get("VACANTES")
+                (Integer) requirement.get("VACANTES"),
+                perfiles
         );
     }
 

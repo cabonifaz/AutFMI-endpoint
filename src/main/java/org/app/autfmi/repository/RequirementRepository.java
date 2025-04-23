@@ -115,6 +115,8 @@ public class RequirementRepository {
                                     (String) rqTalentRow.get("SITUACION"),
                                     (Integer) rqTalentRow.get("ID_ESTADO"),
                                     (String) rqTalentRow.get("ESTADO"),
+                                    (Integer) rqTalentRow.get("ID_PERFIL"),
+                                    (String) rqTalentRow.get("PERFIL"),
                                     (Boolean) rqTalentRow.get("CONFIRMADO")
                             );
 

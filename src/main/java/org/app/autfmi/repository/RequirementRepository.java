@@ -523,6 +523,7 @@ public class RequirementRepository {
                     talentRequest.getEmail(),
                     talentRequest.getIdSituacion(),
                     talentRequest.getIdEstado(),
+                    talentRequest.getIdPerfil(),
                     talentRequest.isConfirmado()? 1 : 0
             );
 

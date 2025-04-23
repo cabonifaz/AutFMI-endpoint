@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.servlet.http.HttpServletRequest;
 import org.app.autfmi.model.dto.LinkTokenDTO;
 import org.app.autfmi.model.dto.UserDTO;
+import org.app.autfmi.model.request.RequirementPostulantRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -75,7 +76,7 @@ public class JwtHelper {
         UserDTO userData = decodeToken(authToken);
 
         dataToken.setUserData(userData);
-        dataToken.setLstrRequerimientos((List<Integer>) claims.get("lst_rq"));
+        dataToken.setLstrRequerimientos((List<RequirementPostulantRequest>) claims.get("lst_rq"));
 
         return dataToken;
     }

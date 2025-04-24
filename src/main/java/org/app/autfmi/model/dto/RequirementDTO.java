@@ -19,6 +19,9 @@ public class RequirementDTO {
     private Integer idEstado;
     private String estado;
     private Integer vacantes;
+    private int idDuracion;
+    private String duracion;
+    private Date fechaVencimiento;
     private List<RequirementVacanteDTO> lstRqVacantes;
     private List<RequirementTalentDTO> lstRqTalento;
     private List<RequirementFileDTO> lstRqArchivo;

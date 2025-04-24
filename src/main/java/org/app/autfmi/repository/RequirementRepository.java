@@ -67,8 +67,6 @@ public class RequirementRepository {
                     for (Map<String, Object> requirementRow : requirementSet) {
                         requirementList.add(mapToRequirementItemDTO(requirementRow));
                     }
-
-                    System.out.println(requirementList);
                 }
                 return new RequirementListResponse(idTipoMensaje, mensaje, requirementList);
             }
@@ -186,6 +184,9 @@ public class RequirementRepository {
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
                 .addValue("AUTOGEN_RQ", request.getAutogenRQ())
+                .addValue("ID_DURACION", request.getIdDuracion())
+                .addValue("DURACION", request.getDuracion())
+                .addValue("FECHA_VENCIMIENTO", request.getFechaVencimiento())
                 .addValue("LST_CONTACTOS", request.getLstContactos())
                 .addValue("LST_VACANTES", tvpRqVacantes)
                 .addValue("LST_ARCHIVOS", tvpRqFiles)
@@ -224,6 +225,9 @@ public class RequirementRepository {
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
                 .addValue("DESCRIPCION", request.getDescripcion())
                 .addValue("ESTADO", request.getEstado())
+                .addValue("ID_DURACION", request.getIdDuracion())
+                .addValue("DURACION", request.getDuracion())
+                .addValue("FECHA_VENCIMIENTO", request.getFechaVencimiento())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -453,6 +457,8 @@ public class RequirementRepository {
                 (Integer) requirement.get("ID_ESTADO"),
                 (String) requirement.get("ESTADO"),
                 (Integer) requirement.get("VACANTES"),
+                (String) requirement.get("DURACION"),
+                (String) requirement.get("FECHA_VENCIMIENTO"),
                 perfiles
         );
     }
@@ -467,6 +473,9 @@ public class RequirementRepository {
                 (Integer) requerimiento.get("ID_ESTADO"),
                 (String) requerimiento.get("ESTADO"),
                 (Integer) requerimiento.get("VACANTES"),
+                (Integer) requerimiento.get("ID_DURACION"),
+                (String) requerimiento.get("DURACION"),
+                (Date) requerimiento.get("FECHA_VENCIMIENTO"),
                 lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles

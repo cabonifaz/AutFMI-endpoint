@@ -1,5 +1,6 @@
 package org.app.autfmi.repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
@@ -66,7 +67,19 @@ public class PostulantRepository {
             tvpRqPostulant.addColumnMetadata("ID_PERFIL", Types.INTEGER);
             int indice = 1;
 
-            for (RequirementPostulantRequest itemRq : lstRequerimientos) {
+            ObjectMapper mapper = new ObjectMapper();
+
+            for (Object item : lstRequerimientos) {
+                RequirementPostulantRequest itemRq;
+
+                if (item instanceof RequirementPostulantRequest) {
+                    itemRq = (RequirementPostulantRequest) item;
+                } else if (item instanceof Map) {
+                    itemRq = mapper.convertValue(item, RequirementPostulantRequest.class);
+                } else {
+                    throw new IllegalArgumentException("Tipo de objeto no compatible: " + item.getClass());
+                }
+
                 tvpRqPostulant.addRow(
                         indice,
                         itemRq.getIdRQ(),
@@ -76,7 +89,7 @@ public class PostulantRepository {
                 indice++;
             }
         } catch (Exception e) {
-            System.err.println("Error en TVP RequirementIds");
+            System.err.println("Error en TVP RequirementPostulants");
             System.err.println(e.getMessage());
         }
 

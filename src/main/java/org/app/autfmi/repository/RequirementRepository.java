@@ -187,6 +187,7 @@ public class RequirementRepository {
                 .addValue("ID_DURACION", request.getIdDuracion())
                 .addValue("DURACION", request.getDuracion())
                 .addValue("FECHA_VENCIMIENTO", request.getFechaVencimiento())
+                .addValue("ID_MODALIDAD", request.getIdModalidad())
                 .addValue("LST_CONTACTOS", request.getLstContactos())
                 .addValue("LST_VACANTES", tvpRqVacantes)
                 .addValue("LST_ARCHIVOS", tvpRqFiles)
@@ -228,6 +229,7 @@ public class RequirementRepository {
                 .addValue("ID_DURACION", request.getIdDuracion())
                 .addValue("DURACION", request.getDuracion())
                 .addValue("FECHA_VENCIMIENTO", request.getFechaVencimiento())
+                .addValue("ID_MODALIDAD", request.getIdModalidad())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -459,6 +461,7 @@ public class RequirementRepository {
                 (Integer) requirement.get("VACANTES"),
                 (String) requirement.get("DURACION"),
                 (String) requirement.get("FECHA_VENCIMIENTO"),
+                (String) requirement.get("MODALIDAD"),
                 perfiles
         );
     }
@@ -476,6 +479,8 @@ public class RequirementRepository {
                 (Integer) requerimiento.get("ID_DURACION"),
                 (String) requerimiento.get("DURACION"),
                 (Date) requerimiento.get("FECHA_VENCIMIENTO"),
+                (Integer) requerimiento.get("ID_MODALIDAD"),
+                (String) requerimiento.get("MODALIDAD"),
                 lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles

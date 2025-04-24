@@ -20,6 +20,7 @@ public class RequirementRequest {
     private Integer idDuracion;
     private Double duracion;
     private String fechaVencimiento;
+    private Integer idModalidad;
     private String lstContactos;
     private List<VacanteRequirement> lstVacantes;
     @JsonProperty()

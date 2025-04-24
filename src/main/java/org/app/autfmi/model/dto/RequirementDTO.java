@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class RequirementDTO {
     private String estado;
     private Integer vacantes;
     private Integer idDuracion;
-    private String duracion;
+    private BigDecimal duracion;
     private Date fechaVencimiento;
     private Integer idModalidad;
     private String modalidad;

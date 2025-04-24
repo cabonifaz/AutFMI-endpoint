@@ -477,7 +477,7 @@ public class RequirementRepository {
                 (String) requerimiento.get("ESTADO"),
                 (Integer) requerimiento.get("VACANTES"),
                 (Integer) requerimiento.get("ID_DURACION"),
-                (String) requerimiento.get("DURACION"),
+                (BigDecimal) requerimiento.get("DURACION"),
                 (Date) requerimiento.get("FECHA_VENCIMIENTO"),
                 (Integer) requerimiento.get("ID_MODALIDAD"),
                 (String) requerimiento.get("MODALIDAD"),

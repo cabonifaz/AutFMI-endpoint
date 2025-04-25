@@ -588,4 +588,13 @@ public class RequirementRepository {
         );
     }
 
+
+    @Async
+    public void updateRequirementAlertJob() {
+        System.out.println("Ejecutando SP de alertas JOB");
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_ALERTA_JOB");
+        simpleJdbcCall.execute();
+    }
+
 }

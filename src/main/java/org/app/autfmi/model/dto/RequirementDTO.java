@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -15,14 +16,14 @@ public class RequirementDTO {
     private Integer idCliente;
     private String cliente;
     private String codigoRQ;
-    private Date fechaSolicitud;
+    private String fechaSolicitud;
     private String descripcion;
     private Integer idEstado;
     private String estado;
     private Integer vacantes;
     private Integer idDuracion;
     private BigDecimal duracion;
-    private Date fechaVencimiento;
+    private String fechaVencimiento;
     private Integer idModalidad;
     private String modalidad;
     private List<RequirementVacanteDTO> lstRqVacantes;

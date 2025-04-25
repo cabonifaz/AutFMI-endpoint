@@ -462,6 +462,7 @@ public class RequirementRepository {
                 (String) requirement.get("DURACION"),
                 (String) requirement.get("FECHA_VENCIMIENTO"),
                 (String) requirement.get("MODALIDAD"),
+                (Integer) requirement.get("ID_ALERTA"),
                 perfiles
         );
     }

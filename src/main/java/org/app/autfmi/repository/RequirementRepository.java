@@ -75,7 +75,13 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse getRequirementById(Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList, BaseRequest baseRequest) {
+    public BaseResponse getRequirementById(
+            Integer idRequerimiento,
+            Boolean showfiles,
+            Boolean showVacantesList,
+            Boolean showContactList,
+            BaseRequest baseRequest
+    ) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_SEL");
 
@@ -163,7 +169,35 @@ public class RequirementRepository {
                         }
                     }
 
-                    return new RequirementResponse(idTipoMensaje, mensaje, mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes));
+                    List<ClientContactItemDTO> lstContactos = new ArrayList<>();
+                    if (showContactList) {
+                        List<Map<String, Object>> resultSet6 = (List<Map<String, Object>>) result.get("#result-set-6");
+
+                        if (resultSet6 != null && !resultSet6.isEmpty()) {
+                            for (Map<String, Object> contacto : resultSet6) {
+                                ClientContactItemDTO itemContacto = new ClientContactItemDTO(
+                                        (Integer) contacto.get("ID_CLIENTE_CONTACTO"),
+                                        (String) contacto.get("NOMBRES"),
+                                        (String) contacto.get("APELLIDO_PATERNO"),
+                                        (String) contacto.get("APELLIDO_MATERNO"),
+                                        (String) contacto.get("CARGO"),
+                                        (String) contacto.get("TELEFONO"),
+                                        (String) contacto.get("TELEFONO_2"),
+                                        (String) contacto.get("CORREO"),
+                                        (String) contacto.get("CORREO_2"),
+                                        (Integer) contacto.get("ASIGNADO")
+                                );
+
+                                lstContactos.add(itemContacto);
+                            }
+                        }
+                    }
+
+                    return new RequirementResponse(
+                            idTipoMensaje,
+                            mensaje,
+                            mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes, lstContactos)
+                    );
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -467,7 +501,13 @@ public class RequirementRepository {
         );
     }
 
-    private RequirementDTO mapToRequirementDTO(Map<String, Object> requerimiento, List<RequirementTalentDTO> lstRqTalents, List<RequirementFileDTO> lstRqFiles, List<RequirementVacanteDTO> lstRqVacantes) {
+    private RequirementDTO mapToRequirementDTO(
+            Map<String, Object> requerimiento,
+            List<RequirementTalentDTO> lstRqTalents,
+            List<RequirementFileDTO> lstRqFiles,
+            List<RequirementVacanteDTO> lstRqVacantes,
+            List<ClientContactItemDTO> lstContactos
+    ) {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
@@ -484,7 +524,8 @@ public class RequirementRepository {
                 (String) requerimiento.get("MODALIDAD"),
                 lstRqVacantes,
                 lstRqTalents,
-                lstRqFiles
+                lstRqFiles,
+                lstContactos
         );
     }
 

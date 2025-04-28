@@ -17,5 +17,5 @@ public class ClientContactItemDTO {
     private String telefono2;
     private String correo;
     private String correo2;
-    private Integer idEstadoContacto;
+    private Integer asignado;
 }

@@ -174,7 +174,10 @@ public class ClientRepository {
                     .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                     .addValue("USUARIO", baseRequest.getUsername())
                     .addValue("ID_ROL", baseRequest.getIdRol())
-                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+
+                    .addValue("FLAG_CONFIRMAR", contacto.getFlagConfirmar())
+                    .addValue("ID_RQ", contacto.getIdRq());
 
             Map<String, Object> result = simpleJdbcCall.execute(params);
 

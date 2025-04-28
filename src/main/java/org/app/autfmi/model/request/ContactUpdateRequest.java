@@ -15,4 +15,6 @@ public class ContactUpdateRequest {
     private String telefono2;
     private String correo;
     private String correo2;
+    private Integer flagConfirmar;
+    private Integer idRq;
 }

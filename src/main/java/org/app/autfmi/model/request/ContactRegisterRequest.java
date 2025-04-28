@@ -13,7 +13,9 @@ public class ContactRegisterRequest {
     private String apellidoMaterno;
     private String cargo;
     private String telefono;
+    private String telefono2;
     private String correo;
+    private String correo2;
     private int flagConfirmar;
     @JsonProperty()
     private int idRq;

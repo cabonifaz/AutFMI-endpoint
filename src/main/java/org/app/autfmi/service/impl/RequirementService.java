@@ -44,7 +44,7 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse updateRequirement(String token, RequirementRequest request) {
+    public BaseResponse updateRequirement(String token, RequirementRequest request) throws SQLServerException {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);

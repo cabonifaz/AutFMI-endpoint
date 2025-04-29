@@ -248,9 +248,11 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest) {
+    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_UPD");
+
+        SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantesUpdate(request.getLstVacantes());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
@@ -264,6 +266,7 @@ public class RequirementRepository {
                 .addValue("DURACION", request.getDuracion())
                 .addValue("FECHA_VENCIMIENTO", request.getFechaVencimiento())
                 .addValue("ID_MODALIDAD", request.getIdModalidad())
+                .addValue("LST_VACANTES", tvpRqVacantes)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -561,6 +564,25 @@ public class RequirementRepository {
             tvpRqVacantes.addRow(
                     vacanteRequirement.getIdPerfil(),
                     vacanteRequirement.getCantidad()
+            );
+        }
+
+        return tvpRqVacantes;
+    }
+
+    private static SQLServerDataTable loadTvpRequirementVacantesUpdate(List<VacanteRequirement> lstVacantes) throws SQLServerException {
+        SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
+        tvpRqVacantes.addColumnMetadata("ID_REQUERIMIENTO_VACANTE", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("ID_ESTADO", Types.INTEGER);
+
+        for (VacanteRequirement vacanteRequirement : lstVacantes) {
+            tvpRqVacantes.addRow(
+                    vacanteRequirement.getIdRequerimientoVacante(),
+                    vacanteRequirement.getIdPerfil(),
+                    vacanteRequirement.getCantidad(),
+                    vacanteRequirement.getIdEstado()
             );
         }
 

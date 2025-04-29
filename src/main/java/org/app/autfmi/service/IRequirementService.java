@@ -16,7 +16,7 @@ public interface IRequirementService {
 
     BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException;
 
-    BaseResponse updateRequirement(String token, RequirementRequest request);
+    BaseResponse updateRequirement(String token, RequirementRequest request) throws SQLServerException;
 
 
     BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException;

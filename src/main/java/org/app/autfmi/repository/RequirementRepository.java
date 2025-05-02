@@ -498,6 +498,7 @@ public class RequirementRepository {
                 (Integer) requirement.get("ID_ESTADO"),
                 (String) requirement.get("ESTADO"),
                 (Integer) requirement.get("VACANTES"),
+                (Integer) requirement.get("VACANTES_CUBIERTAS"),
                 (String) requirement.get("DURACION"),
                 (String) requirement.get("FECHA_VENCIMIENTO"),
                 (String) requirement.get("MODALIDAD"),

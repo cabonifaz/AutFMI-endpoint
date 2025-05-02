@@ -344,7 +344,9 @@ public class RequirementRepository {
                         }
 
                         //ENVIAR CORREO
-                        mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
+                        if (request.getFlagCorreo()){
+                            mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
+                        }
                     }
                 }
             }

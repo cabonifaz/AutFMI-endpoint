@@ -65,11 +65,11 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse getRequirementTalentData(String token, Integer idTalento) {
+    public BaseResponse getRequirementTalentData(String token, Integer idTalento, Integer idRequerimiento) {
         UserDTO user = jwt.decodeToken(token);
         String funcionalidades = Constante.MOSTRAR_DATOS_TALENTO;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        return requirementRepository.getRequirementTalentData(baseRequest, idTalento);
+        return requirementRepository.getRequirementTalentData(baseRequest, idTalento, idRequerimiento);
     }
 
 

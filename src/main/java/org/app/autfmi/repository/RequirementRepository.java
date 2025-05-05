@@ -356,12 +356,13 @@ public class RequirementRepository {
         }
     }
 
-    public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento) {
+    public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_TALENTO_REQUERIMIENTO_SEL");
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_TALENTO", idTalento)
+                .addValue("ID_REQUERIMIENTO", idRequerimiento)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -401,6 +402,7 @@ public class RequirementRepository {
                 (String) talentoRQ.get("EMAIL"),
                 (Integer) talentoRQ.get("ID_SITUACION"),
                 (String) talentoRQ.get("SITUACION"),
+                (String) talentoRQ.get("TOOL_TIP"),
                 (Integer) talentoRQ.get("ID_ESTADO"),
                 (String) talentoRQ.get("ESTADO")
         );

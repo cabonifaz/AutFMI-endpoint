@@ -121,11 +121,12 @@ public class RequirementController {
     @GetMapping("/talents/data")
     public ResponseEntity<BaseResponse> getRequirementTalentData(
             @RequestParam Integer idTalento,
+            @RequestParam Integer idRequerimiento,
             HttpServletRequest httpServletRequest
     ) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = requirementService.getRequirementTalentData(token, idTalento);
+            BaseResponse response = requirementService.getRequirementTalentData(token, idTalento, idRequerimiento);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

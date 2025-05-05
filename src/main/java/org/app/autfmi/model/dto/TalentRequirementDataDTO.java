@@ -16,6 +16,7 @@ public class TalentRequirementDataDTO {
     private String email;
     private Integer idSituacion;
     private String situacion;
+    private String tooltip;
     private Integer idEstado;
     private String estado;
 }

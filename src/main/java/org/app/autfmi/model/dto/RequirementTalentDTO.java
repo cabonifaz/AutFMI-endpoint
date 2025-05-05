@@ -21,4 +21,5 @@ public class RequirementTalentDTO {
     private Integer idPerfil;
     private String perfil;
     private boolean confirmado;
+    private String tooltip;
 }

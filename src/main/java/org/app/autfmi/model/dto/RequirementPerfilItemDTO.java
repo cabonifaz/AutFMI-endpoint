@@ -10,4 +10,6 @@ import lombok.NoArgsConstructor;
 public class RequirementPerfilItemDTO {
     private int idPerfil;
     private String perfil;
+    private int vacantesTotales;
+    private int vacantesCubiertas;
 }

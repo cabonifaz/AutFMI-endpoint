@@ -75,7 +75,13 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse getRequirementById(Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList, BaseRequest baseRequest) {
+    public BaseResponse getRequirementById(
+            Integer idRequerimiento,
+            Boolean showfiles,
+            Boolean showVacantesList,
+            Boolean showContactList,
+            BaseRequest baseRequest
+    ) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_SEL");
 
@@ -163,7 +169,35 @@ public class RequirementRepository {
                         }
                     }
 
-                    return new RequirementResponse(idTipoMensaje, mensaje, mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes));
+                    List<ClientContactItemDTO> lstContactos = new ArrayList<>();
+                    if (showContactList) {
+                        List<Map<String, Object>> resultSet6 = (List<Map<String, Object>>) result.get("#result-set-6");
+
+                        if (resultSet6 != null && !resultSet6.isEmpty()) {
+                            for (Map<String, Object> contacto : resultSet6) {
+                                ClientContactItemDTO itemContacto = new ClientContactItemDTO(
+                                        (Integer) contacto.get("ID_CLIENTE_CONTACTO"),
+                                        (String) contacto.get("NOMBRES"),
+                                        (String) contacto.get("APELLIDO_PATERNO"),
+                                        (String) contacto.get("APELLIDO_MATERNO"),
+                                        (String) contacto.get("CARGO"),
+                                        (String) contacto.get("TELEFONO"),
+                                        (String) contacto.get("TELEFONO_2"),
+                                        (String) contacto.get("CORREO"),
+                                        (String) contacto.get("CORREO_2"),
+                                        (Integer) contacto.get("ASIGNADO")
+                                );
+
+                                lstContactos.add(itemContacto);
+                            }
+                        }
+                    }
+
+                    return new RequirementResponse(
+                            idTipoMensaje,
+                            mensaje,
+                            mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes, lstContactos)
+                    );
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -214,9 +248,11 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest) {
+    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_UPD");
+
+        SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantesUpdate(request.getLstVacantes());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
@@ -230,6 +266,7 @@ public class RequirementRepository {
                 .addValue("DURACION", request.getDuracion())
                 .addValue("FECHA_VENCIMIENTO", request.getFechaVencimiento())
                 .addValue("ID_MODALIDAD", request.getIdModalidad())
+                .addValue("LST_VACANTES", tvpRqVacantes)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -307,7 +344,9 @@ public class RequirementRepository {
                         }
 
                         //ENVIAR CORREO
-                        mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
+                        if (request.getFlagCorreo()){
+                            mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
+                        }
                     }
                 }
             }
@@ -459,6 +498,7 @@ public class RequirementRepository {
                 (Integer) requirement.get("ID_ESTADO"),
                 (String) requirement.get("ESTADO"),
                 (Integer) requirement.get("VACANTES"),
+                (Integer) requirement.get("VACANTES_CUBIERTAS"),
                 (String) requirement.get("DURACION"),
                 (String) requirement.get("FECHA_VENCIMIENTO"),
                 (String) requirement.get("MODALIDAD"),
@@ -467,7 +507,13 @@ public class RequirementRepository {
         );
     }
 
-    private RequirementDTO mapToRequirementDTO(Map<String, Object> requerimiento, List<RequirementTalentDTO> lstRqTalents, List<RequirementFileDTO> lstRqFiles, List<RequirementVacanteDTO> lstRqVacantes) {
+    private RequirementDTO mapToRequirementDTO(
+            Map<String, Object> requerimiento,
+            List<RequirementTalentDTO> lstRqTalents,
+            List<RequirementFileDTO> lstRqFiles,
+            List<RequirementVacanteDTO> lstRqVacantes,
+            List<ClientContactItemDTO> lstContactos
+    ) {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
@@ -484,7 +530,8 @@ public class RequirementRepository {
                 (String) requerimiento.get("MODALIDAD"),
                 lstRqVacantes,
                 lstRqTalents,
-                lstRqFiles
+                lstRqFiles,
+                lstContactos
         );
     }
 
@@ -520,6 +567,25 @@ public class RequirementRepository {
             tvpRqVacantes.addRow(
                     vacanteRequirement.getIdPerfil(),
                     vacanteRequirement.getCantidad()
+            );
+        }
+
+        return tvpRqVacantes;
+    }
+
+    private static SQLServerDataTable loadTvpRequirementVacantesUpdate(List<VacanteRequirement> lstVacantes) throws SQLServerException {
+        SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
+        tvpRqVacantes.addColumnMetadata("ID_REQUERIMIENTO_VACANTE", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("ID_ESTADO", Types.INTEGER);
+
+        for (VacanteRequirement vacanteRequirement : lstVacantes) {
+            tvpRqVacantes.addRow(
+                    vacanteRequirement.getIdRequerimientoVacante(),
+                    vacanteRequirement.getIdPerfil(),
+                    vacanteRequirement.getCantidad(),
+                    vacanteRequirement.getIdEstado()
             );
         }
 

@@ -12,11 +12,11 @@ public interface IRequirementService {
 
     BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado);
 
-    BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList);
+    BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList, Boolean showContactList);
 
     BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException;
 
-    BaseResponse updateRequirement(String token, RequirementRequest request);
+    BaseResponse updateRequirement(String token, RequirementRequest request) throws SQLServerException;
 
 
     BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request) throws SQLServerException;

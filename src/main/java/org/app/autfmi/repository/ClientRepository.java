@@ -97,7 +97,9 @@ public class ClientRepository {
                                 (String) clientContactRow.get("APELLIDO_MATERNO"),
                                 (String) clientContactRow.get("CARGO"),
                                 (String) clientContactRow.get("TELEFONO"),
+                                (String) clientContactRow.get("TELEFONO_2"),
                                 (String) clientContactRow.get("CORREO"),
+                                (String) clientContactRow.get("CORREO_2"),
                                 (Integer) clientContactRow.get("ID_ESTADO_CONTACTO")
                         );
 
@@ -123,7 +125,9 @@ public class ClientRepository {
                     .addValue("APELLIDO_MATERNO",contacto.getApellidoMaterno())
                     .addValue("CARGO",contacto.getCargo())
                     .addValue("TELEFONO",contacto.getTelefono())
+                    .addValue("TELEFONO_2",contacto.getTelefono2())
                     .addValue("CORREO",contacto.getCorreo())
+                    .addValue("CORREO_2",contacto.getCorreo2())
 
                     .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                     .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
@@ -162,13 +166,18 @@ public class ClientRepository {
                     .addValue("APELLIDO_MATERNO",contacto.getApellidoMaterno())
                     .addValue("CARGO",contacto.getCargo())
                     .addValue("TELEFONO",contacto.getTelefono())
+                    .addValue("TELEFONO_2",contacto.getTelefono2())
                     .addValue("CORREO",contacto.getCorreo())
+                    .addValue("CORREO_2",contacto.getCorreo2())
 
                     .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                     .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                     .addValue("USUARIO", baseRequest.getUsername())
                     .addValue("ID_ROL", baseRequest.getIdRol())
-                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+                    .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+
+                    .addValue("FLAG_CONFIRMAR", contacto.getFlagConfirmar())
+                    .addValue("ID_RQ", contacto.getIdRq());
 
             Map<String, Object> result = simpleJdbcCall.execute(params);
 

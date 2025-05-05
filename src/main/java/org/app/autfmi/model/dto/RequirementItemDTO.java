@@ -17,6 +17,7 @@ public class RequirementItemDTO {
     private Integer idEstado;
     private String estado;
     private Integer vacantes;
+    private Integer vacantesCubiertas;
     private String duracion;
     private String fechaVencimiento;
     private String modalidad;

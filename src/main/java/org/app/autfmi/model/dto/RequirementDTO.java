@@ -27,4 +27,5 @@ public class RequirementDTO {
     private List<RequirementVacanteDTO> lstRqVacantes;
     private List<RequirementTalentDTO> lstRqTalento;
     private List<RequirementFileDTO> lstRqArchivo;
+    private List<ClientContactItemDTO> lstRqContactos;
 }

@@ -9,5 +9,6 @@ import java.util.List;
 @AllArgsConstructor
 public class RequirementTalentRequest {
     private Integer idRequerimiento;
+    private Boolean flagCorreo;
     private List<RequirementTalentRequestDTO> lstTalentos;
 }

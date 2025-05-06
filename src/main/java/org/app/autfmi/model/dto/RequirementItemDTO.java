@@ -12,6 +12,7 @@ import java.util.List;
 public class RequirementItemDTO {
     private Integer idRequerimiento;
     private String cliente;
+    private String titulo;
     private String codigoRQ;
     private String fechaSolicitud;
     private Integer idEstado;

@@ -498,6 +498,7 @@ public class RequirementRepository {
         return new RequirementItemDTO(
                 (Integer) requirement.get("ID_REQUERIMIENTO"),
                 (String) requirement.get("CLIENTE"),
+                (String) requirement.get("TITULO"),
                 (String) requirement.get("CODIGO_RQ"),
                 (String) requirement.get("FECHA_SOLICITUD"),
                 (Integer) requirement.get("ID_ESTADO"),

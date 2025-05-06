@@ -10,7 +10,7 @@ import java.util.Date;
 
 public interface IRequirementService {
 
-    BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado);
+    BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar, Date fechaSolicitud, Integer estado);
 
     BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList, Boolean showContactList);
 

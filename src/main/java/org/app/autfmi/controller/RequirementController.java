@@ -26,13 +26,13 @@ public class RequirementController {
             @RequestParam @Nullable Integer nPag,
             @RequestParam @Nullable Integer cPag,
             @RequestParam @Nullable Integer idCliente,
-            @RequestParam @Nullable String codigoRQ,
+            @RequestParam @Nullable String buscar,
             @RequestParam @Nullable Date fechaSolicitud,
             @RequestParam @Nullable Integer estado,
             HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = requirementService.listRequirements(token, nPag, cPag, idCliente, codigoRQ, fechaSolicitud, estado);
+            BaseResponse response = requirementService.listRequirements(token, nPag, cPag, idCliente, buscar, fechaSolicitud, estado);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

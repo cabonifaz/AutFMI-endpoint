@@ -22,10 +22,10 @@ public class RequirementService implements IRequirementService {
     private final JwtHelper jwt;
 
     @Override
-    public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
+    public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar, Date fechaSolicitud, Integer estado) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
-        return requirementRepository.listRequirements(baseRequest, nPag, cPag, idCliente, codigoRQ, fechaSolicitud, estado);
+        return requirementRepository.listRequirements(baseRequest, nPag, cPag, idCliente, buscar, fechaSolicitud, estado);
     }
 
     @Override

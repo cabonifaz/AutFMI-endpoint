@@ -12,6 +12,7 @@ public class RequirementRequest {
     private Integer idRequerimiento;
     private Integer idCliente;
     private String cliente;
+    private String titulo;
     private String codigoRQ;
     private String fechaSolicitud;
     private String descripcion;

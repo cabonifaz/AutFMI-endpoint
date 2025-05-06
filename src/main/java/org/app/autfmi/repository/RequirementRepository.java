@@ -35,13 +35,13 @@ public class RequirementRepository {
     private final JdbcTemplate jdbcTemplate;
     private final MailUtils mailUtils;
 
-    public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente, String codigoRQ, Date fechaSolicitud, Integer estado) {
+    public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente, String buscar, Date fechaSolicitud, Integer estado) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", idCliente)
-                .addValue("CODIGO_RQ", codigoRQ)
+                .addValue("BUSCAR", buscar)
                 .addValue("FECHA_SOLICITUD", fechaSolicitud)
                 .addValue("ESTADO", estado)
                 .addValue("NUM_PAG", nPag)
@@ -214,6 +214,7 @@ public class RequirementRepository {
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", request.getIdCliente())
                 .addValue("CLIENTE", request.getCliente())
+                .addValue("TITULO", request.getTitulo())
                 .addValue("CODIGO_RQ", request.getCodigoRQ())
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
                 .addValue("DESCRIPCION", request.getDescripcion())
@@ -259,6 +260,7 @@ public class RequirementRepository {
                 .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
                 .addValue("ID_CLIENTE", request.getIdCliente())
                 .addValue("CLIENTE", request.getCliente())
+                .addValue("TITULO", request.getTitulo())
                 .addValue("CODIGO_RQ", request.getCodigoRQ())
                 .addValue("FECHA_SOLICITUD", request.getFechaSolicitud())
                 .addValue("DESCRIPCION", request.getDescripcion())
@@ -520,6 +522,7 @@ public class RequirementRepository {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
+                (String) requerimiento.get("TITULO"),
                 (String) requerimiento.get("CODIGO_RQ"),
                 requerimiento.get("FECHA_SOLICITUD").toString(),
                 (String) requerimiento.get("DESCRIPCION"),

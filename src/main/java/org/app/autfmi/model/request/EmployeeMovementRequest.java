@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class EmployeeMovementRequest {
-    private Integer idUsuarioTalento;
+    private Integer idTalento;
     private String nombres;
     private String apellidoPaterno;
     private String apellidoMaterno;
@@ -27,6 +27,6 @@ public class EmployeeMovementRequest {
     private String puesto;
     private Integer idMovArea;
     private String movArea;
-    private String jornada;
+    private String horario;
     private String fchMovimiento;
 }

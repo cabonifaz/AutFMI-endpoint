@@ -10,13 +10,11 @@ import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.util.Common;
-import org.app.autfmi.util.Constante;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -45,38 +43,33 @@ public class HistoryRepository {
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
-        String usernameUsuarioMovimiento = request.getNombres().charAt(0) + request.getApellidoPaterno().trim().toLowerCase();
-        String correoUsuarioMovimiento = usernameUsuarioMovimiento + Constante.DOMINIO_CORREO;
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_TALENTO_EMPLEADO_MOVIMIENTO", params -> params
+                .addValue("ID_TALENTO", request.getIdTalento())
+                .addValue("NOMBRES", request.getNombres())
+                .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
+                .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
 
-        Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_UPD", params -> {
-            params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
-                    .addValue("NOMBRES", request.getNombres())
-                    .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
-                    .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
+                .addValue("ID_AREA", request.getIdArea())
+                .addValue("AREA", request.getArea())
+                .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
+                .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
+                .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
+                .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
 
-                    .addValue("ID_AREA", request.getIdArea())
-                    .addValue("AREA", request.getArea())
-                    .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
-                    .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
-                    .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
-                    .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
-
-                    .addValue("ID_MODALIDAD", request.getIdModalidad())
-                    .addValue("ID_CLIENTE", request.getIdCliente())
-                    .addValue("CLIENTE", request.getCliente())
-                    .addValue("MONTO_BASE", request.getMontoBase())
-                    .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
-                    .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
-                    .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
-                    .addValue("ID_MONEDA", request.getIdMoneda())
-                    .addValue("PUESTO", request.getPuesto())
-                    .addValue("ID_MOV_AREA", request.getIdMovArea())
-                    .addValue("MOV_AREA", request.getMovArea())
-                    .addValue("JORNADA", request.getJornada())
-                    .addValue("FCH_HISTORIAL", request.getFchMovimiento())
-                    .addValue("USERNAME_EMPLEADO", usernameUsuarioMovimiento)
-                    .addValue("EMAIL_EMPLEADO", correoUsuarioMovimiento);
-        });
+                .addValue("ID_MODALIDAD", request.getIdModalidad())
+                .addValue("ID_CLIENTE", request.getIdCliente())
+                .addValue("CLIENTE", request.getCliente())
+                .addValue("MONTO_BASE", request.getMontoBase())
+                .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
+                .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
+                .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
+                .addValue("ID_MONEDA", request.getIdMoneda())
+                .addValue("PUESTO", request.getPuesto())
+                .addValue("ID_MOV_AREA", request.getIdMovArea())
+                .addValue("MOV_AREA", request.getMovArea())
+                .addValue("HORARIO", request.getHorario())
+                .addValue("FCH_HISTORIAL", request.getFchMovimiento())
+        );
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-2");
 
@@ -103,7 +96,7 @@ public class HistoryRepository {
                 (String) report.get("AREA"),
                 (String) report.get("PUESTO"),
                 (String) report.get("MOV_AREA"),
-                (String) report.get("JORNADA"),
+                (String) report.get("HORARIO"),
                 (String) report.get("FCH_HISTORIAL"),
                 (Double) report.get("MONTO_BASE"),
                 (Double) report.get("MONTO_MOVILIDAD"),
@@ -117,11 +110,8 @@ public class HistoryRepository {
     }
 
     public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
-        String usernameUsuarioCese = request.getNombres().charAt(0) + request.getApellidoPaterno().trim();
-        String correoUsuarioCese = usernameUsuarioCese.toLowerCase() + Constante.DOMINIO_CORREO;
-
-        Map<String, Object> result = executeProcedure(baseRequest, "SP_USUARIOS_EMPLEADOS_CESE", params -> {
-            params.addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_TALENTO_EMPLEADO_CESE", params -> {
+            params.addValue("ID_TALENTO", request.getIdTalento())
                     .addValue("NOMBRES", request.getNombres())
                     .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
                     .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
@@ -129,9 +119,7 @@ public class HistoryRepository {
                     .addValue("ID_CLIENTE", request.getIdCliente())
                     .addValue("CLIENTE", request.getCliente())
                     .addValue("ID_AREA", request.getIdArea())
-                    .addValue("FCH_HISTORIAL", request.getFchCese())
-                    .addValue("USERNAME_EMPLEADO", usernameUsuarioCese.toLowerCase())
-                    .addValue("EMAIL_EMPLEADO", correoUsuarioCese);
+                    .addValue("FCH_HISTORIAL", request.getFchCese());
         });
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -169,29 +157,29 @@ public class HistoryRepository {
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("SP_USUARIOS_EMPLEADOS_INS");
+                .withProcedureName("SP_TALENTO_EMPLEADO_INGRESO");
 
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
-        String usernameUsuarioIngreso = request.getNombres().charAt(0) + request.getApellidoPaterno().trim();
-        String correoUsuarioIngreso = usernameUsuarioIngreso.toLowerCase() + Constante.DOMINIO_CORREO;
-
         SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
                 .addValue("ID_TALENTO", request.getIdTalento())
-                .addValue("NOMBRES", request.getNombres())
-                .addValue("APELLIDO_PATERNO", request.getApellidoPaterno())
-                .addValue("APELLIDO_MATERNO", request.getApellidoMaterno())
-                // USUARIO EMPLEADO
-                .addValue("ID_USUARIO_TALENTO", request.getIdUsuarioTalento())
+                // TALENTO EMPLEADO
+                .addValue("ID_CLIENTE", request.getIdCliente())
                 .addValue("ID_AREA", request.getIdArea())
                 .addValue("CARGO", request.getCargo())
-                .addValue("ID_CLIENTE", request.getIdCliente())
-                .addValue("HORARIO_TRABAJO", request.getHorarioTrabajo())
                 .addValue("FCH_INICIO_CONTRATO", fchInicioContrato)
                 .addValue("FCH_TERMINO_CONTRATO", fchTerminoContrato)
                 .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
                 .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
+                .addValue("REMUNERACION", request.getRemuneracion())
+                .addValue("ID_TIEMPO_CONTRATO", request.getIdTiempoContrato())
+                .addValue("TIEMPO_CONTRATO", request.getTiempoContrato())
+                .addValue("ID_MODALIDAD_CONTRATO", request.getIdModalidadContrato())
+                .addValue("HORARIO", request.getHorario())
+                .addValue("TIENE_EQUIPO", request.getTieneEquipo())
+                .addValue("UBICACION", request.getUbicacion())
                 // HISTORIAL
                 .addValue("ID_MOTIVO", request.getIdMotivo())
                 .addValue("ID_MONEDA", request.getIdMoneda())
@@ -204,8 +192,6 @@ public class HistoryRepository {
                 .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
                 .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
                 .addValue("FCH_HISTORIAL", request.getFchHistorial())
-                .addValue("USERNAME_EMPLEADO", usernameUsuarioIngreso)
-                .addValue("EMAIL_EMPLEADO", correoUsuarioIngreso)
                 // VALIDAR ROL
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
@@ -241,7 +227,7 @@ public class HistoryRepository {
                 (String) report.get("MODALIDAD"),
                 (String) report.get("MOTIVO"),
                 (String) report.get("CARGO"),
-                (String) report.get("JORNADA"),
+                (String) report.get("HORARIO"),
                 (Double) report.get("MONTO_BASE"),
                 (Double) report.get("MONTO_MOVILIDAD"),
                 (Double) report.get("MONTO_TRIMESTRAL"),

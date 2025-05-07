@@ -134,7 +134,7 @@ public class PDFUtils {
                 .replace("{{modalidad}}", report.getModalidad())
                 .replace("{{motivoIngreso}}", report.getMotivo())
                 .replace("{{cargo}}", report.getCargo())
-                .replace("{{horarioTrabajo}}", report.getHorarioTrabajo())
+                .replace("{{horarioTrabajo}}", report.getHorario())
                 .replace("{{montoBaseIn}}", report.getMontoBase().toString())
                 .replace("{{montoMovilidadIn}}", report.getMontoMovilidad().toString())
                 .replace("{{montoTrimestralIn}}", report.getMontoTrimestral().toString())
@@ -191,7 +191,7 @@ public class PDFUtils {
                 .replace("{{montoTrimestralMov}}", report.getMontoTrimestral().toString())
                 .replace("{{puesto}}", report.getPuesto())
                 .replace("{{area}}", report.getArea())
-                .replace("{{jornada}}", report.getJornada())
+                .replace("{{jornada}}", report.getHorario())
                 .replace("{{fechaMovimiento}}", report.getFechaHistorial())
                 // CESE
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")

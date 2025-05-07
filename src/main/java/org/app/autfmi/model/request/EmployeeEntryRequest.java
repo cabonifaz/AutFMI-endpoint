@@ -6,19 +6,22 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class EmployeeEntryRequest {
+    private Integer idRequerimiento;
     // Employee record
     private Integer idTalento;
-    private String nombres;
-    private String apellidoPaterno;
-    private String apellidoMaterno;
-    private Integer idUsuarioTalento;
     private Integer idArea;
     private String cargo;
-    private String horarioTrabajo;
+    private String horario;
+    private Double remuneracion;
     private String fchInicioContrato;
     private String fchTerminoContrato;
     private String proyectoServicio;
     private String objetoContrato;
+    private Integer idTiempoContrato;
+    private Integer tiempoContrato;
+    private Integer idModalidadContrato;
+    private Integer tieneEquipo;
+    private String ubicacion;
     // History record
     private Integer idModalidad;
     private Integer idMotivo;

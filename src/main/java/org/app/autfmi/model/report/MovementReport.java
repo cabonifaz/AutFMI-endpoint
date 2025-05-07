@@ -15,7 +15,7 @@ public class MovementReport {
     private String unidad;
     private String puesto;
     private String area;
-    private String jornada;
+    private String horario;
     private String fechaHistorial;
     private Double montoBase;
     private Double montoMovilidad;

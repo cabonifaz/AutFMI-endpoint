@@ -17,7 +17,7 @@ public class EntryReport {
     private String modalidad;
     private String motivo;
     private String cargo;
-    private String horarioTrabajo;
+    private String horario;
     private Double montoBase;
     private Double montoMovilidad;
     private Double montoTrimestral;

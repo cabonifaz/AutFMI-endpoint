@@ -50,9 +50,6 @@ public class EmployeeService implements IEmployeeService {
 
             SolicitudData data = new SolicitudData();
 
-            String usernameNuevoUsuario = request.getNombres().charAt(0) + request.getApellidoPaterno().trim();
-            String correoNuevoUsuario = usernameNuevoUsuario.toLowerCase() + Constante.DOMINIO_CORREO;
-
             data.setNombres(report.getNombres());
             data.setApellidos(report.getApellidos());
             data.setArea(report.getUnidad());
@@ -60,8 +57,8 @@ public class EmployeeService implements IEmployeeService {
 
             data.setNombresCreacion(report.getNombres());
             data.setApellidosCreacion(report.getApellidos());
-            data.setNombreUsuarioCreacion(usernameNuevoUsuario.toLowerCase());
-            data.setCorreoCreacion(correoNuevoUsuario);
+            data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
+            data.setCorreoCreacion(report.getEmailEmpleado());
             data.setAreaCreacion(report.getUnidad());
             data.setFirmante(report.getFirmante());
 

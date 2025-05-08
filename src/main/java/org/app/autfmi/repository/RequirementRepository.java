@@ -7,6 +7,8 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
+import org.app.autfmi.model.report.EntryReport;
+import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
@@ -15,6 +17,7 @@ import org.app.autfmi.model.response.TalentRequirementDataResponse;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
+import org.app.autfmi.util.PDFUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -34,6 +37,7 @@ import java.util.Map;
 public class RequirementRepository {
     private final JdbcTemplate jdbcTemplate;
     private final MailUtils mailUtils;
+    private final PDFUtils pdfUtils;
 
     public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente, String buscar, Date fechaSolicitud, Integer estado) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -318,6 +322,8 @@ public class RequirementRepository {
                     List<Map<String, Object>> gestorSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
                     List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS CONFIRMADOS
                     List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
+                    List<Map<String, Object>> gestorIngresoSet = (List<Map<String, Object>>) result.get("#result-set-5"); // GESTOR INGRESO
+                    List<Map<String, Object>> reportSet = (List<Map<String, Object>>) result.get("#result-set-6"); // REPORTES
 
                     if (postulantsSet != null && !postulantsSet.isEmpty() && gestorSet != null && !gestorSet.isEmpty()) {
                         Map<String, Object> gestorRqRow = gestorSet.get(0);
@@ -329,6 +335,9 @@ public class RequirementRepository {
                                 (String) gestorRqRow.get("CLIENTE"),
                                 "Ingreso"
                         );
+
+                        Map<String, Object> gestorIngreso = gestorIngresoSet.get(0);
+                        String correoGestorIngreso = gestorIngreso.get("CORREO").toString();
 
                         List<PostulantDTO> postulantList = new ArrayList<>();
                         if (!postulantsSet.isEmpty()) {
@@ -346,9 +355,54 @@ public class RequirementRepository {
                             }
                         }
 
-                        //ENVIAR CORREO
+                        // ENVIAR CORREO
                         if (request.getFlagCorreo()){
                             mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
+
+                            // ENVIAR CORREO CON REPORTE DE NUEVOS INGRESOS
+                            if (reportSet != null && !reportSet.isEmpty()) {
+                                List<FileDTO> lstfiles = new ArrayList<>();
+                                SolicitudData data = new SolicitudData();
+                                for (Map<String, Object> reportRow : reportSet) {
+                                    EntryReport report = mapToEntryReport(reportRow);
+                                    // FORM FILE
+                                    FileDTO fileFormulario = new FileDTO(
+                                            "FT-GT-12 Formulario de Ingreso",
+                                            pdfUtils.replaceEntryRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),report),
+                                            null
+                                    );
+
+                                    // SOLICITUD FILE
+                                    data.setNombres(report.getNombres());
+                                    data.setApellidos(report.getApellidos());
+                                    data.setArea(report.getUnidad());
+                                    data.setFechaSolicitud(report.getFechaInicioContrato());
+
+                                    data.setNombresCreacion(report.getNombres());
+                                    data.setApellidosCreacion(report.getApellidos());
+                                    data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
+                                    data.setCorreoCreacion(report.getEmailEmpleado());
+                                    data.setAreaCreacion(report.getUnidad());
+                                    data.setFirmante(report.getFirmante());
+
+                                    FileDTO fileSolicitud = new FileDTO(
+                                            "FT-GS-01 Solicitud de Creación de Usuario",
+                                            pdfUtils.replaceSolicitudPDFValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
+                                            null
+                                    );
+
+                                    lstfiles.add(fileFormulario);
+                                    lstfiles.add(fileSolicitud);
+                                }
+
+                                // ENVIAR CORREO CON PDF's
+                                pdfUtils.enviarCorreoConPDF(
+                                        lstfiles,
+                                        correoGestorIngreso,
+                                        "Ingreso de empleado",
+                                        "Formulario de nuevo ingreso de empleado."
+                                );
+                            }
                         }
                     }
                 }
@@ -357,6 +411,34 @@ public class RequirementRepository {
         } catch (Exception e) {
             return new BaseResponse(3, e.getMessage());
         }
+    }
+
+    private EntryReport mapToEntryReport(Map<String, Object> report) {
+        return new EntryReport(
+                null,
+                (String) report.get("NOMBRES"),
+                (String) report.get("APELLIDOS"),
+                (String) report.get("AREA"),
+                (String) report.get("FCH_HISTORIAL"),
+                (String) report.get("MODALIDAD"),
+                (String) report.get("MOTIVO"),
+                (String) report.get("CARGO"),
+                (String) report.get("HORARIO"),
+                (Double) report.get("MONTO_BASE"),
+                (Double) report.get("MONTO_MOVILIDAD"),
+                (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("FCH_INICIO_CONTRATO"),
+                (String) report.get("FCH_TERMINO_CONTRATO"),
+                (String) report.get("PROYECTO_SERVICIO"),
+                (String) report.get("OBJETO_CONTRATO"),
+                (Integer) report.get("DECLARAR_SUNAT"),
+                (String) report.get("SEDE_DECLARAR"),
+                null,
+                (String) report.get("FIRMANTE"),
+                null,
+                (String) report.get("USERNAME_EMPLEADO"),
+                (String) report.get("EMAIL_EMPLEADO")
+        );
     }
 
     public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {
@@ -623,6 +705,32 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("CONFIRMADO", Types.BIT);
 
+        tvpRqTalents.addColumnMetadata("INGRESO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_CLIENTE", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("CLIENTE", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("ID_AREA", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("CARGO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("FCH_INICIO_CONTRATO", Types.TIMESTAMP);
+        tvpRqTalents.addColumnMetadata("FCH_TERMINO_CONTRATO", Types.TIMESTAMP);
+        tvpRqTalents.addColumnMetadata("PROYECTO_SERVICIO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("OBJETO_CONTRATO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("REMUNERACION", Types.DECIMAL);
+        tvpRqTalents.addColumnMetadata("ID_TIEMPO_CONTRATO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("TIEMPO_CONTRATO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_MODALIDAD_CONTRATO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("HORARIO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("TIENE_EQUIPO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("UBICACION", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("ID_MOTIVO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_MONEDA", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ID_MODALIDAD", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("DECLARAR_SUNAT", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("SEDE_DECLARAR", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("MONTO_BASE", Types.DECIMAL);
+        tvpRqTalents.addColumnMetadata("MONTO_MOVILIDAD", Types.DECIMAL);
+        tvpRqTalents.addColumnMetadata("MONTO_TRIMESTRAL", Types.DECIMAL);
+        tvpRqTalents.addColumnMetadata("MONTO_SEMESTRAL", Types.DECIMAL);
+
         int indice = 1;
 
         for (RequirementTalentRequestDTO talentRequest : request.getLstTalentos()) {
@@ -637,7 +745,32 @@ public class RequirementRepository {
                     talentRequest.getIdSituacion(),
                     talentRequest.getIdEstado(),
                     talentRequest.getIdPerfil(),
-                    talentRequest.isConfirmado()? 1 : 0
+                    talentRequest.isConfirmado() ? 1 : 0,
+
+                    talentRequest.getIngreso() != null ? talentRequest.getIngreso() : 0,
+                    talentRequest.getIdCliente(),
+                    talentRequest.getIdArea(),
+                    talentRequest.getCargo(),
+                    talentRequest.getFchInicioContrato(),
+                    talentRequest.getFchTerminoContrato(),
+                    talentRequest.getProyectoServicio(),
+                    talentRequest.getObjetoContrato(),
+                    talentRequest.getRemuneracion(),
+                    talentRequest.getIdTiempoContrato(),
+                    talentRequest.getTiempoContrato(),
+                    talentRequest.getIdModalidadContrato(),
+                    talentRequest.getHorario(),
+                    talentRequest.getTieneEquipo() != null ? talentRequest.getTieneEquipo() : 0,
+                    talentRequest.getUbicacion(),
+                    talentRequest.getIdMotivo(),
+                    talentRequest.getIdMoneda(),
+                    talentRequest.getIdModalidad(),
+                    talentRequest.getDeclararSunat() != null ? talentRequest.getDeclararSunat() : 0,
+                    talentRequest.getSedeDeclarar(),
+                    talentRequest.getMontoBase(),
+                    talentRequest.getMontoMovilidad(),
+                    talentRequest.getMontoTrimestral(),
+                    talentRequest.getMontoSemestral()
             );
 
             indice++;

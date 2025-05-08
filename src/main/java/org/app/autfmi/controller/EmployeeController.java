@@ -95,12 +95,12 @@ public class EmployeeController {
     @GetMapping("/lastHistory")
     public ResponseEntity<FilePDFResponse> getLastHistory(
             @RequestParam Integer idTipoHistorial,
-            @RequestParam Integer idUsuarioTalento,
+            @RequestParam Integer idTalento,
             HttpServletRequest httpServletRequest
     ) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            FilePDFResponse response = employeeService.getLastHistory(token, idTipoHistorial, idUsuarioTalento);
+            FilePDFResponse response = employeeService.getLastHistory(token, idTipoHistorial, idTalento);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (Exception e) {

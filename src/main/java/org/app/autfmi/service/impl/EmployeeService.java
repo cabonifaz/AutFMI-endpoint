@@ -30,8 +30,8 @@ public class EmployeeService implements IEmployeeService {
     private final JwtHelper jwt;
 
     @Override
-    public BaseResponse getEmployee(Integer idUsuarioTalento) {
-        return employeeRepository.getEmployee(idUsuarioTalento);
+    public BaseResponse getEmployee(Integer idTalento) {
+        return employeeRepository.getEmployee(idTalento);
     }
 
     @Override
@@ -194,10 +194,10 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idUsuarioTalento) {
+    public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-        Object report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial, idUsuarioTalento);
+        Object report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial, idTalento);
         String formularioFileB64;
         String solicitudFileB64;
         FilePDFResponse response = new FilePDFResponse();

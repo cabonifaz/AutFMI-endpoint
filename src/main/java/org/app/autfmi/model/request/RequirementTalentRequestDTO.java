@@ -25,16 +25,12 @@ public class RequirementTalentRequestDTO {
     private String fchTerminoContrato;
     private String proyectoServicio;
     private String objetoContrato;
-    private Double remuneracion;
-    private Integer idTiempoContrato;
-    private Integer tiempoContrato;
     private Integer idModalidadContrato;
     private String horario;
     private Integer tieneEquipo;
     private String ubicacion;
     private Integer idMotivo;
     private Integer idMoneda;
-    private Integer idModalidad;
     private Integer declararSunat;
     private String sedeDeclarar;
     private Double montoBase;

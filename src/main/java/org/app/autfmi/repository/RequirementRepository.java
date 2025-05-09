@@ -714,16 +714,12 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("FCH_TERMINO_CONTRATO", Types.TIMESTAMP);
         tvpRqTalents.addColumnMetadata("PROYECTO_SERVICIO", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("OBJETO_CONTRATO", Types.VARCHAR);
-        tvpRqTalents.addColumnMetadata("REMUNERACION", Types.DECIMAL);
-        tvpRqTalents.addColumnMetadata("ID_TIEMPO_CONTRATO", Types.INTEGER);
-        tvpRqTalents.addColumnMetadata("TIEMPO_CONTRATO", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("ID_MODALIDAD_CONTRATO", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("HORARIO", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("TIENE_EQUIPO", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("UBICACION", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("ID_MOTIVO", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("ID_MONEDA", Types.INTEGER);
-        tvpRqTalents.addColumnMetadata("ID_MODALIDAD", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("DECLARAR_SUNAT", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("SEDE_DECLARAR", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("MONTO_BASE", Types.DECIMAL);
@@ -755,16 +751,12 @@ public class RequirementRepository {
                     talentRequest.getFchTerminoContrato(),
                     talentRequest.getProyectoServicio(),
                     talentRequest.getObjetoContrato(),
-                    talentRequest.getRemuneracion(),
-                    talentRequest.getIdTiempoContrato(),
-                    talentRequest.getTiempoContrato(),
                     talentRequest.getIdModalidadContrato(),
                     talentRequest.getHorario(),
                     talentRequest.getTieneEquipo() != null ? talentRequest.getTieneEquipo() : 0,
                     talentRequest.getUbicacion(),
                     talentRequest.getIdMotivo(),
                     talentRequest.getIdMoneda(),
-                    talentRequest.getIdModalidad(),
                     talentRequest.getDeclararSunat() != null ? talentRequest.getDeclararSunat() : 0,
                     talentRequest.getSedeDeclarar(),
                     talentRequest.getMontoBase(),

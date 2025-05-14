@@ -1,7 +1,10 @@
 package org.app.autfmi.model.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
+import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
@@ -17,24 +20,46 @@ public class RequirementTalentRequestDTO {
     private Integer idPerfil;
     private boolean confirmado;
 
+    @JsonProperty()
     private Integer ingreso;
+    @JsonProperty()
     private Integer idCliente;
+    @JsonProperty()
+    private String cliente;
+    @JsonProperty()
     private Integer idArea;
+    @JsonProperty()
     private String cargo;
+    @JsonProperty()
     private String fchInicioContrato;
+    @JsonProperty()
     private String fchTerminoContrato;
+    @JsonProperty()
     private String proyectoServicio;
+    @JsonProperty()
     private String objetoContrato;
+    @JsonProperty()
     private Integer idModalidadContrato;
+    @JsonProperty()
     private String horario;
+    @JsonProperty()
     private Integer tieneEquipo;
+    @JsonProperty()
     private String ubicacion;
+    @JsonProperty()
     private Integer idMotivo;
+    @JsonProperty()
     private Integer idMoneda;
+    @JsonProperty()
     private Integer declararSunat;
+    @JsonProperty()
     private String sedeDeclarar;
-    private Double montoBase;
-    private Double montoMovilidad;
-    private Double montoTrimestral;
-    private Double montoSemestral;
+    @JsonProperty()
+    private BigDecimal montoBase;
+    @JsonProperty()
+    private BigDecimal montoMovilidad;
+    @JsonProperty()
+    private BigDecimal montoTrimestral;
+    @JsonProperty()
+    private BigDecimal montoSemestral;
 }

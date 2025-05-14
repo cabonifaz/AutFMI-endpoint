@@ -24,6 +24,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
+import org.yaml.snakeyaml.scanner.Constant;
 
 import java.math.BigDecimal;
 import java.sql.Types;
@@ -295,6 +296,9 @@ public class RequirementRepository {
 
     public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) {
         try {
+            System.out.println(Constante.TXT_SEPARADOR);
+            System.out.println("INICIO REPOSITORY saveRequirementTalents");
+
             BaseResponse baseResponse = new BaseResponse();
             SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                     .withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
@@ -310,9 +314,12 @@ public class RequirementRepository {
                     .addValue("USUARIO", baseRequest.getUsername())
                     .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
+            System.out.println("EJECUTANDO SP...");
             Map<String, Object> result = simpleJdbcCall.execute(params);
+
             List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
+            System.out.println(resultSet);
             if (resultSet != null && !resultSet.isEmpty()) {
                 Map<String, Object> row = resultSet.get(0);
                 baseResponse.setIdTipoMensaje((Integer) row.get("ID_TIPO_MENSAJE"));
@@ -407,6 +414,9 @@ public class RequirementRepository {
                     }
                 }
             }
+
+            System.out.println("FIN REPOSITORY saveRequirementTalents");
+            System.out.println(Constante.TXT_SEPARADOR);
             return baseResponse;
         } catch (Exception e) {
             return new BaseResponse(3, e.getMessage());
@@ -729,6 +739,8 @@ public class RequirementRepository {
 
         int indice = 1;
 
+        System.out.println("CARGANDO DATOS A TABLA TVP");
+
         for (RequirementTalentRequestDTO talentRequest : request.getLstTalentos()) {
             tvpRqTalents.addRow(
                     indice,
@@ -745,6 +757,7 @@ public class RequirementRepository {
 
                     talentRequest.getIngreso() != null ? talentRequest.getIngreso() : 0,
                     talentRequest.getIdCliente(),
+                    talentRequest.getCliente(),
                     talentRequest.getIdArea(),
                     talentRequest.getCargo(),
                     talentRequest.getFchInicioContrato(),
@@ -767,6 +780,8 @@ public class RequirementRepository {
 
             indice++;
         }
+
+        System.out.println("DATOS CARGADOS, RETORNANDO VALORES DE TVP");
         return tvpRqTalents;
     }
 

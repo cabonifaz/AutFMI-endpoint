@@ -710,8 +710,8 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("CLIENTE", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("ID_AREA", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("CARGO", Types.VARCHAR);
-        tvpRqTalents.addColumnMetadata("FCH_INICIO_CONTRATO", Types.TIMESTAMP);
-        tvpRqTalents.addColumnMetadata("FCH_TERMINO_CONTRATO", Types.TIMESTAMP);
+        tvpRqTalents.addColumnMetadata("FCH_INICIO_CONTRATO", Types.DATE);
+        tvpRqTalents.addColumnMetadata("FCH_TERMINO_CONTRATO", Types.DATE);
         tvpRqTalents.addColumnMetadata("PROYECTO_SERVICIO", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("OBJETO_CONTRATO", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("ID_MODALIDAD_CONTRATO", Types.INTEGER);

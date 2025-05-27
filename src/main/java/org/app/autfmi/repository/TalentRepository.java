@@ -183,13 +183,9 @@ public class TalentRepository {
     }
 
     private TalentItemDTO mapToTalentItemDTO(Map<String, Object> talent) {
-        Boolean esTrabajador = ((Integer) talent.get("ES_TRABAJADOR")) == 1;
-
         return new TalentItemDTO(
-                (Integer) talent.get("ID_USUARIO_TALENTO"),
                 (Integer) talent.get("ID_TALENTO"),
                 (Integer) talent.get("ID_TIPO_HISTORIAL"),
-                esTrabajador,
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),
                 (String) talent.get("MODALIDAD")

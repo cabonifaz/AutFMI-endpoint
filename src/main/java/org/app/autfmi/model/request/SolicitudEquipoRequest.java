@@ -10,7 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SolicitudEquipoRequest {
-    private Integer idUsuarioEmpleado;
+    private Integer idTalento;
     private String nombreEmpleado;
     private String apellidoPaternoEmpleado;
     private String apellidoMaternoEmpleado;

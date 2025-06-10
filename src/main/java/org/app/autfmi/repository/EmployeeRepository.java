@@ -75,7 +75,7 @@ public class EmployeeRepository {
         SQLServerDataTable tvpProductos = getSqlServerDataTable(solicitudEquipoRequest);
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ID_USUARIO_EMPLEADO", solicitudEquipoRequest.getIdUsuarioEmpleado())
+                .addValue("ID_TALENTO", solicitudEquipoRequest.getIdTalento())
                 .addValue("NOMBRE_EMPLEADO", solicitudEquipoRequest.getNombreEmpleado())
                 .addValue("APELLIDO_PATERNO_EMPLEADO", solicitudEquipoRequest.getApellidoPaternoEmpleado())
                 .addValue("APELLIDO_MATERNO_EMPLEADO", solicitudEquipoRequest.getApellidoMaternoEmpleado())

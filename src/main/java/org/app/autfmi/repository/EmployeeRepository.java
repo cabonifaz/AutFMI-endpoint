@@ -24,12 +24,12 @@ import java.util.Map;
 public class EmployeeRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse getEmployee(Integer idUsuarioTalento) {
+    public BaseResponse getEmployee(Integer idTalento) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("SP_USUARIOS_EMPLEADOS_SEL");
+                .withProcedureName("SP_TALENTO_EMPLEADO_SEL");
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ID_USUARIO_TALENTO", idUsuarioTalento);
+                .addValue("ID_TALENTO", idTalento);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
 

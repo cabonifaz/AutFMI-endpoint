@@ -23,9 +23,9 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @GetMapping("/data")
-    public ResponseEntity<BaseResponse> getEmployee(@RequestParam Integer idUsuarioTalento) {
+    public ResponseEntity<BaseResponse> getEmployee(@RequestParam Integer idTalento) {
         try {
-            BaseResponse response = employeeService.getEmployee(idUsuarioTalento);
+            BaseResponse response = employeeService.getEmployee(idTalento);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

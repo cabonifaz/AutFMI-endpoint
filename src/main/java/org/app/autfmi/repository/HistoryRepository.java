@@ -249,7 +249,7 @@ public class HistoryRepository {
         Object report = null;
         Map<String, Object> result = executeProcedure(baseRequest, "SP_HISTORIAL_SEL", params -> {
             params.addValue("ID_TIPO_HISTORIAL", idTipoHistorial)
-                    .addValue("ID_USUARIO_TALENTO", idUsuarioTalento);
+                    .addValue("ID_TALENTO", idUsuarioTalento);
         });
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");

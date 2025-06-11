@@ -12,15 +12,10 @@ public class TalentDTO {
     private String nombres;
     private String apellidoPaterno;
     private String apellidoMaterno;
-    private String telefono;
+    private String celular;
     private String email;
     private String dni;
-    private Integer tiempoContrato;
-    private Integer idTiempoContrato;
-    private String fechaInicioLabores;
     private String cargo;
     private Double remuneracion;
     private Integer idMoneda;
-    private Integer idModalidad;
-    private String ubicacion;
 }

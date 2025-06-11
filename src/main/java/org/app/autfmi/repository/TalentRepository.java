@@ -57,6 +57,7 @@ public class TalentRepository {
     }
 
     public BaseResponse getTalentById(Integer idTalento, BaseRequest baseRequest) {
+        // GET FROM BT_TALENTO
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_USUARIOS_TALENTOS_SEL");
 
@@ -89,6 +90,7 @@ public class TalentRepository {
     }
 
     public BaseResponse saveTalent(TalentRequest talent, BaseRequest baseRequest) {
+        // UPDATE BT_TALENTO, REQ_TALENTO -> CONFIRMADO 0, INGRESO 0
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_USUARIOS_TALENTOS_INS");
 
@@ -168,17 +170,12 @@ public class TalentRepository {
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDO_PATERNO"),
                 (String) talent.get("APELLIDO_MATERNO"),
-                (String) talent.get("TELEFONO"),
+                (String) talent.get("CELULAR"),
                 (String) talent.get("EMAIL"),
                 (String) talent.get("DNI"),
-                (Integer) talent.get("TIEMPO_CONTRATO"),
-                (Integer) talent.get("ID_TIPO_TIEMPO_CONTRATO"),
-                (String) talent.get("FCH_INICIO_LABORES"),
                 (String) talent.get("CARGO"),
                 (Double) talent.get("REMUNERACION"),
-                (Integer) talent.get("ID_TIPO_MONEDA"),
-                (Integer) talent.get("ID_MODALIDAD"),
-                (String) talent.get("UBICACION")
+                (Integer) talent.get("ID_MONEDA")
         );
     }
 
@@ -186,6 +183,7 @@ public class TalentRepository {
         return new TalentItemDTO(
                 (Integer) talent.get("ID_TALENTO"),
                 (Integer) talent.get("ID_TIPO_HISTORIAL"),
+                (Integer) talent.get("ID_EQUIPO_SOLICITUD"),
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),
                 (String) talent.get("MODALIDAD")

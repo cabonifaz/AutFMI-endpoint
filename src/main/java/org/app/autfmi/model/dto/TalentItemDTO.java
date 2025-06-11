@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 public class TalentItemDTO {
     private Integer idTalento;
     private Integer idTipoHistorial;
+    private Integer idEquipoSolicitud;
     private String nombres;
     private String apellidos;
     private String modalidad;

@@ -37,12 +37,19 @@ public class Common {
     }
 
     public static String parseDateToFormDate(String date) {
+        if (date == null || date.isEmpty()) {
+            return "";
+        }
+
+        // Verifica si ya está en el formato dd/MM/yyyy
+        if (date.matches("\\d{2}/\\d{2}/\\d{4}")) {
+            return date;
+        }
+
+        // Formatear desde yyyy-MM-dd a dd/MM/yyyy
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-        if (date != null && !date.isEmpty()) {
-            return LocalDate.parse(date, inputFormatter).format(outputFormatter);
-        }
-        return "";
+        LocalDate parsedDate = LocalDate.parse(date, inputFormatter);
+        return parsedDate.format(outputFormatter);
     }
 }

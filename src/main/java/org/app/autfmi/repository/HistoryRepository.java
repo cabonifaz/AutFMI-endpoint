@@ -67,7 +67,7 @@ public class HistoryRepository {
                 .addValue("FCH_HISTORIAL", request.getFchMovimiento())
         );
 
-        List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-2");
+        List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
 
         if (message != null && !message.isEmpty()) {
             Map<String, Object> row = message.get(0);
@@ -75,7 +75,7 @@ public class HistoryRepository {
             String mensaje = (String) row.get("MENSAJE");
 
             if (idTipoMensaje == 2) {
-                List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-3");
+                List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-2");
                 Map<String, Object> reportRow = report.get(0);
 
                 return mapToMovementReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);

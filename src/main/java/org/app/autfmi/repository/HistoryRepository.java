@@ -1,9 +1,7 @@
 package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
-import org.app.autfmi.model.report.CeseReport;
-import org.app.autfmi.model.report.EntryReport;
-import org.app.autfmi.model.report.MovementReport;
+import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
@@ -245,38 +243,53 @@ public class HistoryRepository {
         );
     }
 
-    public Object getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {
-        Object report = null;
-        Map<String, Object> result = executeProcedure(baseRequest, "SP_HISTORIAL_SEL", params -> {
-            params.addValue("ID_TIPO_HISTORIAL", idTipoHistorial)
-                    .addValue("ID_TALENTO", idTalento);
-        });
+    public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {
+        try {
+            Map<String, Object> result = executeProcedure(baseRequest, "SP_HISTORIAL_SEL", params -> {
+                params.addValue("ID_TIPO_HISTORIAL", idTipoHistorial)
+                        .addValue("ID_TALENTO", idTalento);
+            });
 
-        List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
+            List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (message != null && !message.isEmpty()) {
-            Map<String, Object> row = message.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
+            if (message != null && !message.isEmpty()) {
+                Map<String, Object> row = message.get(0);
+                Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+                String mensaje = (String) row.get("MENSAJE");
 
-            if (idTipoMensaje == 2) {
-                List<Map<String, Object>> reportData = (List<Map<String, Object>>) result.get("#result-set-2");
-                Map<String, Object> reportRow = reportData.get(0);
+                BaseResponse response = new BaseResponse(idTipoMensaje, mensaje);
 
-                switch (idTipoHistorial) {
-                    case 1:
-                        report = mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
-                        break;
-                    case 2:
-                        report = mapToMovementReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
-                        break;
-                    case 3:
-                        report = mapToCeseReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
-                        break;
+                if (idTipoMensaje == 2) {
+                    List<Map<String, Object>> reportData = (List<Map<String, Object>>) result.get("#result-set-2");
+
+                    if (reportData == null || reportData.isEmpty()) {
+                        String tipo = switch (idTipoHistorial) {
+                            case 1 -> "ingreso";
+                            case 2 -> "movimiento";
+                            case 3 -> "cese";
+                            default -> "historial";
+                        };
+
+                        return new BaseReport(new BaseResponse(1, "El talento no tiene reportes de " + tipo + " previos"));
+                    }
+
+                    Map<String, Object> reportRow = reportData.get(0);
+
+                    return switch (idTipoHistorial) {
+                        case 1 -> mapToEntryReport(response, reportRow);
+                        case 2 -> mapToMovementReport(response, reportRow);
+                        case 3 -> mapToCeseReport(response, reportRow);
+                        default -> new BaseReport(response);
+                    };
+                } else {
+                    return new BaseReport(response);
                 }
-                return report;
             }
+
+            return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
+
+        } catch (Exception ex) {
+            return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
         }
-        return null;
     }
 }

@@ -8,7 +8,7 @@ import org.app.autfmi.model.response.BaseResponse;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CeseReport {
+public class CeseReport implements IReport {
     private BaseResponse response;
     private String nombres;
     private String apellidos;

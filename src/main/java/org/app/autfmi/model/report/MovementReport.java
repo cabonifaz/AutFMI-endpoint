@@ -8,7 +8,7 @@ import org.app.autfmi.model.response.BaseResponse;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovementReport {
+public class MovementReport implements IReport {
     private BaseResponse response;
     private String nombres;
     private String apellidos;

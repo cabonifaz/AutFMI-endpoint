@@ -182,7 +182,6 @@ public class TalentRepository {
     private TalentItemDTO mapToTalentItemDTO(Map<String, Object> talent) {
         return new TalentItemDTO(
                 (Integer) talent.get("ID_TALENTO"),
-                (Integer) talent.get("ID_TIPO_HISTORIAL"),
                 (Integer) talent.get("ID_EQUIPO_SOLICITUD"),
                 (String) talent.get("NOMBRES"),
                 (String) talent.get("APELLIDOS"),

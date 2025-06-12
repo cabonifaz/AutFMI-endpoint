@@ -108,7 +108,6 @@ public class EmployeeController {
                     new FilePDFResponse(new BaseResponse(3, e.getMessage()), Collections.emptyList()),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
-
         }
     }
 
@@ -125,6 +124,24 @@ public class EmployeeController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/lastSolicitudEquipo")
+    public ResponseEntity<FilePDFResponse> getLastSolicitudEquipo(
+            HttpServletRequest httpServletRequest,
+            @RequestParam Integer idSolicitudEquipo
+    ) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            FilePDFResponse response = employeeService.getLastSolicitudEquipo(token, idSolicitudEquipo);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (Exception e) {
+            return new ResponseEntity<>(
+                    new FilePDFResponse(new BaseResponse(3, e.getMessage()), Collections.emptyList()),
                     HttpStatus.INTERNAL_SERVER_ERROR
             );
         }

@@ -2,10 +2,7 @@ package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.report.*;
-import org.app.autfmi.model.request.BaseRequest;
-import org.app.autfmi.model.request.EmployeeContractEndRequest;
-import org.app.autfmi.model.request.EmployeeEntryRequest;
-import org.app.autfmi.model.request.EmployeeMovementRequest;
+import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.util.Common;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,6 +11,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -290,6 +288,87 @@ public class HistoryRepository {
 
         } catch (Exception ex) {
             return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
+        }
+    }
+
+    public SolicitudEquipoReport getLastSolicitudEquipo(BaseRequest baseRequest, Integer idSolicitudEquipo) {
+        try {
+            Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_SEL", params -> {
+                params.addValue("ID_EQUIPO_SOLICITUD", idSolicitudEquipo);
+            });
+
+            List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
+            SolicitudEquipoReport report = new SolicitudEquipoReport();
+
+            if (message != null && !message.isEmpty()) {
+                Map<String, Object> row = message.get(0);
+                Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+                String mensaje = (String) row.get("MENSAJE");
+
+                BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
+
+                if (idTipoMensaje == 2) {
+                    List<Map<String, Object>> resultSetSolicitud = (List<Map<String, Object>>) result.get("#result-set-2");
+                    List<Map<String, Object>> resultSetSolicitudSoftwareList = (List<Map<String, Object>>) result.get("#result-set-3");
+                    List<Map<String, Object>> resultSetGestor = (List<Map<String, Object>>) result.get("#result-set-4");
+
+                    boolean validSolicitud = resultSetSolicitud != null && !resultSetSolicitud.isEmpty();
+                    boolean validSoftwareList = resultSetSolicitudSoftwareList != null && !resultSetSolicitudSoftwareList.isEmpty();
+                    boolean validGestor = resultSetGestor != null && !resultSetGestor.isEmpty();
+
+                    if (validSolicitud && validSoftwareList && validGestor) {
+                        Map<String, Object> reportRow = resultSetSolicitud.get(0);
+
+                        // solicitud
+                        report.setNombreEmpleado((String) reportRow.get("NOMBRE_EMPLEADO"));
+                        report.setApellidosEmpleado((String) reportRow.get("APELLIDOS_EMPLEADO"));
+                        report.setCliente((String) reportRow.get("EMPRESA_CLIENTE"));
+                        report.setArea((String) reportRow.get("AREA"));
+                        report.setPuesto((String) reportRow.get("PUESTO"));
+                        report.setFechaSolicitud((String) reportRow.get("FECHA_SOLICITUD"));
+                        report.setFechaEntrega((String) reportRow.get("FECHA_ENTREGA"));
+                        report.setIdTipoEquipo((Integer) reportRow.get("ID_TIPO_EQUIPO"));
+                        report.setProcesador((String) reportRow.get("PROCESADOR"));
+                        report.setRam((String) reportRow.get("RAM"));
+                        report.setHd((String) reportRow.get("HD"));
+                        report.setMarca((String) reportRow.get("MARCA"));
+                        report.setIdAnexo((Integer) reportRow.get("ID_ANEXO"));
+                        report.setCelular((Boolean) reportRow.get("CELULAR"));
+                        report.setInternetMovil((Boolean) reportRow.get("INTERNET_MOVIL"));
+                        report.setAccesorios((String) reportRow.get("ACCESORIOS"));
+
+                        // lista software
+                        List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
+                        for (Map<String, Object> softwareRow : resultSetSolicitudSoftwareList) {
+                            SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
+                            software.setProducto((String) softwareRow.get("PRODUCTO"));
+                            software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
+
+                            lstSoftware.add(software);
+                        }
+
+                        report.setLstSoftware(lstSoftware);
+
+                        // datos gestor
+                        Map<String, Object> gestorRow = resultSetGestor.get(0);
+
+                        report.setCorreoGestor((String) gestorRow.get("EMAIL"));
+                        report.setNombreApellidoGestor((String) gestorRow.get("NOMBRE_APELLIDO_GESTOR"));
+                    }
+                }
+
+                // base response
+                report.setBaseResponse(baseResponse);
+
+                return report;
+            }
+
+            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
+            return report;
+        } catch (Exception ex) {
+            SolicitudEquipoReport report = new SolicitudEquipoReport();
+            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
+            return report;
         }
     }
 }

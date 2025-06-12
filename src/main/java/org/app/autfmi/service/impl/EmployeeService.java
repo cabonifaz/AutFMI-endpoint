@@ -10,6 +10,7 @@ import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
+import org.app.autfmi.model.response.SolicitudEquipoResponse;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
@@ -19,6 +20,7 @@ import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -167,16 +169,18 @@ public class EmployeeService implements IEmployeeService {
     public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws MessagingException, SQLServerException {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
-        SolicitudEquipoReport solicitudEquipoReport = employeeRepository.solicitudEquipo(baseRequest, request);
+        SolicitudEquipoResponse solicitudEquipoResponse = employeeRepository.solicitudEquipo(baseRequest, request);
 
-        if (solicitudEquipoReport != null && solicitudEquipoReport.getBaseResponse().getIdTipoMensaje() == 2) {
+        if (solicitudEquipoResponse != null && solicitudEquipoResponse.getBaseResponse().getIdTipoMensaje() == 2) {
             List<FileDTO> lstfiles = new ArrayList<>();
             String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
-            String nombresApellidos = solicitudEquipoReport.getNombres() + ' ' + solicitudEquipoReport.getApellidos();
+
+            // map request to report
+            SolicitudEquipoReport report = mapToSolicitudEquipoReport(request, solicitudEquipoResponse);
 
             FileDTO fileFormulario = new FileDTO(
                     "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
-                    pdfUtils.replaceSolicitudEquipoPDFValues(template, request, nombresApellidos),
+                    pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
                     null
             );
 
@@ -184,13 +188,41 @@ public class EmployeeService implements IEmployeeService {
 
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
-                    solicitudEquipoReport.getCorreoGestor(),
+                    solicitudEquipoResponse.getCorreoGestor(),
                     "Requerimiento de Software y Hardware",
                     "Formulario Requerimiento de Software y Hardware."
             );
         }
 
-        return solicitudEquipoReport.getBaseResponse();
+        return solicitudEquipoResponse.getBaseResponse();
+    }
+
+    private static SolicitudEquipoReport mapToSolicitudEquipoReport(SolicitudEquipoRequest request, SolicitudEquipoResponse solicitudEquipoResponse) {
+        SolicitudEquipoReport report = new SolicitudEquipoReport();
+        // general
+        report.setBaseResponse(solicitudEquipoResponse.getBaseResponse());
+        // datos gestor
+        report.setCorreoGestor(solicitudEquipoResponse.getCorreoGestor());
+        report.setNombreApellidoGestor(solicitudEquipoResponse.getNombres() + ' ' + solicitudEquipoResponse.getApellidos());
+        // datos reporte
+        report.setNombreEmpleado(request.getNombreEmpleado());
+        report.setApellidosEmpleado(request.getApellidoPaternoEmpleado() + ' ' + request.getApellidoMaternoEmpleado());
+        report.setCliente(request.getCliente());
+        report.setArea(request.getArea());
+        report.setPuesto(request.getPuesto());
+        report.setFechaSolicitud(request.getFechaSolicitud());
+        report.setFechaEntrega(request.getFechaEntrega());
+        report.setIdTipoEquipo(request.getIdTipoEquipo());
+        report.setProcesador(request.getProcesador());
+        report.setRam(request.getRam());
+        report.setHd(request.getHd());
+        report.setMarca(request.getMarca());
+        report.setIdAnexo(request.getIdAnexo());
+        report.setCelular(request.getCelular());
+        report.setInternetMovil(request.getInternetMovil());
+        report.setAccesorios(request.getAccesorios());
+        report.setLstSoftware(request.getLstSoftware());
+        return report;
     }
 
     @Override
@@ -285,6 +317,36 @@ public class EmployeeService implements IEmployeeService {
         }
 
         response.setLstArchivos(lstfiles);
+        return response;
+    }
+
+    @Override
+    public FilePDFResponse getLastSolicitudEquipo(String token, Integer idSolicitudEquipo) throws MessagingException {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+        SolicitudEquipoReport report = historyRepository.getLastSolicitudEquipo(baseRequest, idSolicitudEquipo);
+        
+        FilePDFResponse response = new FilePDFResponse();
+        List<FilePDFDTO> lstfiles = new ArrayList<>();
+
+        if (report != null && report.getBaseResponse().getIdTipoMensaje() == 2) {
+            response.setBaseResponse(report.getBaseResponse());
+            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+            String fileName = "FT-GS-03 Formulario de Requerimiento de Software y Hardware";
+
+            String solicitudFileB64 = pdfUtils.filePDFToBase64(
+                    pdfUtils.crearPDF( pdfUtils.replaceSolicitudEquipoPDFValues(template, report), fileName )
+            );
+
+            lstfiles.add(new FilePDFDTO(fileName, solicitudFileB64));
+
+            response.setLstArchivos(lstfiles);
+        } else {
+            BaseResponse baseResponse = new BaseResponse(3, "Error al obtener solicitud");
+            response.setBaseResponse(baseResponse);
+            response.setLstArchivos(Collections.emptyList());
+        }
+
         return response;
     }
 }

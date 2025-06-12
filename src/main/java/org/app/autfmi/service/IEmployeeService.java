@@ -16,5 +16,5 @@ public interface IEmployeeService {
     BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) throws MessagingException;
     BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws MessagingException, SQLServerException;
     FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento);
-
+    FilePDFResponse getLastSolicitudEquipo(String token, Integer idSolicitudEquipo) throws MessagingException;
 }

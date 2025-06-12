@@ -4,7 +4,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.EmployeeDTO;
-import org.app.autfmi.model.report.SolicitudEquipoReport;
+import org.app.autfmi.model.response.SolicitudEquipoResponse;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
@@ -65,11 +65,11 @@ public class EmployeeRepository {
         );
     }
 
-    public SolicitudEquipoReport solicitudEquipo(BaseRequest baseRequestequest, SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
+    public SolicitudEquipoResponse solicitudEquipo(BaseRequest baseRequestequest, SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_EQUIPO_SOLICITUD_INS");
 
-        SolicitudEquipoReport solicitudEquipoReport = new SolicitudEquipoReport();
+        SolicitudEquipoResponse solicitudEquipoResponse = new SolicitudEquipoResponse();
         BaseResponse baseResponse = new BaseResponse();
 
         SQLServerDataTable tvpProductos = getSqlServerDataTable(solicitudEquipoRequest);
@@ -92,6 +92,7 @@ public class EmployeeRepository {
                 .addValue("RAM", solicitudEquipoRequest.getRam())
                 .addValue("HD", solicitudEquipoRequest.getHd())
                 .addValue("MARCA", solicitudEquipoRequest.getMarca())
+                .addValue("ID_ANEXO", solicitudEquipoRequest.getIdAnexo())
                 .addValue("ANEXO", solicitudEquipoRequest.getAnexo())
                 .addValue("CELULAR", solicitudEquipoRequest.getCelular())
                 .addValue("INTERNET_MOVIL", solicitudEquipoRequest.getInternetMovil())
@@ -113,15 +114,15 @@ public class EmployeeRepository {
             baseResponse.setMensaje((String) row.get("MENSAJE"));
 
             if (baseResponse.getIdTipoMensaje() == 2) {
-                solicitudEquipoReport.setNombres((String) row.get("NOMBRES_FIRMANTE"));
-                solicitudEquipoReport.setApellidos((String) row.get("APELLIDOS_FIRMANTE"));
-                solicitudEquipoReport.setCorreoGestor((String) row.get("EMAIL_FIRMANTE"));
+                solicitudEquipoResponse.setNombres((String) row.get("NOMBRES_FIRMANTE"));
+                solicitudEquipoResponse.setApellidos((String) row.get("APELLIDOS_FIRMANTE"));
+                solicitudEquipoResponse.setCorreoGestor((String) row.get("EMAIL_FIRMANTE"));
             }
         }
 
-        solicitudEquipoReport.setBaseResponse(baseResponse);
+        solicitudEquipoResponse.setBaseResponse(baseResponse);
 
-        return solicitudEquipoReport;
+        return solicitudEquipoResponse;
     }
 
     private static SQLServerDataTable getSqlServerDataTable(SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {

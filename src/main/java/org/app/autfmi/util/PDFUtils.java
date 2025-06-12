@@ -5,10 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.report.CeseReport;
-import org.app.autfmi.model.report.EntryReport;
-import org.app.autfmi.model.report.MovementReport;
-import org.app.autfmi.model.report.SolicitudData;
+import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -274,25 +271,27 @@ public class PDFUtils {
         return htmlTemplate;
     }
 
-    public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoRequest request, String nombreGestor) {
-        String nombresApellidos = request.getNombreEmpleado() + ' ' + request.getApellidoPaternoEmpleado() + ' ' + request.getApellidoMaternoEmpleado();
+    public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoReport report) {
+        String nombresApellidos = report.getNombreEmpleado() + ' ' + report.getApellidosEmpleado();
         String checkboxCheckedSymbol = "X";
 
-        String tipoPc = request.getIdTipoEquipo() == 1 ? checkboxCheckedSymbol : "";
-        String tipoLaptop = request.getIdTipoEquipo() == 2 ? checkboxCheckedSymbol : "";
-        String anexoFijo = request.getIdAnexo() == 1 ? checkboxCheckedSymbol : "";
-        String anexoSoftphone = request.getIdAnexo() == 2 ? checkboxCheckedSymbol : "";
-        String celularSi = request.getCelular() ? checkboxCheckedSymbol : "";
-        String celularNo = !request.getCelular() ? checkboxCheckedSymbol : "";
-        String internetSi = request.getInternetMovil() ? checkboxCheckedSymbol : "";
-        String internetNo = !request.getInternetMovil() ? checkboxCheckedSymbol : "";
+        String tipoPc = report.getIdTipoEquipo() == 1 ? checkboxCheckedSymbol : "";
+        String tipoLaptop = report.getIdTipoEquipo() == 2 ? checkboxCheckedSymbol : "";
+        String anexoFijo = report.getIdAnexo() == 1 ? checkboxCheckedSymbol : "";
+        String anexoSoftphone = report.getIdAnexo() == 2 ? checkboxCheckedSymbol : "";
+        String celularSi = report.getCelular() ? checkboxCheckedSymbol : "";
+        String celularNo = !report.getCelular() ? checkboxCheckedSymbol : "";
+        String internetSi = report.getInternetMovil() ? checkboxCheckedSymbol : "";
+        String internetNo = !report.getInternetMovil() ? checkboxCheckedSymbol : "";
 
         // lista de productos
         List<String> listaProductos = new ArrayList<>();
 
-        for (SolicitudSoftwareRequest requestSoftware: request.getLstSoftware()) {
+        for (int i = 0; i < report.getLstSoftware().size(); i++) {
+            SolicitudSoftwareRequest requestSoftware = report.getLstSoftware().get(i);
+
             listaProductos.add(Constante.LIST_ITEM
-                    .replace("{{numeroItem}}", requestSoftware.getIdItem().toString())
+                    .replace("{{numeroItem}}", String.valueOf(i + 1))
                     .replace("{{producto}}", requestSoftware.getProducto())
                     .replace("{{version}}", requestSoftware.getProdVersion())
             );
@@ -301,27 +300,27 @@ public class PDFUtils {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GS-03 Formulario de Requerimiento de Software y Hardware")
                 .replace("{{apellidosNombres}}", nombresApellidos)
-                .replace("{{cliente}}", request.getCliente())
-                .replace("{{area}}", request.getArea())
-                .replace("{{cargo}}", request.getPuesto())
-                .replace("{{fechaSolicitud}}", Common.parseDateToFormDate(request.getFechaSolicitud()))
-                .replace("{{fechaEntrega}}", Common.parseDateToFormDate(request.getFechaEntrega()))
+                .replace("{{cliente}}", report.getCliente())
+                .replace("{{area}}", report.getArea())
+                .replace("{{cargo}}", report.getPuesto())
+                .replace("{{fechaSolicitud}}", Common.parseDateToFormDate(report.getFechaSolicitud()))
+                .replace("{{fechaEntrega}}", Common.parseDateToFormDate(report.getFechaEntrega()))
                 .replace("{{symbolPc}}", tipoPc)
                 .replace("{{symbolLaptop}}", tipoLaptop)
-                .replace("{{procesador}}", request.getProcesador())
-                .replace("{{ram}}", request.getRam())
-                .replace("{{hd}}", request.getHd())
-                .replace("{{marca}}", request.getMarca())
+                .replace("{{procesador}}", report.getProcesador())
+                .replace("{{ram}}", report.getRam())
+                .replace("{{hd}}", report.getHd())
+                .replace("{{marca}}", report.getMarca())
                 .replace("{{symbolFijo}}", anexoFijo)
                 .replace("{{symbolSoftphone}}", anexoSoftphone)
                 .replace("{{symbolCelSi}}", celularSi)
                 .replace("{{symbolCelNo}}", celularNo)
                 .replace("{{symbolIntSi}}", internetSi)
                 .replace("{{symbolIntNo}}", internetNo)
-                .replace("{{accesorios}}", request.getAccesorios())
+                .replace("{{accesorios}}", report.getAccesorios())
                 .replace("{{listaProducto}}", String.join("\n", listaProductos))
-                .replace("{{nombreFirma}}", nombreGestor)
-                .replace("{{nombreGestor}}", nombreGestor);
+                .replace("{{nombreFirma}}", report.getNombreApellidoGestor())
+                .replace("{{nombreGestor}}", report.getNombreApellidoGestor());
 
         return htmlTemplate;
     }

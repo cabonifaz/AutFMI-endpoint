@@ -64,6 +64,7 @@ public class RequirementRepository {
             Map<String, Object> row = resultSet.get(0);
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
             String mensaje = (String) row.get("MENSAJE");
+            Integer totalResult = (Integer) row.get("TOTAL_ELEMENTOS");
 
             if (idTipoMensaje == 2) {
                 List<Map<String, Object>> requirementSet = (List<Map<String, Object>>) result.get("#result-set-2");
@@ -73,7 +74,7 @@ public class RequirementRepository {
                         requirementList.add(mapToRequirementItemDTO(requirementRow));
                     }
                 }
-                return new RequirementListResponse(idTipoMensaje, mensaje, requirementList);
+                return new RequirementListResponse(idTipoMensaje, mensaje, requirementList, totalResult);
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }

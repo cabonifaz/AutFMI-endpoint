@@ -10,9 +10,11 @@ import java.util.List;
 @Setter
 public class RequirementListResponse extends BaseResponse{
     private List<RequirementItemDTO> requerimientos;
+    private Integer totalElementos;
 
-    public RequirementListResponse(Integer idTipoMensaje, String mensaje, List<RequirementItemDTO> requerimientos) {
+    public RequirementListResponse(Integer idTipoMensaje, String mensaje, List<RequirementItemDTO> requerimientos, Integer totalElementos) {
         super(idTipoMensaje, mensaje);
         this.requerimientos = requerimientos;
+        this.totalElementos = totalElementos;
     }
 }

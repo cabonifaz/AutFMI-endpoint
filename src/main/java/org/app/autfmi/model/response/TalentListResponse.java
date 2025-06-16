@@ -9,9 +9,11 @@ import java.util.List;
 @Setter
 public class TalentListResponse extends BaseResponse {
     private List<TalentItemDTO> talentos;
+    private Integer totalElementos;
 
-    public TalentListResponse(Integer idTipoMensaje, String mensaje, List<TalentItemDTO> talentos) {
+    public TalentListResponse(Integer idTipoMensaje, String mensaje, List<TalentItemDTO> talentos, Integer totalElementos) {
         super(idTipoMensaje, mensaje);
         this.talentos = talentos;
+        this.totalElementos = totalElementos;
     }
 }

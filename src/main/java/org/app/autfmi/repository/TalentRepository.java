@@ -40,7 +40,8 @@ public class TalentRepository {
             Map<String, Object> row = resultSet.get(0);
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
             String mensaje = (String) row.get("MENSAJE");
-            Integer totalResult = (Integer) row.get("TOTAL_ELEMENTOS");
+            Integer totalElementos = (Integer) row.get("TOTAL_ELEMENTOS");
+            Integer totalPaginas = (Integer) row.get("TOTAL_PAGINAS");
 
             if (idTipoMensaje == 2) {
                 List<Map<String, Object>> talentsSet = (List<Map<String, Object>>) result.get("#result-set-2");
@@ -50,7 +51,7 @@ public class TalentRepository {
                         talentList.add(mapToTalentItemDTO(talentRow));
                     }
                 }
-                return new TalentListResponse(idTipoMensaje, mensaje, talentList, totalResult);
+                return new TalentListResponse(idTipoMensaje, mensaje, talentList, totalElementos, totalPaginas);
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }

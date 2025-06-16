@@ -11,10 +11,12 @@ import java.util.List;
 public class RequirementListResponse extends BaseResponse{
     private List<RequirementItemDTO> requerimientos;
     private Integer totalElementos;
+    private Integer totalPaginas;
 
-    public RequirementListResponse(Integer idTipoMensaje, String mensaje, List<RequirementItemDTO> requerimientos, Integer totalElementos) {
+    public RequirementListResponse(Integer idTipoMensaje, String mensaje, List<RequirementItemDTO> requerimientos, Integer totalElementos, Integer totalPaginas) {
         super(idTipoMensaje, mensaje);
         this.requerimientos = requerimientos;
         this.totalElementos = totalElementos;
+        this.totalPaginas = totalPaginas;
     }
 }

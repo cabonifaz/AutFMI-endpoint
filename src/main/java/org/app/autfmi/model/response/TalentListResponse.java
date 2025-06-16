@@ -10,10 +10,12 @@ import java.util.List;
 public class TalentListResponse extends BaseResponse {
     private List<TalentItemDTO> talentos;
     private Integer totalElementos;
+    private Integer totalPaginas;
 
-    public TalentListResponse(Integer idTipoMensaje, String mensaje, List<TalentItemDTO> talentos, Integer totalElementos) {
+    public TalentListResponse(Integer idTipoMensaje, String mensaje, List<TalentItemDTO> talentos, Integer totalElementos, Integer totalPaginas) {
         super(idTipoMensaje, mensaje);
         this.talentos = talentos;
         this.totalElementos = totalElementos;
+        this.totalPaginas = totalPaginas;
     }
 }

@@ -1,9 +1,9 @@
 spring:
   datasource:
     dev:
-      url: jdbc:sqlserver://161.132.217.169:1433;database=bdt_staging;encrypt=true;trustServerCertificate=true
-      username: autfmiStaging
-      password: Fractal$Staging123
+      url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     database-platform: org.hibernate.dialect.SQLServerDialect

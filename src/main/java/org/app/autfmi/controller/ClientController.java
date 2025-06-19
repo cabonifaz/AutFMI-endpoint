@@ -1,5 +1,6 @@
 package org.app.autfmi.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.ContactRegisterRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("fmi/client")
 @RequiredArgsConstructor
+@Tag(name = "Cliente")
 public class ClientController {
     private final ClientService clientService;
 

@@ -1,5 +1,6 @@
 package org.app.autfmi.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.AuthRequest;
 import org.app.autfmi.model.response.AuthResponse;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("fmi/auth")
 @RequiredArgsConstructor
+@Tag(name = "Autenticación")
 public class AuthController {
     private final IAuthService authService;
 

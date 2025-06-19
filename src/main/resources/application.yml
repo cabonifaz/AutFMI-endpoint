@@ -15,3 +15,8 @@ spring:
 jwt:
   expiration: ${JWT_EXPIRATION_MILLISECONDS} # 48 hours in milliseconds
   secret: ${JWT_SECRET}
+springdoc:
+  swagger-ui:
+    path: /fmi-backend.html
+  api-docs:
+    path: /fmi-docs

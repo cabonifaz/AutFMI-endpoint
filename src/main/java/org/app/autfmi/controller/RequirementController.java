@@ -1,5 +1,6 @@
 package org.app.autfmi.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.Date;
 @RestController
 @RequestMapping("fmi/requirement")
 @RequiredArgsConstructor
+@Tag(name = "Requerimiento")
 public class RequirementController {
     private final RequirementService requirementService;
 

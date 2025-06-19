@@ -1,5 +1,6 @@
 package org.app.autfmi.controller;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
@@ -19,6 +20,7 @@ import java.util.Collections;
 @RestController
 @RequestMapping("fmi/employee")
 @RequiredArgsConstructor
+@Tag(name = "Empleado")
 public class EmployeeController {
     private final EmployeeService employeeService;
 

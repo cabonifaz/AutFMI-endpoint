@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Date;
 
 @RestController
-@RequestMapping("fmi/tarifario")
+@RequestMapping("/tarifario")
 @RequiredArgsConstructor
 @Tag(name = "Tarifario")
 public class TarifarioController {

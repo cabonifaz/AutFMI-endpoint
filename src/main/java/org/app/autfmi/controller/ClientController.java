@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("fmi/client")
+@RequestMapping("/client")
 @RequiredArgsConstructor
 @Tag(name = "Cliente")
 public class ClientController {

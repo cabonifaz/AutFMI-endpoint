@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Date;
 
 @RestController
-@RequestMapping("fmi/requirement")
+@RequestMapping("/requirement")
 @RequiredArgsConstructor
 @Tag(name = "Requerimiento")
 public class RequirementController {

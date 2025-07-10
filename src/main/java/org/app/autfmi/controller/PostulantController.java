@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("fmi/postulant")
+@RequestMapping("/postulant")
 @RequiredArgsConstructor
 @Tag(name = "Postulante")
 public class PostulantController {

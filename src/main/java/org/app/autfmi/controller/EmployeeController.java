@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 
 @RestController
-@RequestMapping("fmi/employee")
+@RequestMapping("/employee")
 @RequiredArgsConstructor
 @Tag(name = "Empleado")
 public class EmployeeController {

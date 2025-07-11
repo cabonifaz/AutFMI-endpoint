@@ -18,7 +18,13 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:3000",
                         "https://agreeable-pebble-0832a380f.5.azurestaticapps.net", // FMI Staging
                         "https://gray-ocean-0fc1baf0f.5.azurestaticapps.net", // FMI Preprod
-                        "https://calm-water-0f8491110.4.azurestaticapps.net" // BDT Staging
+                        "https://calm-water-0f8491110.4.azurestaticapps.net", // BDT Staging
+                        // AWS BDT Staging
+                        "https://bdt.aplicacion2-team.com",
+                        "https://api-bdt.aplicacion2-team.com",
+                        // AWS FMI Staging
+                        "https://autfmi.aplicacion2-team.com",
+                        "https://api-fmi.aplicacion2-team.com"
                 ).allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("Authorization", "Content-Type", "Accept")
                 .exposedHeaders("Authorization")

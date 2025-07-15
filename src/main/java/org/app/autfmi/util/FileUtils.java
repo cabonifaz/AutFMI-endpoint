@@ -2,12 +2,9 @@ package org.app.autfmi.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -139,58 +136,48 @@ public class FileUtils {
             byte[] fileBytes = Base64.getDecoder().decode(archivoBase64);
 
             String bucketName = System.getenv("AWS_BUCKET");
-            String regionName = System.getenv("AWS_REGION");
-
             if (bucketName == null || bucketName.isEmpty()) {
                 logger.error("Variable de entorno AWS_BUCKET no está definida");
                 return;
             }
 
-            // Crear cliente de S3
-            try (S3Client s3 = S3Client.builder()
-                    .region(Region.of(regionName))
-                    .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-                    .build()) {
+            S3Client s3 = ClienteS3.getInstance();
 
-                // Verificar si el archivo ya existe
-                boolean existe;
-                try {
-                    HeadObjectRequest headRequest = HeadObjectRequest.builder()
-                            .bucket(bucketName)
-                            .key(ruta)
-                            .build();
-                    s3.headObject(headRequest);
-                    existe = true;
-                } catch (S3Exception e) {
-                    existe = false;
-                }
-
-                if (existe) {
-                    logger.info("Archivo ya existe. Se sobrescribirá: " + ruta);
-                } else {
-                    logger.info("Archivo no existe. Se procederá a crear uno nuevo.");
-                }
-
-                // Subir archivo
-                PutObjectRequest putRequest = PutObjectRequest.builder()
+            // Verificar si el archivo ya existe
+            boolean existe;
+            try {
+                HeadObjectRequest headRequest = HeadObjectRequest.builder()
                         .bucket(bucketName)
                         .key(ruta)
                         .build();
-
-                s3.putObject(putRequest, RequestBody.fromBytes(fileBytes));
-
-                logger.info("Archivo guardado exitosamente en S3 en la ruta: " + ruta);
-                logger.info("Fin Utilitarios - GuardarArchivoAws");
-                logger.info(Constante.TXT_SEPARADOR);
-
+                s3.headObject(headRequest);
+                existe = true;
             } catch (S3Exception e) {
-                logger.error("Error con S3: " + e.awsErrorDetails().errorMessage(), e);
-            } catch (Exception e) {
-                logger.error("Error inesperado al subir archivo a S3: " + e.getMessage(), e);
+                existe = false;
             }
+
+            if (existe) {
+                logger.info("Archivo ya existe. Se sobrescribirá: " + ruta);
+            } else {
+                logger.info("Archivo no existe. Se procederá a crear uno nuevo.");
+            }
+
+            // Subir archivo
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(ruta)
+                    .build();
+
+            s3.putObject(putRequest, RequestBody.fromBytes(fileBytes));
+
+            logger.info("Archivo guardado exitosamente en S3 en la ruta: " + ruta);
+            logger.info("Fin Utilitarios - GuardarArchivoAws");
+            logger.info(Constante.TXT_SEPARADOR);
 
         } catch (IllegalArgumentException e) {
             logger.error("Cadena Base64 inválida: " + e.getMessage(), e);
+        } catch (Exception e) {
+            logger.error("Error inesperado al subir archivo a S3: " + e.getMessage(), e);
         }
     }
 
@@ -200,17 +187,13 @@ public class FileUtils {
         logger.info("Ruta recibida (S3 key): " + archivoRutaPre);
 
         String bucketName = System.getenv("AWS_BUCKET");
-        String regionName = System.getenv("AWS_REGION");
-
-        if (bucketName == null || regionName == null) {
-            logger.error("Variables de entorno AWS_BUCKET o AWS_REGION no están definidas");
+        if (bucketName == null || bucketName.isEmpty()) {
+            logger.error("Variable de entorno AWS_BUCKET no está definida");
             return;
         }
 
-        try (S3Client s3 = S3Client.builder()
-                .region(Region.of(regionName))
-                .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-                .build()) {
+        try {
+            S3Client s3 = ClienteS3.getInstance();
 
             // Verificar si el objeto existe
             try {

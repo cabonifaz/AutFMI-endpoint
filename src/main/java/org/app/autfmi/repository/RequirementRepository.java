@@ -149,7 +149,8 @@ public class RequirementRepository {
                             for (Map<String, Object> rqFileRow : resultSet4) {
                                 RequirementFileDTO itemRqArchivo = new RequirementFileDTO(
                                         (Integer) rqFileRow.get("ID_REQUERIMIENTO_ARCHIVO"),
-                                        FileUtils.cargarArchivo((String) rqFileRow.get("LINK")),
+//                                        FileUtils.cargarArchivo((String) rqFileRow.get("LINK")),
+                                        "",
                                         (String) rqFileRow.get("NOMBRE_ARCHIVO"),
                                         (Integer) rqFileRow.get("ID_TIPO_ARCHIVO")
                                 );
@@ -564,7 +565,7 @@ public class RequirementRepository {
                 List<Map<String, Object>> resultSet2 = (List<Map<String, Object>>) result.get("#result-set-2");
                 Map<String, Object> fileToDelete = resultSet2.get(0);
                 String rutaPre = (String) fileToDelete.get("LINK");
-                FileUtils.eliminarArchivo(rutaPre);
+                FileUtils.eliminarArchivoAws(rutaPre);
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }
@@ -698,7 +699,7 @@ public class RequirementRepository {
     protected void guardarArchivos(List<FileRequest> lstFiles, Integer idNewRq, Integer idEmpresa) {
         for (FileRequest fileItem : lstFiles) {
             String rutaRq = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idNewRq.toString()) + fileItem.getNombreArchivo() + "." + fileItem.getExtensionArchivo();
-            FileUtils.guardarArchivo(fileItem.getString64(), rutaRq);
+            FileUtils.guardarArchivoAws(fileItem.getString64(), rutaRq);
         }
     }
 

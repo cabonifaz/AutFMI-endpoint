@@ -20,7 +20,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "https://gray-ocean-0fc1baf0f.5.azurestaticapps.net", // FMI Preprod
                         "https://calm-water-0f8491110.4.azurestaticapps.net", // BDT Staging
                         // AWS BDT Staging
-                        "https://bdt.aplicacion2-team.com",
+                        "https://bancotalentos.aplicacion2-team.com",
                         "https://api-bdt.aplicacion2-team.com",
                         // AWS FMI Staging
                         "https://autfmi.aplicacion2-team.com",

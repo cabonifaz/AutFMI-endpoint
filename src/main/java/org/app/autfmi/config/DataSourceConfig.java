@@ -13,9 +13,9 @@ import javax.sql.DataSource;
 @Configuration(proxyBeanMethods = false)
 public class DataSourceConfig {
     @Bean
-    @Profile("dev")
+    @Profile("prod")
     @Primary
-    @ConfigurationProperties("spring.datasource.dev") // Set to use dev config yml
+    @ConfigurationProperties("spring.datasource.prod") // Set to use dev config yml
     public DataSourceProperties dataSourceProperties() {
         return new DataSourceProperties();
     }
@@ -29,7 +29,7 @@ public class DataSourceConfig {
     }
 
     @Bean
-    @Profile("dev")
+    @Profile("prod")
     @Primary
     JdbcTemplate jdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);

@@ -16,7 +16,7 @@ spring:
         boot:
           allow_jdbc_metadata_access: false
   profiles:
-    include: dev
+    include: prod
 jwt:
   expiration: ${JWT_EXPIRATION_MILLISECONDS} # 48 hours in milliseconds
   secret: ${JWT_SECRET}
@@ -25,11 +25,3 @@ springdoc:
     path: /fmi-backend.html
   api-docs:
     path: /fmi-docs
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: never

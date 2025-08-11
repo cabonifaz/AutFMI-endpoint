@@ -1,13 +1,11 @@
 package org.app.autfmi.service.impl;
 
-import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.LinkTokenDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.PostulantRepository;
-import org.app.autfmi.repository.TalentRepository;
 import org.app.autfmi.service.IPostulantService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
@@ -18,7 +16,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PostulantService implements IPostulantService {
     private final PostulantRepository postulantRepository;
-    private final TalentRepository talentRepository;
     private final JwtHelper jwt;
 
     @Override

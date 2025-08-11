@@ -27,12 +27,8 @@ public class PostulantService implements IPostulantService {
             LinkTokenDTO tokenData = jwt.decodeLinkToken(token);
             BaseRequest baseRequest = Common.createBaseRequest(tokenData.getUserData(), Constante.INSERTAR_TALENTO);
 
-            BaseResponse baseResponse = talentRepository.saveTalent(request, baseRequest);
-            if (baseResponse.getIdTipoMensaje() == 2) {
-                return postulantRepository.registerPostulant(baseRequest, request.getIdTalento(), tokenData.getLstrRequerimientos());
-            } else {
-                return baseResponse;
-            }
+            return postulantRepository.registerPostulant(baseRequest, request.getIdTalento(), tokenData.getLstrRequerimientos());
+
         } catch (Exception e) {
             return new BaseResponse(3, "Error en Service RegisterPostulant::: " + e.getMessage());
         }

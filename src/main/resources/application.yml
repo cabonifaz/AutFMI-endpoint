@@ -16,7 +16,7 @@ spring:
         boot:
           allow_jdbc_metadata_access: false
   profiles:
-    include: prod
+    include: dev
 jwt:
   expiration: ${JWT_EXPIRATION_MILLISECONDS} # 48 hours in milliseconds
   secret: ${JWT_SECRET}

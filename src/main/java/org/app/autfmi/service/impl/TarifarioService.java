@@ -18,10 +18,10 @@ public class TarifarioService implements ITarifarioService {
     private final JwtHelper jwt;
 
     @Override
-    public BaseResponse listTarifario(String token) {
+    public BaseResponse listTarifario(String token, Integer idCliente) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TARIFARIO);
-        return tarifarioRepository.listaTarifario(baseRequest);
+        return tarifarioRepository.listaTarifario(baseRequest, idCliente);
     }
 
 }

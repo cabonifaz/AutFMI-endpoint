@@ -23,11 +23,12 @@ import java.util.Map;
 public class TarifarioRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse listaTarifario(BaseRequest baseRequest) {
+    public BaseResponse listaTarifario(BaseRequest baseRequest, Integer idCliente) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_TARIFARIO_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_CLIENTE", idCliente)
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())

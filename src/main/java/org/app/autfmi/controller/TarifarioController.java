@@ -24,10 +24,12 @@ public class TarifarioController {
     private final TarifarioService tarifarioService;
 
     @GetMapping("/list")
-    public ResponseEntity<BaseResponse> getRequirementsList(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<BaseResponse> getRequirementsList(
+            HttpServletRequest httpServletRequest,
+            @RequestParam Integer idCliente) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = tarifarioService.listTarifario(token);
+            BaseResponse response = tarifarioService.listTarifario(token, idCliente);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

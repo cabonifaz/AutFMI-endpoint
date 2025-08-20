@@ -4,5 +4,5 @@ import org.app.autfmi.model.response.BaseResponse;
 
 public interface ITarifarioService {
 
-    BaseResponse listTarifario (String token);
+    BaseResponse listTarifario (String token, Integer idCliente);
 }

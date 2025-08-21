@@ -16,9 +16,13 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins(
                         "http://localhost:3000",
-                        "https://agreeable-pebble-0832a380f.5.azurestaticapps.net", // FMI Staging
-                        "https://gray-ocean-0fc1baf0f.5.azurestaticapps.net", // FMI Preprod
-                        "https://calm-water-0f8491110.4.azurestaticapps.net", // BDT Staging
+                        "http://localhost:3001",
+                        // Azure BDT Staging
+                        "https://happy-forest-038bd820f.1.azurestaticapps.net",
+                        "https://bancotalentobackendstaging-gee7h5b8exe6gkhb.canadacentral-01.azurewebsites.net",
+                        // Azure FMI Staging
+                        "https://thankful-glacier-088d1980f.2.azurestaticapps.net",
+                        "https://autfmibackendstaging-gnfub6d8cdg5aqbd.canadacentral-01.azurewebsites.net",
                         // AWS BDT Staging
                         "https://bancotalentos.aplicacion2-team.com",
                         "https://api-bdt.aplicacion2-team.com",

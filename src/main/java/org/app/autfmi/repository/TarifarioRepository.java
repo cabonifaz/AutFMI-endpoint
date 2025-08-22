@@ -63,7 +63,9 @@ public class TarifarioRepository {
         return new TarifarioDTO(
                 (Integer) tarifa.get("ID_PERFIL"),
                 (String) tarifa.get("PERFIL"),
-                (BigDecimal) tarifa.get("TARIFA")
+                (BigDecimal) tarifa.get("TARIFA"),
+                (String) tarifa.get("MONEDA"),
+                (String) tarifa.get("TIPO_TARIFA")
         );
     }
 

@@ -59,7 +59,7 @@ public class TalentRepository {
     }
 
     public BaseResponse getTalentById(Integer idTalento, BaseRequest baseRequest) {
-        // GET FROM BT_TALENTO
+        // COMES FROM BT_TALENTO TABLE
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_USUARIOS_TALENTOS_SEL");
 

@@ -127,12 +127,14 @@ public class EmployeeRepository {
 
     private static SQLServerDataTable getSqlServerDataTable(SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
         SQLServerDataTable tvpProductos = new SQLServerDataTable();
+        tvpProductos.addColumnMetadata("ID_TALENTO", Types.INTEGER);
         tvpProductos.addColumnMetadata("ID_ITEM", Types.INTEGER);
         tvpProductos.addColumnMetadata("PRODUCTO", Types.VARCHAR);
         tvpProductos.addColumnMetadata("PROD_VERSION", Types.VARCHAR);
 
         for (SolicitudSoftwareRequest softwareRequest : solicitudEquipoRequest.getLstSoftware()) {
             tvpProductos.addRow(
+                    softwareRequest.getIdItem(),
                     softwareRequest.getIdItem(),
                     softwareRequest.getProducto(),
                     softwareRequest.getProdVersion()

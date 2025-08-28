@@ -77,6 +77,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
+                    Collections.emptyList(),
                     "Ingreso de empleado",
                     "Formulario de nuevo ingreso de empleado."
             );
@@ -111,6 +112,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
+                    Collections.emptyList(),
                     "Movimiento de empleado",
                     "Formulario de movimiento de empleado."
             );
@@ -157,6 +159,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
+                    Collections.emptyList(),
                     "Cese de empleado",
                     "Formulario de cese del empleado."
             );
@@ -189,6 +192,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     solicitudEquipoResponse.getCorreoGestor(),
+                    Collections.emptyList(),
                     "Requerimiento de Software y Hardware",
                     "Formulario Requerimiento de Software y Hardware."
             );

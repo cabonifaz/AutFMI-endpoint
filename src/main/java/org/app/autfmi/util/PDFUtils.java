@@ -82,7 +82,7 @@ public class PDFUtils {
         return Base64.getEncoder().encodeToString(byteArchivo);
     }
 
-    public void enviarCorreoConPDF(List<FileDTO> lstfiles, String to, String subject, String text) throws MessagingException {
+    public void enviarCorreoConPDF(List<FileDTO> lstfiles, String to, List<String> copyTo, String subject, String text) throws MessagingException {
         try {
             for (FileDTO lstfile : lstfiles) {
                 lstfile.setByteArchivo(crearPDF(lstfile.getHtmlTemplate(), ""));
@@ -98,6 +98,14 @@ public class PDFUtils {
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(text);
+
+        if (copyTo != null && !copyTo.isEmpty()) {
+            copyTo.removeIf(email -> email.equals(to));
+
+            if (!copyTo.isEmpty()) {
+                helper.setCc(copyTo.toArray(new String[0]));
+            }
+        }
 
         for (FileDTO objfile : lstfiles) {
             ByteArrayDataSource dataSource = new ByteArrayDataSource(objfile.getByteArchivo(), "application/pdf");

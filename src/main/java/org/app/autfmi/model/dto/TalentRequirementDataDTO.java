@@ -19,4 +19,5 @@ public class TalentRequirementDataDTO {
     private String tooltip;
     private Integer idEstado;
     private String estado;
+    private Integer tieneEquipo;
 }

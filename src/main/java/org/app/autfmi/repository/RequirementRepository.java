@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.SolicitudData;
+import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
@@ -134,7 +135,8 @@ public class RequirementRepository {
                                     (Integer) rqTalentRow.get("ID_PERFIL"),
                                     (String) rqTalentRow.get("PERFIL"),
                                     (Boolean) rqTalentRow.get("CONFIRMADO"),
-                                    (String) rqTalentRow.get("TOOL_TIP")
+                                    (String) rqTalentRow.get("TOOL_TIP"),
+                                    (Integer) rqTalentRow.get("TIENE_EQUIPO")
                             );
 
                             lstRqTalents.add(itemRqTalento);
@@ -307,10 +309,12 @@ public class RequirementRepository {
                     .withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
 
             SQLServerDataTable tvpRqTalents = loadTvpRequirementTalents(request);
+            SQLServerDataTable tvpProductos = loadTvpProductos(request);
 
             MapSqlParameterSource params = new MapSqlParameterSource()
                     .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
                     .addValue("LST_TALENTOS", tvpRqTalents)
+                    .addValue("LST_SOFTWARE", tvpProductos)
                     .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                     .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                     .addValue("ID_ROL", baseRequest.getIdRol())
@@ -329,15 +333,17 @@ public class RequirementRepository {
                 baseResponse.setMensaje((String) row.get("MENSAJE"));
 
                 if (baseResponse.getIdTipoMensaje() == 2) {
-                    List<Map<String, Object>> gestorSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
+                    List<Map<String, Object>> gestorRqSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
                     List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS CONFIRMADOS
                     List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
-                    List<Map<String, Object>> gestorIngresoSet = (List<Map<String, Object>>) result.get("#result-set-5"); // GESTOR INGRESO
+                    List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // GESTOR DOCUMENTOS
                     List<Map<String, Object>> reportSet = (List<Map<String, Object>>) result.get("#result-set-6"); // REPORTES
+                    List<Map<String, Object>> solicitudesEquipoSet = (List<Map<String, Object>>) result.get("#result-set-7"); // REPORTE SOLICITUDES EQUIPO
+                    List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result.get("#result-set-8"); // REPORTE EQUIPO SOFTWARES
 
-                    if (postulantsSet != null && !postulantsSet.isEmpty() && gestorSet != null && !gestorSet.isEmpty()) {
-                        Map<String, Object> gestorRqRow = gestorSet.get(0);
-                        GestorRqDTO gestor = new GestorRqDTO(
+                    if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null && !gestorRqSet.isEmpty()) {
+                        Map<String, Object> gestorRqRow = gestorRqSet.get(0);
+                        GestorRqDTO gestorRq = new GestorRqDTO(
                                 (String) gestorRqRow.get("NOMBRES"),
                                 (String) gestorRqRow.get("APELLIDOS"),
                                 (String) gestorRqRow.get("CORREO"),
@@ -346,8 +352,12 @@ public class RequirementRepository {
                                 "Ingreso"
                         );
 
-                        Map<String, Object> gestorIngreso = gestorIngresoSet.get(0);
-                        String correoGestorIngreso = gestorIngreso.get("CORREO").toString();
+                        List<String> copyTo = new ArrayList<>();
+                        copyTo.add(gestorRq.getCorreo());
+
+                        Map<String, Object> gestorDocs = gestorDocsSet.get(0);
+                        String gestorDocsCorreo = gestorDocs.get("GESTOR_DOCS_CORREO").toString();
+                        String gestorDocsFullName = gestorDocs.get("GESTOR_DOCS").toString();
 
                         List<PostulantDTO> postulantList = new ArrayList<>();
                         if (!postulantsSet.isEmpty()) {
@@ -367,7 +377,7 @@ public class RequirementRepository {
 
                         // ENVIAR CORREO
                         if (request.getFlagCorreo()){
-                            mailUtils.sendRequirementPostulantMail(gestor, "Ingreso de nuevo talento", postulantList, contactosList);
+                            mailUtils.sendRequirementPostulantMail(gestorRq, "Ingreso de nuevo talento", postulantList, contactosList);
 
                             // ENVIAR CORREO CON REPORTE DE NUEVOS INGRESOS
                             if (reportSet != null && !reportSet.isEmpty()) {
@@ -408,9 +418,76 @@ public class RequirementRepository {
                                 // ENVIAR CORREO CON PDF's
                                 pdfUtils.enviarCorreoConPDF(
                                         lstfiles,
-                                        correoGestorIngreso,
+                                        gestorDocsCorreo,
+                                        copyTo,
                                         "Ingreso de empleado",
                                         "Formulario de nuevo ingreso de empleado."
+                                );
+                            }
+
+                            // Solicitudes Equipo
+                            if (solicitudesEquipoSet != null && !solicitudesEquipoSet.isEmpty()) {
+
+                                List<FileDTO> lstSolicitudEquipoFiles = new ArrayList<>();
+                                String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+
+                                for (Map<String, Object> solicitudRow: solicitudesEquipoSet) {
+                                    SolicitudEquipoReport report =  new SolicitudEquipoReport();
+                                    // datos gestor
+                                    report.setCorreoGestor(gestorDocsCorreo);
+                                    report.setNombreApellidoGestor(gestorDocsFullName);
+                                    // datos reporte
+                                    report.setNombreEmpleado((String) solicitudRow.get("NOMBRE_EMPLEADO"));
+                                    report.setApellidosEmpleado((String) solicitudRow.get("APELLIDOS_EMPLEADO"));
+                                    report.setCliente((String) solicitudRow.get("CLIENTE"));
+                                    report.setArea((String) solicitudRow.get("AREA"));
+                                    report.setPuesto((String) solicitudRow.get("PUESTO"));
+                                    report.setFechaSolicitud((String) solicitudRow.get("FECHA_SOLICITUD"));
+                                    report.setFechaEntrega((String) solicitudRow.get("FECHA_ENTREGA"));
+                                    report.setIdTipoEquipo((Integer) solicitudRow.get("ID_TIPO_EQUIPO"));
+                                    report.setProcesador((String) solicitudRow.get("PROCESADOR"));
+                                    report.setRam((String) solicitudRow.get("RAM"));
+                                    report.setHd((String) solicitudRow.get("HD"));
+                                    report.setMarca((String) solicitudRow.get("MARCA"));
+                                    report.setIdAnexo((Integer) solicitudRow.get("ID_ANEXO"));
+                                    report.setCelular((Boolean) solicitudRow.get("CELULAR"));
+                                    report.setInternetMovil((Boolean) solicitudRow.get("INTERNET_MOVIL"));
+                                    report.setAccesorios((String) solicitudRow.get("ACCESORIOS"));
+
+                                    // lista de software por solicitud
+                                    List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
+                                    if (equipoSoftwaresSet != null && !equipoSoftwaresSet.isEmpty()) {
+                                        for (Map<String, Object> softwareRow: equipoSoftwaresSet) {
+                                            Integer solicitudSoftwareId = (Integer) softwareRow.get("ID_EQUIPO_SOLICITUD");
+                                            Integer solicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
+
+                                            // Solo agregar si pertenece a esta solicitud
+                                            if (solicitudSoftwareId != null && solicitudSoftwareId.equals(solicitudId)) {
+                                                SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
+                                                software.setIdItem((Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
+                                                software.setProducto((String) softwareRow.get("PRODUCTO"));
+                                                software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
+                                                lstSoftware.add(software);
+                                            }
+                                        }
+                                        report.setLstSoftware(lstSoftware);
+                                    }
+
+                                    FileDTO fileFormulario = new FileDTO(
+                                            "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
+                                            pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
+                                            null
+                                    );
+
+                                    lstSolicitudEquipoFiles.add(fileFormulario);
+                                }
+
+                                pdfUtils.enviarCorreoConPDF(
+                                        lstSolicitudEquipoFiles,
+                                        gestorDocsCorreo,
+                                        copyTo,
+                                        "Requerimiento de Software y Hardware",
+                                        "Formulario Requerimiento de Software y Hardware."
                                 );
                             }
                         }
@@ -502,7 +579,8 @@ public class RequirementRepository {
                 (String) talentoRQ.get("SITUACION"),
                 (String) talentoRQ.get("TOOL_TIP"),
                 (Integer) talentoRQ.get("ID_ESTADO"),
-                (String) talentoRQ.get("ESTADO")
+                (String) talentoRQ.get("ESTADO"),
+                (Integer) talentoRQ.get("TIENE_EQUIPO")
         );
     }
 
@@ -740,11 +818,29 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("MONTO_TRIMESTRAL", Types.DECIMAL);
         tvpRqTalents.addColumnMetadata("MONTO_SEMESTRAL", Types.DECIMAL);
 
+        // Solicitud Equipo
+        tvpRqTalents.addColumnMetadata("AREA", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("FECHA_SOLICITUD", Types.DATE);
+        tvpRqTalents.addColumnMetadata("FECHA_ENTREGA", Types.DATE);
+        tvpRqTalents.addColumnMetadata("ID_TIPO_EQUIPO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("TIPO_EQUIPO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("PROCESADOR", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("RAM", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("HD", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("MARCA", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("ID_ANEXO", Types.INTEGER);
+        tvpRqTalents.addColumnMetadata("ANEXO", Types.VARCHAR);
+        tvpRqTalents.addColumnMetadata("BIT_CELULAR", Types.BIT);
+        tvpRqTalents.addColumnMetadata("BIT_INTERNET_MOVIL", Types.BIT);
+        tvpRqTalents.addColumnMetadata("ACCESORIOS", Types.VARCHAR);
+
         int indice = 1;
 
         System.out.println("CARGANDO DATOS A TABLA TVP");
 
         for (RequirementTalentRequestDTO talentRequest : request.getLstTalentos()) {
+            SolicitudEquipoDTO se = talentRequest.getSolicitudEquipo();
+
             tvpRqTalents.addRow(
                     indice,
                     talentRequest.getIdTalento(),
@@ -778,7 +874,23 @@ public class RequirementRepository {
                     talentRequest.getMontoBase(),
                     talentRequest.getMontoMovilidad(),
                     talentRequest.getMontoTrimestral(),
-                    talentRequest.getMontoSemestral()
+                    talentRequest.getMontoSemestral(),
+
+                    // Solicitud Equipo
+                    talentRequest.getArea(),
+                    se != null ? se.getFechaSolicitud() : null,
+                    se != null ? se.getFechaEntrega() : null,
+                    se != null ? se.getIdTipoEquipo() : null,
+                    se != null ? se.getTipoEquipo() : null,
+                    se != null ? se.getProcesador() : null,
+                    se != null ? se.getRam() : null,
+                    se != null ? se.getHd() : null,
+                    se != null ? se.getMarca(): null,
+                    se != null ? se.getIdAnexo() : null,
+                    se != null ? se.getAnexo() : null,
+                    se != null ? se.getBitCelular() : null,
+                    se != null ? se.getBitInternetMovil() : null,
+                    se != null ? se.getAccesorios() : null
             );
 
             indice++;
@@ -788,6 +900,30 @@ public class RequirementRepository {
         return tvpRqTalents;
     }
 
+    private static SQLServerDataTable loadTvpProductos(RequirementTalentRequest request) throws SQLServerException {
+        SQLServerDataTable tvpProductos = new SQLServerDataTable();
+        tvpProductos.addColumnMetadata("ID_TALENTO", Types.INTEGER);
+        tvpProductos.addColumnMetadata("ID_ITEM", Types.INTEGER);
+        tvpProductos.addColumnMetadata("PRODUCTO", Types.VARCHAR);
+        tvpProductos.addColumnMetadata("PROD_VERSION", Types.VARCHAR);
+
+        for (RequirementTalentRequestDTO talent : request.getLstTalentos()) {
+            SolicitudEquipoDTO se = talent.getSolicitudEquipo();
+
+            if (se != null && se.getLstSoftware() != null) {
+                for (SolicitudSoftwareRequest software : se.getLstSoftware()) {
+                    tvpProductos.addRow(
+                            talent.getIdTalento(),
+                            software != null ? software.getIdItem() : null,
+                            software != null ? software.getProducto() : null,
+                            software != null ? software.getProdVersion() : null
+                    );
+                }
+            }
+        }
+
+        return tvpProductos;
+    }
 
     private static PostulantDTO mapListPostulantDTO(Map<String, Object> postulanteRow) {
         return new PostulantDTO(

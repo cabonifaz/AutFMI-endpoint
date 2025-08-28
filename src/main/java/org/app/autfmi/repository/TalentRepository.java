@@ -108,7 +108,7 @@ public class TalentRepository {
                 .addValue("TIEMPO_CONTRATO", talent.getTiempoContrato())
                 .addValue("ID_TIPO_TIEMPO_CONTRATO", talent.getIdTiempoContrato())
                 .addValue("FCH_INICIO_LABORES", talent.getFechaInicioLabores())
-                .addValue("CARGO", talent.getCargo())
+                .addValue("CARGO", "")
                 .addValue("REMUNERACION", talent.getRemuneracion())
                 .addValue("ID_TIPO_MONEDA", talent.getIdMoneda())
                 .addValue("ID_MODALIDAD", talent.getIdModalidad())

@@ -18,7 +18,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:3000",
                         "http://localhost:3001",
                         // Azure BDT Preprod
-                        "https://ashy-meadow-0fe993f0f.1.azurestaticapps.net",
+                        "https://zealous-plant-02486730f.2.azurestaticapps.net",
                         "https://bancotalentobackendpreprod-awdecbbsgrh4d8bn.canadacentral-01.azurewebsites.net",
                         // Azure FMI Preprod
                         "https://salmon-rock-06416070f.2.azurestaticapps.net",

@@ -94,10 +94,9 @@ public class TalentRepository {
     public BaseResponse saveTalent(TalentRequest talent, BaseRequest baseRequest) {
         // UPDATE BT_TALENTO, REQ_TALENTO -> CONFIRMADO 0, INGRESO 0
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("SP_USUARIOS_TALENTOS_INS");
+                .withProcedureName("SP_USUARIOS_TALENTOS_UPD");
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_TALENTO", talent.getIdTalento())
                 .addValue("NOMBRES", talent.getNombres())
                 .addValue("APELLIDO_PATERNO", talent.getApellidoPaterno())

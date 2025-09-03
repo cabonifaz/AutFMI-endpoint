@@ -29,6 +29,7 @@ import org.yaml.snakeyaml.scanner.Constant;
 
 import java.math.BigDecimal;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -136,7 +137,12 @@ public class RequirementRepository {
                                     (String) rqTalentRow.get("PERFIL"),
                                     (Boolean) rqTalentRow.get("CONFIRMADO"),
                                     (String) rqTalentRow.get("TOOL_TIP"),
-                                    (Integer) rqTalentRow.get("TIENE_EQUIPO")
+                                    (Integer) rqTalentRow.get("TIENE_EQUIPO"),
+                                    (String) rqTalentRow.get("UBICACION"),
+                                    (Integer) rqTalentRow.get("ID_MODALIDAD_FACTURACION"),
+                                    (String) rqTalentRow.get("FCH_INICIO_LABORES"),
+                                    (String) rqTalentRow.get("FCH_FIN_LABORES"),
+                                    (BigDecimal) rqTalentRow.get("MONTO_BASE")
                             );
 
                             lstRqTalents.add(itemRqTalento);

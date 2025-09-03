@@ -139,7 +139,7 @@ public class RequirementRepository {
                                     (String) rqTalentRow.get("TOOL_TIP"),
                                     (Integer) rqTalentRow.get("TIENE_EQUIPO"),
                                     (String) rqTalentRow.get("UBICACION"),
-                                    (Integer) rqTalentRow.get("ID_MODALIDAD_FACTURACION"),
+                                    (Integer) rqTalentRow.get("ID_MODALIDAD_CONTRATO"),
                                     (String) rqTalentRow.get("FCH_INICIO_LABORES"),
                                     (String) rqTalentRow.get("FCH_FIN_LABORES"),
                                     (BigDecimal) rqTalentRow.get("MONTO_BASE")

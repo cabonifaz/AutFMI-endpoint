@@ -64,6 +64,8 @@ public class RequirementTalentRequestDTO {
     @JsonProperty()
     private BigDecimal montoMovilidad;
     @JsonProperty()
+    private BigDecimal montoMensual;
+    @JsonProperty()
     private BigDecimal montoTrimestral;
     @JsonProperty()
     private BigDecimal montoSemestral;

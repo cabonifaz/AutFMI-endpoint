@@ -821,6 +821,7 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("SEDE_DECLARAR", Types.VARCHAR);
         tvpRqTalents.addColumnMetadata("MONTO_BASE", Types.DECIMAL);
         tvpRqTalents.addColumnMetadata("MONTO_MOVILIDAD", Types.DECIMAL);
+        tvpRqTalents.addColumnMetadata("MONTO_MENSUAL", Types.DECIMAL);
         tvpRqTalents.addColumnMetadata("MONTO_TRIMESTRAL", Types.DECIMAL);
         tvpRqTalents.addColumnMetadata("MONTO_SEMESTRAL", Types.DECIMAL);
 
@@ -879,6 +880,7 @@ public class RequirementRepository {
                     talentRequest.getSedeDeclarar(),
                     talentRequest.getMontoBase(),
                     talentRequest.getMontoMovilidad(),
+                    talentRequest.getMontoMensual(),
                     talentRequest.getMontoTrimestral(),
                     talentRequest.getMontoSemestral(),
 

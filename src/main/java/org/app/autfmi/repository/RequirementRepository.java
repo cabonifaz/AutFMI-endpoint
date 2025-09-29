@@ -12,6 +12,7 @@ import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
@@ -25,6 +26,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.ObjectError;
 import org.yaml.snakeyaml.scanner.Constant;
 
 import java.math.BigDecimal;
@@ -951,4 +953,49 @@ public class RequirementRepository {
         simpleJdbcCall.execute();
     }
 
+    public FileResponse getRqFile(BaseRequest baseRequest, Integer idRequerimentFile) {
+
+        SimpleJdbcCall sCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_SEL");
+
+        FileResponse fileResponse = new FileResponse();
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_REQUERIMIENTO_ARCHIVO", idRequerimentFile)
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> resMap = sCall.execute(params);
+        List<Map<String, Object>> resSeList = (List<Map<String, Object>>) resMap.get("#result-set-1");
+
+        if (resSeList != null && !resSeList.isEmpty()) {
+
+            Integer idTipoMensaje = (Integer) resSeList.get(0).get("ID_TIPO_MENSAJE");
+            String mensaje = (String) resSeList.get(0).get("MENSAJE");
+            fileResponse.setBaseResponse(new BaseResponse(
+                    idTipoMensaje, mensaje));
+
+            if (fileResponse.getBaseResponse().getIdTipoMensaje() == 2) {
+                List<Map<String, Object>> fileSet = (List<Map<String, Object>>) resMap.get("#result-set-2");
+
+                if (fileSet != null && !fileSet.isEmpty()) {
+                    Map<String, Object> fileRow = fileSet.get(0);
+                    String link = (String) fileRow.get("LINK");
+                    // Extraer la extensión del archivo
+                    String ext = "";
+                    if (link != null && link.contains(".")) {
+                        ext = link.substring(link.lastIndexOf('.') + 1);
+                    }
+                    fileResponse.setExt(ext);
+                    fileResponse.setFile(link);
+
+                }
+            }
+        }
+
+        return fileResponse;
+    }
 }

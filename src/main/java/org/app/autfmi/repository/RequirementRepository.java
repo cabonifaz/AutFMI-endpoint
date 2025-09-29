@@ -12,6 +12,7 @@ import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
@@ -25,6 +26,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
+import org.springframework.validation.ObjectError;
 import org.yaml.snakeyaml.scanner.Constant;
 
 import java.math.BigDecimal;
@@ -42,7 +44,8 @@ public class RequirementRepository {
     private final MailUtils mailUtils;
     private final PDFUtils pdfUtils;
 
-    public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente, String buscar, Date fechaSolicitud, Integer estado) {
+    public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
+            String buscar, Date fechaSolicitud, Integer estado) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_LST");
 
@@ -77,7 +80,8 @@ public class RequirementRepository {
                         requirementList.add(mapToRequirementItemDTO(requirementRow));
                     }
                 }
-                return new RequirementListResponse(idTipoMensaje, mensaje, requirementList, totalElementos, totalPaginas);
+                return new RequirementListResponse(idTipoMensaje, mensaje, requirementList, totalElementos,
+                        totalPaginas);
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }
@@ -89,8 +93,7 @@ public class RequirementRepository {
             Boolean showfiles,
             Boolean showVacantesList,
             Boolean showContactList,
-            BaseRequest baseRequest
-    ) {
+            BaseRequest baseRequest) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_SEL");
 
@@ -142,8 +145,8 @@ public class RequirementRepository {
                                     (Integer) rqTalentRow.get("ID_MODALIDAD_CONTRATO"),
                                     (String) rqTalentRow.get("FCH_INICIO_LABORES"),
                                     (String) rqTalentRow.get("FCH_FIN_LABORES"),
-                                    (BigDecimal) rqTalentRow.get("MONTO_BASE")
-                            );
+                                    (BigDecimal) rqTalentRow.get("MONTO_BASE"),
+                                    (Integer) rqTalentRow.get("ID_CV_FILE"));
 
                             lstRqTalents.add(itemRqTalento);
                         }
@@ -157,11 +160,10 @@ public class RequirementRepository {
                             for (Map<String, Object> rqFileRow : resultSet4) {
                                 RequirementFileDTO itemRqArchivo = new RequirementFileDTO(
                                         (Integer) rqFileRow.get("ID_REQUERIMIENTO_ARCHIVO"),
-//                                        FileUtils.cargarArchivo((String) rqFileRow.get("LINK")),
+                                        // FileUtils.cargarArchivo((String) rqFileRow.get("LINK")),
                                         "",
                                         (String) rqFileRow.get("NOMBRE_ARCHIVO"),
-                                        (Integer) rqFileRow.get("ID_TIPO_ARCHIVO")
-                                );
+                                        (Integer) rqFileRow.get("ID_TIPO_ARCHIVO"));
 
                                 lstRqFiles.add(itemRqArchivo);
                             }
@@ -178,8 +180,7 @@ public class RequirementRepository {
                                         (Integer) vacante.get("ID_REQUERIMIENTO_VACANTE"),
                                         (Integer) vacante.get("ID_PERFIL"),
                                         (String) vacante.get("PERFIL_PROFESIONAL"),
-                                        (Integer) vacante.get("CANTIDAD")
-                                );
+                                        (Integer) vacante.get("CANTIDAD"));
 
                                 lstRqVacantes.add(itemRqVacante);
                             }
@@ -202,8 +203,7 @@ public class RequirementRepository {
                                         (String) contacto.get("TELEFONO_2"),
                                         (String) contacto.get("CORREO"),
                                         (String) contacto.get("CORREO_2"),
-                                        (Integer) contacto.get("ASIGNADO")
-                                );
+                                        (Integer) contacto.get("ASIGNADO"));
 
                                 lstContactos.add(itemContacto);
                             }
@@ -213,8 +213,8 @@ public class RequirementRepository {
                     return new RequirementResponse(
                             idTipoMensaje,
                             mensaje,
-                            mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes, lstContactos)
-                    );
+                            mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes,
+                                    lstContactos));
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -266,7 +266,8 @@ public class RequirementRepository {
         return null;
     }
 
-    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
+    public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest)
+            throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_UPD");
 
@@ -340,14 +341,19 @@ public class RequirementRepository {
 
                 if (baseResponse.getIdTipoMensaje() == 2) {
                     List<Map<String, Object>> gestorRqSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
-                    List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS CONFIRMADOS
+                    List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS
+                                                                                                                       // CONFIRMADOS
                     List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
-                    List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // GESTOR DOCUMENTOS
+                    List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // GESTOR
+                                                                                                                       // DOCUMENTOS
                     List<Map<String, Object>> reportSet = (List<Map<String, Object>>) result.get("#result-set-6"); // REPORTES
-                    List<Map<String, Object>> solicitudesEquipoSet = (List<Map<String, Object>>) result.get("#result-set-7"); // REPORTE SOLICITUDES EQUIPO
-                    List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result.get("#result-set-8"); // REPORTE EQUIPO SOFTWARES
+                    List<Map<String, Object>> solicitudesEquipoSet = (List<Map<String, Object>>) result
+                            .get("#result-set-7"); // REPORTE SOLICITUDES EQUIPO
+                    List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result
+                            .get("#result-set-8"); // REPORTE EQUIPO SOFTWARES
 
-                    if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null && !gestorRqSet.isEmpty()) {
+                    if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null
+                            && !gestorRqSet.isEmpty()) {
                         Map<String, Object> gestorRqRow = gestorRqSet.get(0);
                         GestorRqDTO gestorRq = new GestorRqDTO(
                                 (String) gestorRqRow.get("NOMBRES"),
@@ -355,8 +361,7 @@ public class RequirementRepository {
                                 (String) gestorRqRow.get("CORREO"),
                                 (String) gestorRqRow.get("CODIGO_RQ"),
                                 (String) gestorRqRow.get("CLIENTE"),
-                                "Ingreso"
-                        );
+                                "Ingreso");
 
                         List<String> copyTo = new ArrayList<>();
                         copyTo.add(gestorRq.getCorreo());
@@ -376,14 +381,14 @@ public class RequirementRepository {
                         if (contactosSet != null && !contactosSet.isEmpty()) {
                             for (Map<String, Object> contactoRow : contactosSet) {
                                 contactosList.add(
-                                    (String) contactoRow.get("CORREO")
-                                );
+                                        (String) contactoRow.get("CORREO"));
                             }
                         }
 
                         // ENVIAR CORREO
-                        if (request.getFlagCorreo()){
-                            mailUtils.sendRequirementPostulantMail(gestorRq, "Ingreso de nuevo talento", postulantList, contactosList);
+                        if (request.getFlagCorreo()) {
+                            mailUtils.sendRequirementPostulantMail(gestorRq, "Ingreso de nuevo talento", postulantList,
+                                    contactosList);
 
                             // ENVIAR CORREO CON REPORTE DE NUEVOS INGRESOS
                             if (reportSet != null && !reportSet.isEmpty()) {
@@ -394,9 +399,9 @@ public class RequirementRepository {
                                     // FORM FILE
                                     FileDTO fileFormulario = new FileDTO(
                                             "FT-GT-12 Formulario de Ingreso",
-                                            pdfUtils.replaceEntryRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),report),
-                                            null
-                                    );
+                                            pdfUtils.replaceEntryRequestValues(
+                                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), report),
+                                            null);
 
                                     // SOLICITUD FILE
                                     data.setNombres(report.getNombres());
@@ -413,9 +418,9 @@ public class RequirementRepository {
 
                                     FileDTO fileSolicitud = new FileDTO(
                                             "FT-GS-01 Solicitud de Creación de Usuario",
-                                            pdfUtils.replaceSolicitudPDFValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
-                                            null
-                                    );
+                                            pdfUtils.replaceSolicitudPDFValues(
+                                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
+                                            null);
 
                                     lstfiles.add(fileFormulario);
                                     lstfiles.add(fileSolicitud);
@@ -427,8 +432,7 @@ public class RequirementRepository {
                                         gestorDocsCorreo,
                                         copyTo,
                                         "Ingreso de empleado",
-                                        "Formulario de nuevo ingreso de empleado."
-                                );
+                                        "Formulario de nuevo ingreso de empleado.");
                             }
 
                             // Solicitudes Equipo
@@ -437,8 +441,8 @@ public class RequirementRepository {
                                 List<FileDTO> lstSolicitudEquipoFiles = new ArrayList<>();
                                 String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
 
-                                for (Map<String, Object> solicitudRow: solicitudesEquipoSet) {
-                                    SolicitudEquipoReport report =  new SolicitudEquipoReport();
+                                for (Map<String, Object> solicitudRow : solicitudesEquipoSet) {
+                                    SolicitudEquipoReport report = new SolicitudEquipoReport();
                                     // datos gestor
                                     report.setCorreoGestor(gestorDocsCorreo);
                                     report.setNombreApellidoGestor(gestorDocsFullName);
@@ -463,12 +467,14 @@ public class RequirementRepository {
                                     // lista de software por solicitud
                                     List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
                                     if (equipoSoftwaresSet != null && !equipoSoftwaresSet.isEmpty()) {
-                                        for (Map<String, Object> softwareRow: equipoSoftwaresSet) {
-                                            Integer solicitudSoftwareId = (Integer) softwareRow.get("ID_EQUIPO_SOLICITUD");
+                                        for (Map<String, Object> softwareRow : equipoSoftwaresSet) {
+                                            Integer solicitudSoftwareId = (Integer) softwareRow
+                                                    .get("ID_EQUIPO_SOLICITUD");
                                             Integer solicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
 
                                             // Solo agregar si pertenece a esta solicitud
-                                            if (solicitudSoftwareId != null && solicitudSoftwareId.equals(solicitudId)) {
+                                            if (solicitudSoftwareId != null
+                                                    && solicitudSoftwareId.equals(solicitudId)) {
                                                 SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
                                                 software.setIdItem((Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
                                                 software.setProducto((String) softwareRow.get("PRODUCTO"));
@@ -482,8 +488,7 @@ public class RequirementRepository {
                                     FileDTO fileFormulario = new FileDTO(
                                             "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
                                             pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
-                                            null
-                                    );
+                                            null);
 
                                     lstSolicitudEquipoFiles.add(fileFormulario);
                                 }
@@ -493,8 +498,7 @@ public class RequirementRepository {
                                         gestorDocsCorreo,
                                         copyTo,
                                         "Requerimiento de Software y Hardware",
-                                        "Formulario Requerimiento de Software y Hardware."
-                                );
+                                        "Formulario Requerimiento de Software y Hardware.");
                             }
                         }
                     }
@@ -533,8 +537,7 @@ public class RequirementRepository {
                 (String) report.get("FIRMANTE"),
                 null,
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {
@@ -565,7 +568,8 @@ public class RequirementRepository {
                 if (resultSet2 != null && !resultSet2.isEmpty()) {
                     Map<String, Object> talentRequirementData = resultSet2.get(0);
 
-                    return new TalentRequirementDataResponse(idTipoMensaje, mensaje, mapTalentRequirementDataDTO(talentRequirementData));
+                    return new TalentRequirementDataResponse(idTipoMensaje, mensaje,
+                            mapTalentRequirementDataDTO(talentRequirementData));
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -586,16 +590,14 @@ public class RequirementRepository {
                 (String) talentoRQ.get("TOOL_TIP"),
                 (Integer) talentoRQ.get("ID_ESTADO"),
                 (String) talentoRQ.get("ESTADO"),
-                (Integer) talentoRQ.get("TIENE_EQUIPO")
-        );
+                (Integer) talentoRQ.get("TIENE_EQUIPO"));
     }
 
-
-    public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFileRequest request) throws SQLServerException {
+    public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFileRequest request)
+            throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_INS");
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
-
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
@@ -622,7 +624,6 @@ public class RequirementRepository {
         }
         return null;
     }
-
 
     public BaseResponse removeRequirementFile(BaseRequest baseRequest, Integer idRqFile) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -667,8 +668,7 @@ public class RequirementRepository {
                 perfiles = objectMapper.readValue(
                         jsonPerfiles,
                         new TypeReference<>() {
-                        }
-                );
+                        });
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -688,8 +688,7 @@ public class RequirementRepository {
                 (String) requirement.get("FECHA_VENCIMIENTO"),
                 (String) requirement.get("MODALIDAD"),
                 (Integer) requirement.get("ID_ALERTA"),
-                perfiles
-        );
+                perfiles);
     }
 
     private RequirementDTO mapToRequirementDTO(
@@ -697,8 +696,7 @@ public class RequirementRepository {
             List<RequirementTalentDTO> lstRqTalents,
             List<RequirementFileDTO> lstRqFiles,
             List<RequirementVacanteDTO> lstRqVacantes,
-            List<ClientContactItemDTO> lstContactos
-    ) {
+            List<ClientContactItemDTO> lstContactos) {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
@@ -717,11 +715,11 @@ public class RequirementRepository {
                 lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles,
-                lstContactos
-        );
+                lstContactos);
     }
 
-    private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa) throws SQLServerException {
+    private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)
+            throws SQLServerException {
         SQLServerDataTable tvpRqFiles = new SQLServerDataTable();
         tvpRqFiles.addColumnMetadata("INDICE", Types.INTEGER);
         tvpRqFiles.addColumnMetadata("LINK", Types.VARCHAR);
@@ -730,21 +728,22 @@ public class RequirementRepository {
         int indice = 1;
 
         for (FileRequest fileRequest : lstArchivos) {
-            String rutaArchivo = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS + fileRequest.getNombreArchivo() + "." + fileRequest.getExtensionArchivo();
+            String rutaArchivo = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS
+                    + fileRequest.getNombreArchivo() + "." + fileRequest.getExtensionArchivo();
 
             tvpRqFiles.addRow(
                     indice,
                     rutaArchivo,
                     fileRequest.getNombreArchivo(),
-                    fileRequest.getIdTipoArchivo()
-            );
+                    fileRequest.getIdTipoArchivo());
 
             indice++;
         }
         return tvpRqFiles;
     }
 
-    private static SQLServerDataTable loadTvpRequirementVacantes(List<VacanteRequirement> lstVacantes) throws SQLServerException {
+    private static SQLServerDataTable loadTvpRequirementVacantes(List<VacanteRequirement> lstVacantes)
+            throws SQLServerException {
         SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
         tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
@@ -752,14 +751,14 @@ public class RequirementRepository {
         for (VacanteRequirement vacanteRequirement : lstVacantes) {
             tvpRqVacantes.addRow(
                     vacanteRequirement.getIdPerfil(),
-                    vacanteRequirement.getCantidad()
-            );
+                    vacanteRequirement.getCantidad());
         }
 
         return tvpRqVacantes;
     }
 
-    private static SQLServerDataTable loadTvpRequirementVacantesUpdate(List<VacanteRequirement> lstVacantes) throws SQLServerException {
+    private static SQLServerDataTable loadTvpRequirementVacantesUpdate(List<VacanteRequirement> lstVacantes)
+            throws SQLServerException {
         SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
         tvpRqVacantes.addColumnMetadata("ID_REQUERIMIENTO_VACANTE", Types.INTEGER);
         tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
@@ -771,24 +770,24 @@ public class RequirementRepository {
                     vacanteRequirement.getIdRequerimientoVacante(),
                     vacanteRequirement.getIdPerfil(),
                     vacanteRequirement.getCantidad(),
-                    vacanteRequirement.getIdEstado()
-            );
+                    vacanteRequirement.getIdEstado());
         }
 
         return tvpRqVacantes;
     }
 
-
     @Async
     protected void guardarArchivos(List<FileRequest> lstFiles, Integer idNewRq, Integer idEmpresa) {
         for (FileRequest fileItem : lstFiles) {
-            String rutaRq = Constante.RUTA_REPOSITORIO + idEmpresa + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idNewRq.toString()) + fileItem.getNombreArchivo() + "." + fileItem.getExtensionArchivo();
+            String rutaRq = Constante.RUTA_REPOSITORIO + idEmpresa
+                    + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idNewRq.toString())
+                    + fileItem.getNombreArchivo() + "." + fileItem.getExtensionArchivo();
             FileUtils.guardarArchivoAws(fileItem.getString64(), rutaRq);
         }
     }
 
-
-    private static SQLServerDataTable loadTvpRequirementTalents(RequirementTalentRequest request) throws SQLServerException {
+    private static SQLServerDataTable loadTvpRequirementTalents(RequirementTalentRequest request)
+            throws SQLServerException {
         SQLServerDataTable tvpRqTalents = new SQLServerDataTable();
         tvpRqTalents.addColumnMetadata("INDICE", Types.INTEGER);
         tvpRqTalents.addColumnMetadata("ID_TALENTO", Types.INTEGER);
@@ -893,13 +892,12 @@ public class RequirementRepository {
                     se != null ? se.getProcesador() : null,
                     se != null ? se.getRam() : null,
                     se != null ? se.getHd() : null,
-                    se != null ? se.getMarca(): null,
+                    se != null ? se.getMarca() : null,
                     se != null ? se.getIdAnexo() : null,
                     se != null ? se.getAnexo() : null,
                     se != null ? se.getBitCelular() : null,
                     se != null ? se.getBitInternetMovil() : null,
-                    se != null ? se.getAccesorios() : null
-            );
+                    se != null ? se.getAccesorios() : null);
 
             indice++;
         }
@@ -924,8 +922,7 @@ public class RequirementRepository {
                             talent.getIdTalento(),
                             software != null ? software.getIdItem() : null,
                             software != null ? software.getProducto() : null,
-                            software != null ? software.getProdVersion() : null
-                    );
+                            software != null ? software.getProdVersion() : null);
                 }
             }
         }
@@ -945,10 +942,8 @@ public class RequirementRepository {
                 (String) postulanteRow.get("CARGO"),
                 (BigDecimal) postulanteRow.get("REMUNERACION"),
                 (String) postulanteRow.get("MODALIDAD"),
-                (String) postulanteRow.get("TIENE_EQUIPO")
-        );
+                (String) postulanteRow.get("TIENE_EQUIPO"));
     }
-
 
     @Async
     public void updateRequirementAlertJob() {
@@ -958,4 +953,49 @@ public class RequirementRepository {
         simpleJdbcCall.execute();
     }
 
+    public FileResponse getRqFile(BaseRequest baseRequest, Integer idRequerimentFile) {
+
+        SimpleJdbcCall sCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_ARCHIVO_SEL");
+
+        FileResponse fileResponse = new FileResponse();
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_REQUERIMIENTO_ARCHIVO", idRequerimentFile)
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> resMap = sCall.execute(params);
+        List<Map<String, Object>> resSeList = (List<Map<String, Object>>) resMap.get("#result-set-1");
+
+        if (resSeList != null && !resSeList.isEmpty()) {
+
+            Integer idTipoMensaje = (Integer) resSeList.get(0).get("ID_TIPO_MENSAJE");
+            String mensaje = (String) resSeList.get(0).get("MENSAJE");
+            fileResponse.setBaseResponse(new BaseResponse(
+                    idTipoMensaje, mensaje));
+
+            if (fileResponse.getBaseResponse().getIdTipoMensaje() == 2) {
+                List<Map<String, Object>> fileSet = (List<Map<String, Object>>) resMap.get("#result-set-2");
+
+                if (fileSet != null && !fileSet.isEmpty()) {
+                    Map<String, Object> fileRow = fileSet.get(0);
+                    String link = (String) fileRow.get("LINK");
+                    // Extraer la extensión del archivo
+                    String ext = "";
+                    if (link != null && link.contains(".")) {
+                        ext = link.substring(link.lastIndexOf('.') + 1);
+                    }
+                    fileResponse.setExt(ext);
+                    fileResponse.setFile(link);
+
+                }
+            }
+        }
+
+        return fileResponse;
+    }
 }

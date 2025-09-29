@@ -8,6 +8,7 @@ import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.service.impl.RequirementService;
 import org.app.autfmi.util.JwtHelper;
 import org.springframework.http.HttpStatus;
@@ -34,14 +35,14 @@ public class RequirementController {
             HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = requirementService.listRequirements(token, nPag, cPag, idCliente, buscar, fechaSolicitud, estado);
+            BaseResponse response = requirementService.listRequirements(token, nPag, cPag, idCliente, buscar,
+                    fechaSolicitud, estado);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -51,26 +52,24 @@ public class RequirementController {
             @RequestParam Boolean showfiles,
             @RequestParam Boolean showVacantesList,
             @RequestParam Boolean showContactList,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            BaseResponse response = requirementService.getRequirement(token, idRequerimiento, showfiles, showVacantesList, showContactList);
+            BaseResponse response = requirementService.getRequirement(token, idRequerimiento, showfiles,
+                    showVacantesList, showContactList);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/save")
     public ResponseEntity<BaseResponse> saveRequirement(
             @RequestBody RequirementRequest request,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.saveRequirement(token, request);
@@ -79,16 +78,14 @@ public class RequirementController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/update")
     public ResponseEntity<BaseResponse> updateRequirement(
             @RequestBody RequirementRequest request,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.updateRequirement(token, request);
@@ -97,16 +94,14 @@ public class RequirementController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/talents/save")
     public ResponseEntity<BaseResponse> saveRequirementTalents(
             @RequestBody RequirementTalentRequest request,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.saveRequirementTalents(token, request);
@@ -115,8 +110,7 @@ public class RequirementController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -124,8 +118,7 @@ public class RequirementController {
     public ResponseEntity<BaseResponse> getRequirementTalentData(
             @RequestParam Integer idTalento,
             @RequestParam Integer idRequerimiento,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.getRequirementTalentData(token, idTalento, idRequerimiento);
@@ -134,16 +127,14 @@ public class RequirementController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/file/save")
     public ResponseEntity<BaseResponse> saveRequirementFile(
             @RequestBody RequirementFileRequest request,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.saveRequirementFile(token, request);
@@ -152,16 +143,14 @@ public class RequirementController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @DeleteMapping("/file/remove")
     public ResponseEntity<BaseResponse> removeRequirementFile(
             @RequestParam Integer idRqFile,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.removeRequirementFile(token, idRqFile);
@@ -170,11 +159,23 @@ public class RequirementController {
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-
+    @GetMapping("/file")
+    public ResponseEntity<FileResponse> getRequirementFiles(
+            @RequestParam Integer idArchivo,
+            HttpServletRequest httpServletRequest) {
+        FileResponse fileResponse = new FileResponse();
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            fileResponse = requirementService.getRequirementFile(token, idArchivo);
+            return ResponseEntity.ok(fileResponse);
+        } catch (Exception e) {
+            fileResponse.setBaseResponse(new BaseResponse(3, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(fileResponse);
+        }
+    }
 
 }

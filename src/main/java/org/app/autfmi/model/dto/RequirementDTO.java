@@ -25,6 +25,7 @@ public class RequirementDTO {
     private String fechaVencimiento;
     private Integer idModalidad;
     private String modalidad;
+    private String modalidadFact;
     private List<RequirementVacanteDTO> lstRqVacantes;
     private List<RequirementTalentDTO> lstRqTalento;
     private List<RequirementFileDTO> lstRqArchivo;

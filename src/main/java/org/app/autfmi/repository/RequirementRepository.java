@@ -247,7 +247,8 @@ public class RequirementRepository {
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("USUARIO", baseRequest.getUsername())
-                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("MODALIDAD_FACT", request.getIdModalidadFact());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -291,7 +292,8 @@ public class RequirementRepository {
                 .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("USUARIO", baseRequest.getUsername())
-                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("MODALIDAD_FACT", request.getIdModalidadFact());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -712,6 +714,7 @@ public class RequirementRepository {
                 requerimiento.get("FECHA_VENCIMIENTO").toString(),
                 (Integer) requerimiento.get("ID_MODALIDAD"),
                 (String) requerimiento.get("MODALIDAD"),
+                (String) requerimiento.get("MODALIDAD_FACT"),
                 lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles,

@@ -1,6 +1,9 @@
 package org.app.autfmi.service;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import org.app.autfmi.model.dto.VacanteCarreraDTO;
+import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
@@ -8,6 +11,7 @@ import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
 
 import java.util.Date;
+import java.util.List;
 
 public interface IRequirementService {
 
@@ -30,4 +34,14 @@ public interface IRequirementService {
         BaseResponse removeRequirementFile(String token, Integer idRqFile);
 
         FileResponse getRequirementFile(String token, Integer idrqFile);
+
+        BaseResponse getTechSkillsForVac(String token, Integer idVacante);
+
+        BaseResponse updateSkillsForVac(String token, Integer idVacante,
+                        List<VacanteSkillDTO> skills);
+
+        BaseResponse updateCareersForVac(String token, Integer idVacante, List<VacanteCarreraDTO> careers);
+
+        BaseResponse getCareersForVac(String token, Integer idVacante);
+
 }

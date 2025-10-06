@@ -16,6 +16,8 @@ import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
+import org.app.autfmi.model.response.VacanteCarreraResponse;
+import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
@@ -26,12 +28,9 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
-import org.springframework.validation.ObjectError;
-import org.yaml.snakeyaml.scanner.Constant;
 
 import java.math.BigDecimal;
 import java.sql.Types;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -226,6 +225,8 @@ public class RequirementRepository {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_INS");
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
         SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantes(request.getLstVacantes());
+        SQLServerDataTable tvpRqVacSkill = loadTvpRqVacSkill(request.getLstVacanteSkills());
+        SQLServerDataTable tvpCarreras = loadTvpLstCarreras(request.getLstCarreras());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", request.getIdCliente())
@@ -248,7 +249,9 @@ public class RequirementRepository {
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("USUARIO", baseRequest.getUsername())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("MODALIDAD_FACT", request.getIdModalidadFact());
+                .addValue("MODALIDAD_FACT", request.getIdModalidadFact())
+                .addValue("LST_VACANTE_SKILLS", tvpRqVacSkill)
+                .addValue("LST_VACANTE_CARRERAS", tvpCarreras);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -265,6 +268,22 @@ public class RequirementRepository {
             return new BaseResponse(idTipoMensaje, mensaje);
         }
         return null;
+    }
+
+    private SQLServerDataTable loadTvpLstCarreras(List<VacanteCarreraRequest> carreras) throws SQLServerException {
+
+        SQLServerDataTable tvp = new SQLServerDataTable();
+        tvp.addColumnMetadata("ID_PERFIL", Types.INTEGER);
+        tvp.addColumnMetadata("CARRERA", Types.VARCHAR);
+        tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", Types.INTEGER);
+
+        for (VacanteCarreraRequest carrera : carreras) {
+            tvp.addRow(
+                    carrera.getIdPerfil(),
+                    carrera.getCarrera(),
+                    carrera.getIdGrado());
+        }
+        return tvp;
     }
 
     public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest)
@@ -1001,4 +1020,222 @@ public class RequirementRepository {
 
         return fileResponse;
     }
+
+    private static SQLServerDataTable loadTvpRqVacSkill(List<VacanteSkill> lstVacanteSkills)
+            throws SQLServerException {
+        SQLServerDataTable tvpRqVacSkill = new SQLServerDataTable();
+
+        tvpRqVacSkill.addColumnMetadata("ID_PERFIL", Types.INTEGER);
+        tvpRqVacSkill.addColumnMetadata("ID_SKILL", Types.INTEGER);
+        tvpRqVacSkill.addColumnMetadata("ANIOS", Types.INTEGER);
+
+        // Recorrer la lista en Java y llenar el TVP
+        for (VacanteSkill skillReq : lstVacanteSkills) {
+            tvpRqVacSkill.addRow(
+                    skillReq.getIdPerfil(),
+                    skillReq.getIdSkill(),
+                    skillReq.getAnios());
+        }
+
+        return tvpRqVacSkill;
+    }
+
+    public VacanteSkillsResponse getTechSkillsForVac(Integer idVacante) {
+
+        SimpleJdbcCall sCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_VACANTE_HABILIDAD_SEL");
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_VACANTE", idVacante);
+
+        List<VacanteSkillDTO> habilidades = new ArrayList<>();
+
+        Map<String, Object> resMap = sCall.execute(params);
+
+        List<Map<String, Object>> msgResult = (List<Map<String, Object>>) resMap.get("#result-set-1");
+        Map<String, Object> msgRow = msgResult.get(0);
+        Integer idTipoMensaje = (Integer) msgRow.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) msgRow.get("MENSAJE");
+
+        if (idTipoMensaje == 2) {
+            // Segundo resultset -> data
+            List<Map<String, Object>> skills = (List<Map<String, Object>>) resMap.get("#result-set-2");
+            for (Map<String, Object> row : skills) {
+                Integer idSkill = (Integer) row.get("ID_HABILIDAD");
+                String skillName = (String) row.get("HABILIDAD");
+                Integer years = (Integer) row.get("ANIOS_EXP");
+                Integer idRegState = (Integer) row.get("ID_ESTADO_REGISTRO");
+                Integer idVac = (Integer) row.get("ID_VACANTE");
+                Integer idProfile = (Integer) row.get("ID_PERFIL");
+                Integer idReqVacSkill = (Integer) row.get("ID_VACANTE_HABILIDAD");
+
+                // Aquí mapear a DTO VacanteSkill
+                VacanteSkillDTO skill = new VacanteSkillDTO();
+                skill.setIdVacanteHabilidad(idReqVacSkill);
+                skill.setIdVacante(idVac);
+                skill.setIdPerfil(idProfile);
+                skill.setIdHabilidad(idSkill);
+                skill.setHabilidad(skillName);
+                skill.setIdEstadoRegistro(idRegState);
+                skill.setAnios(years);
+                habilidades.add(skill);
+            }
+        }
+        return new VacanteSkillsResponse(idTipoMensaje, mensaje, habilidades);
+    }
+
+    public BaseResponse updateSkillsForVac(BaseRequest baseRequest, Integer idVacante,
+            List<VacanteSkillDTO> skills) {
+
+        try {
+
+            SimpleJdbcCall sCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_REQUERIMIENTO_VACANTE_HABILIDAD_UPD");
+
+            SQLServerDataTable tvp = new SQLServerDataTable();
+            tvp.addColumnMetadata("ID_REQUERIMIENTO_VACANTE_HABILIDAD", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("ID_HABILIDAD", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("A_EXP", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("ID_ESTADO_REGISTRO", java.sql.Types.INTEGER);
+
+            for (VacanteSkillDTO s : skills) {
+                tvp.addRow(
+                        s.getIdVacanteHabilidad(),
+                        s.getIdHabilidad(),
+                        s.getAnios(),
+                        s.getIdEstadoRegistro());
+            }
+            SqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("ID_VACANTE", idVacante)
+                    .addValue("USUARIO", baseRequest.getUsername())
+                    .addValue("LST_HABILIDADES", tvp);
+
+            Map<String, Object> resMap = sCall.execute(params);
+
+            List<Map<String, Object>> msgResult = (List<Map<String, Object>>) resMap.get("#result-set-1");
+            Map<String, Object> msgRow = msgResult.get(0);
+            Integer idTipoMensaje = (Integer) msgRow.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) msgRow.get("MENSAJE");
+            return new BaseResponse(idTipoMensaje, mensaje);
+        } catch (Exception e) {
+            return new BaseResponse(3, e.getMessage());
+        }
+    }
+
+    public BaseResponse updateCareersForVac(Integer idVacante, BaseRequest request, List<VacanteCarreraDTO> careers) {
+        BaseResponse baseResponse = new BaseResponse();
+        try {
+
+            SimpleJdbcCall sCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_VACANTE_CARRERA_UPD");
+
+            // Crear el TVP
+            SQLServerDataTable tvp = new SQLServerDataTable();
+            tvp.addColumnMetadata("ID_VACANTE_CARRERA", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("CARRERA", java.sql.Types.VARCHAR);
+            tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("ID_ESTADO_REGISTRO", java.sql.Types.INTEGER);
+
+            // Llenar el TVP con las carreras recibidas
+            for (VacanteCarreraDTO carrera : careers) {
+                tvp.addRow(
+                        carrera.getIdVacanteCarrera(), // Puede ser null si es nueva
+                        carrera.getCarrera(),
+                        carrera.getIdGradoEstudios(),
+                        carrera.getIdEstadoRegistro());
+            }
+
+            // Ejecutar el SP
+            Map<String, Object> result = sCall.execute(
+                    new MapSqlParameterSource()
+                            .addValue("ID_VACANTE", idVacante)
+                            .addValue("LST_CARRERAS", tvp)
+                            .addValue("USUARIO", request.getUsername())
+                            .addValue("ROL", request.getIdRol())
+                            .addValue("FUNCIONALIDADES", request.getFuncionalidades()));
+
+            // Procesar la respuesta (primer result set)
+            List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+            if (resultSet != null && !resultSet.isEmpty()) {
+                Map<String, Object> row = resultSet.get(0);
+                int tipoMensaje = (int) row.get("ID_TIPO_MENSAJE");
+                String mensaje = (String) row.get("MENSAJE");
+                baseResponse.setIdTipoMensaje(tipoMensaje);
+                baseResponse.setMensaje(mensaje);
+            } else {
+                baseResponse.setIdTipoMensaje(3);
+                baseResponse.setMensaje("Ha ocurrido un error al actualizar las carreras de la vacante");
+
+            }
+            System.out.println(baseResponse);
+            return baseResponse;
+
+        } catch (Exception e) {
+            System.out.println(e);
+            return new BaseResponse(3, "Ha ocurrido un error al actualizar las carreras de la vacante.");
+        }
+    }
+
+    public VacanteCarreraResponse getCareersForVac(BaseRequest request, Integer idVac) {
+        VacanteCarreraResponse response = new VacanteCarreraResponse(3, "Error inesperado.", null);
+
+        try {
+            SimpleJdbcCall sCall = new SimpleJdbcCall(jdbcTemplate)
+                    .withProcedureName("SP_VACANTE_CARRERA_SEL");
+
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                    .addValue("ID_VACANTE", idVac)
+                    .addValue("USUARIO", request.getUsername())
+                    .addValue("ROL", request.getIdRol())
+                    .addValue("FUNCIONALIDADES", request.getFuncionalidades());
+
+            Map<String, Object> result = sCall.execute(params);
+
+            // Procesar Result Set #1 (mensaje)
+            List<Map<String, Object>> rs1 = (List<Map<String, Object>>) result.get("#result-set-1");
+            if (rs1 == null || rs1.isEmpty()) {
+                response.setIdTipoMensaje(3);
+                response.setMensaje("No se obtuvó información de la vacante.");
+                return response;
+            }
+
+            Map<String, Object> msgRow = rs1.get(0);
+            Integer tipoMensaje = (Integer) msgRow.get("ID_TIPO_MENSAJE");
+            String mensaje = (String) msgRow.get("MENSAJE");
+
+            response.setIdTipoMensaje(tipoMensaje);
+            response.setMensaje(mensaje);
+
+            // Si hubo error, no continuar
+            if (tipoMensaje == 1 || tipoMensaje == 3) {
+                return response;
+            }
+
+            // Procesar Result Set #2 (lista de carreras)
+            List<Map<String, Object>> rs2 = (List<Map<String, Object>>) result.get("#result-set-2");
+            if (rs2 != null && !rs2.isEmpty()) {
+                List<VacanteCarreraDTO> carreras = rs2.stream().map(row -> {
+                    VacanteCarreraDTO dto = new VacanteCarreraDTO();
+                    dto.setIdVacanteCarrera((Integer) row.get("ID_VACANTE_CARRERA"));
+                    dto.setIdVacante((Integer) row.get("ID_VACANTE"));
+                    dto.setCarrera((String) row.get("CARRERA"));
+                    dto.setIdGradoEstudios((Integer) row.get("ID_GRADO_ESTUDIOS"));
+                    dto.setIdEstadoRegistro((Integer) row.get("ID_ESTADO_REGISTRO"));
+                    return dto;
+                }).toList();
+
+                response.setCarreras(carreras);
+            } else {
+                response.setCarreras(List.of());
+            }
+
+            return response;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new VacanteCarreraResponse(3, "Error al obtener las carreras de la vacante",
+                    null);
+        }
+    }
+
 }

@@ -2,10 +2,8 @@ package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.ParametrosDTO;
-import org.app.autfmi.model.dto.TalentItemDTO;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.ParametrosListResponse;
-import org.app.autfmi.model.response.TalentListResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -42,7 +40,8 @@ public class ParametrosRepository {
             parametrosListResponse.setBaseResponse(baseResponse);
 
             if (baseResponse.getIdTipoMensaje() == 2) {
-                List<Map<String, Object>> paramsResultSet2 = (List<Map<String, Object>>) resultParams.get("#result-set-2");
+                List<Map<String, Object>> paramsResultSet2 = (List<Map<String, Object>>) resultParams
+                        .get("#result-set-2");
                 if (paramsResultSet2 != null && !paramsResultSet2.isEmpty()) {
                     List<ParametrosDTO> parametrosList = new ArrayList<>();
 
@@ -68,8 +67,7 @@ public class ParametrosRepository {
                 (Integer) parametro.get("NUM3"),
                 (String) parametro.get("STRING1"),
                 (String) parametro.get("STRING2"),
-                (String) parametro.get("STRING3")
-        );
+                (String) parametro.get("STRING3"));
     }
 
 }

@@ -4,9 +4,12 @@ import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.UserDTO;
+import org.app.autfmi.model.dto.VacanteCarreraDTO;
+import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.Common;
@@ -16,6 +19,7 @@ import org.app.autfmi.util.JwtHelper;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -111,6 +115,42 @@ public class RequirementService implements IRequirementService {
         }
 
         return fileResponse;
+    }
+
+    @Override
+    public VacanteSkillsResponse getTechSkillsForVac(String token, Integer idVacante) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = new BaseRequest();
+        baseRequest.setUsername(user.getUsuario());
+        baseRequest.setIdRol(user.getIdRoles().get(0));
+        baseRequest.setIdUsuario(user.getIdUsuario());
+        return requirementRepository.getTechSkillsForVac(idVacante);
+    }
+
+    @Override
+    public BaseResponse updateSkillsForVac(String token, Integer idVacante,
+            List<VacanteSkillDTO> skills) {
+
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, "");
+        return requirementRepository.updateSkillsForVac(baseRequest, idVacante, skills);
+
+    }
+
+    @Override
+    public BaseResponse updateCareersForVac(String token, Integer idVacante, List<VacanteCarreraDTO> careers) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.updateCareersForVac(idVacante, baseRequest, careers);
+    }
+
+    @Override
+    public BaseResponse getCareersForVac(String token, Integer idVacante) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.LISTAR_REQUERIMIENTOS;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.getCareersForVac(baseRequest, idVacante);
     }
 
 }

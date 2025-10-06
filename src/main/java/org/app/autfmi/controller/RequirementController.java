@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
@@ -23,6 +24,8 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/requirement")
@@ -214,6 +217,35 @@ public class RequirementController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
                     new BaseResponse(3, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/vacantes/careers/update")
+    public ResponseEntity<BaseResponse> updateCareersForVac(
+            @RequestParam Integer idVacante,
+            @RequestBody List<VacanteCarreraDTO> request,
+            HttpServletRequest httpServletRequest) {
+
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.updateCareersForVac(token, idVacante, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            BaseResponse bRes = new BaseResponse(3, "Error al listar las carreras para la vacante");
+            return ResponseEntity.internalServerError().body(bRes);
+        }
+    }
+
+    @GetMapping("/vacantes/careers")
+    public ResponseEntity<BaseResponse> getMethodName(@RequestParam Integer idVacante,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.getCareersForVac(token, idVacante);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            BaseResponse bRes = new BaseResponse(3, "Error al listar las carreras para la vacante");
+            return ResponseEntity.internalServerError().body(bRes);
         }
     }
 

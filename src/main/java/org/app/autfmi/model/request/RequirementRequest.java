@@ -28,4 +28,5 @@ public class RequirementRequest {
     private List<FileRequest> lstArchivos;
     private String idModalidadFact;
     private List<VacanteSkill> lstVacanteSkills;
+    private List<VacanteCarreraRequest> lstCarreras;
 }

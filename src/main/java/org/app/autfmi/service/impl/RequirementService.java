@@ -4,6 +4,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.UserDTO;
+import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
@@ -135,4 +136,21 @@ public class RequirementService implements IRequirementService {
         return requirementRepository.updateSkillsForVac(baseRequest, idVacante, skills);
 
     }
+
+    @Override
+    public BaseResponse updateCareersForVac(String token, Integer idVacante, List<VacanteCarreraDTO> careers) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.updateCareersForVac(idVacante, baseRequest, careers);
+    }
+
+    @Override
+    public BaseResponse getCareersForVac(String token, Integer idVacante) {
+        UserDTO user = jwt.decodeToken(token);
+        String funcionalidades = Constante.LISTAR_REQUERIMIENTOS;
+        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        return requirementRepository.getCareersForVac(baseRequest, idVacante);
+    }
+
 }

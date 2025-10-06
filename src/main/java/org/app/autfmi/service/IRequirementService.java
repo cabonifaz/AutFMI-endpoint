@@ -2,6 +2,7 @@ package org.app.autfmi.service;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 
+import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
@@ -38,5 +39,9 @@ public interface IRequirementService {
 
         BaseResponse updateSkillsForVac(String token, Integer idVacante,
                         List<VacanteSkillDTO> skills);
+
+        BaseResponse updateCareersForVac(String token, Integer idVacante, List<VacanteCarreraDTO> careers);
+
+        BaseResponse getCareersForVac(String token, Integer idVacante);
 
 }

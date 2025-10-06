@@ -27,4 +27,5 @@ public class RequirementRequest {
     @JsonProperty()
     private List<FileRequest> lstArchivos;
     private String idModalidadFact;
+    private List<VacanteSkill> lstVacanteSkills;
 }

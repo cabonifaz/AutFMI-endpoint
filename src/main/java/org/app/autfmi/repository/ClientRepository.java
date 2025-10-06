@@ -3,14 +3,12 @@ package org.app.autfmi.repository;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.ClientContactItemDTO;
 import org.app.autfmi.model.dto.ClientItemDTO;
-import org.app.autfmi.model.dto.RequirementItemDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.ContactRegisterRequest;
 import org.app.autfmi.model.request.ContactUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.ClientContactListResponse;
 import org.app.autfmi.model.response.ClientListResponse;
-import org.app.autfmi.model.response.RequirementListResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -26,7 +24,7 @@ import java.util.Map;
 public class ClientRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    public BaseResponse listClients(BaseRequest baseRequest){
+    public BaseResponse listClients(BaseRequest baseRequest) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_CLIENTE_LST");
 
@@ -64,11 +62,10 @@ public class ClientRepository {
         return new ClientItemDTO(
                 (Integer) client.get("ID_CLIENTE"),
                 (String) client.get("RAZON_SOCIAL"),
-                (Integer) client.get("TOTAL")
-        );
+                (Integer) client.get("TOTAL"));
     }
 
-    public BaseResponse listClientContacts(BaseRequest baseRequest, Integer idCliente){
+    public BaseResponse listClientContacts(BaseRequest baseRequest, Integer idCliente) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_CLIENTE_CONTACTO_LST");
 
         SqlParameterSource params = new MapSqlParameterSource()
@@ -100,8 +97,7 @@ public class ClientRepository {
                                 (String) clientContactRow.get("TELEFONO_2"),
                                 (String) clientContactRow.get("CORREO"),
                                 (String) clientContactRow.get("CORREO_2"),
-                                (Integer) clientContactRow.get("ID_ESTADO_CONTACTO")
-                        );
+                                (Integer) clientContactRow.get("ID_ESTADO_CONTACTO"));
 
                         clientContacts.add(clientContact);
                     }
@@ -120,14 +116,14 @@ public class ClientRepository {
 
             SqlParameterSource params = new MapSqlParameterSource()
                     .addValue("ID_CLIENTE", contacto.getIdCliente())
-                    .addValue("NOMBRES",contacto.getNombres())
-                    .addValue("APELLIDO_PATERNO",contacto.getApellidoPaterno())
-                    .addValue("APELLIDO_MATERNO",contacto.getApellidoMaterno())
-                    .addValue("CARGO",contacto.getCargo())
-                    .addValue("TELEFONO",contacto.getTelefono())
-                    .addValue("TELEFONO_2",contacto.getTelefono2())
-                    .addValue("CORREO",contacto.getCorreo())
-                    .addValue("CORREO_2",contacto.getCorreo2())
+                    .addValue("NOMBRES", contacto.getNombres())
+                    .addValue("APELLIDO_PATERNO", contacto.getApellidoPaterno())
+                    .addValue("APELLIDO_MATERNO", contacto.getApellidoMaterno())
+                    .addValue("CARGO", contacto.getCargo())
+                    .addValue("TELEFONO", contacto.getTelefono())
+                    .addValue("TELEFONO_2", contacto.getTelefono2())
+                    .addValue("CORREO", contacto.getCorreo())
+                    .addValue("CORREO_2", contacto.getCorreo2())
 
                     .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                     .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
@@ -161,14 +157,14 @@ public class ClientRepository {
 
             SqlParameterSource params = new MapSqlParameterSource()
                     .addValue("ID_CLIENTE_CONTACTO", contacto.getIdClienteContacto())
-                    .addValue("NOMBRES",contacto.getNombres())
-                    .addValue("APELLIDO_PATERNO",contacto.getApellidoPaterno())
-                    .addValue("APELLIDO_MATERNO",contacto.getApellidoMaterno())
-                    .addValue("CARGO",contacto.getCargo())
-                    .addValue("TELEFONO",contacto.getTelefono())
-                    .addValue("TELEFONO_2",contacto.getTelefono2())
-                    .addValue("CORREO",contacto.getCorreo())
-                    .addValue("CORREO_2",contacto.getCorreo2())
+                    .addValue("NOMBRES", contacto.getNombres())
+                    .addValue("APELLIDO_PATERNO", contacto.getApellidoPaterno())
+                    .addValue("APELLIDO_MATERNO", contacto.getApellidoMaterno())
+                    .addValue("CARGO", contacto.getCargo())
+                    .addValue("TELEFONO", contacto.getTelefono())
+                    .addValue("TELEFONO_2", contacto.getTelefono2())
+                    .addValue("CORREO", contacto.getCorreo())
+                    .addValue("CORREO_2", contacto.getCorreo2())
 
                     .addValue("ID_USUARIO", baseRequest.getIdUsuario())
                     .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())

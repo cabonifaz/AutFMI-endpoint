@@ -179,7 +179,9 @@ public class RequirementRepository {
                                         (Integer) vacante.get("ID_REQUERIMIENTO_VACANTE"),
                                         (Integer) vacante.get("ID_PERFIL"),
                                         (String) vacante.get("PERFIL_PROFESIONAL"),
-                                        (Integer) vacante.get("CANTIDAD"));
+                                        (Integer) vacante.get("CANTIDAD"),
+                                        (Integer) vacante.get("TOTAL_HABILIDADES"),
+                                        (Integer) vacante.get("TOTAL_CARRERAS"));
 
                                 lstRqVacantes.add(itemRqVacante);
                             }

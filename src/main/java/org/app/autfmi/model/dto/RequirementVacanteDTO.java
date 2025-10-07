@@ -12,4 +12,6 @@ public class RequirementVacanteDTO {
     private Integer idPerfil;
     private String perfilProfesional;
     private Integer cantidad;
+    private Integer totalHabilidades;
+    private Integer totalCarreras;
 }

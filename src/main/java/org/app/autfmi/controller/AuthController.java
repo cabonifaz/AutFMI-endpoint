@@ -3,7 +3,6 @@ package org.app.autfmi.controller;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.request.AuthRequest;
-import org.app.autfmi.model.response.AuthResponse;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.service.IAuthService;
 import org.springframework.http.HttpStatus;

@@ -31,4 +31,6 @@ public class RequirementTalentDTO {
     private String fchTerminoContrato;
     private BigDecimal montoBase;
     private Integer idCvFile;
+    private Integer idCVEs;
+    private Integer idCVEn;
 }

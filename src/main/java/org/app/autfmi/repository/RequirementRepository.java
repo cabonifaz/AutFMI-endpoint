@@ -145,7 +145,9 @@ public class RequirementRepository {
                                     (String) rqTalentRow.get("FCH_INICIO_LABORES"),
                                     (String) rqTalentRow.get("FCH_FIN_LABORES"),
                                     (BigDecimal) rqTalentRow.get("MONTO_BASE"),
-                                    (Integer) rqTalentRow.get("ID_CV_FILE"));
+                                    (Integer) rqTalentRow.get("ID_CV_FILE"),
+                                    (Integer) rqTalentRow.get("ID_CV_FILE_ES"),
+                                    (Integer) rqTalentRow.get("ID_CV_FILE_EN"));
 
                             lstRqTalents.add(itemRqTalento);
                         }
@@ -761,8 +763,7 @@ public class RequirementRepository {
                     rutaArchivo,
                     fileRequest.getNombreArchivo(),
                     fileRequest.getIdTipoArchivo(),
-                    fileRequest.getIdTipoArchivoRQ()
-                    );
+                    fileRequest.getIdTipoArchivoRQ());
 
             indice++;
         }

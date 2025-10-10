@@ -10,4 +10,5 @@ public class FileRequest {
     private String nombreArchivo;
     private String extensionArchivo;
     private Integer idTipoArchivo;
+    private Integer idTipoArchivoRQ;
 }

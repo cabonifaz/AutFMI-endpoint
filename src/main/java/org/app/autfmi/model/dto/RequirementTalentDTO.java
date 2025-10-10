@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -32,4 +31,6 @@ public class RequirementTalentDTO {
     private String fchTerminoContrato;
     private BigDecimal montoBase;
     private Integer idCvFile;
+    private Integer idCVEs;
+    private Integer idCVEn;
 }

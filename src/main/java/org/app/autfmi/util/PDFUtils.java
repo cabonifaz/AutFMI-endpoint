@@ -6,7 +6,6 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.report.*;
-import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

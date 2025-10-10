@@ -1,6 +1,6 @@
 package org.app.autfmi.service.impl;
 
-import lombok.AllArgsConstructor;
+
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
@@ -8,7 +8,6 @@ import org.app.autfmi.model.request.ContactRegisterRequest;
 import org.app.autfmi.model.request.ContactUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.ClientRepository;
-import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IClientService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;

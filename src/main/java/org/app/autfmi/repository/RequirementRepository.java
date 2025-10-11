@@ -145,7 +145,9 @@ public class RequirementRepository {
                                     (String) rqTalentRow.get("FCH_INICIO_LABORES"),
                                     (String) rqTalentRow.get("FCH_FIN_LABORES"),
                                     (BigDecimal) rqTalentRow.get("MONTO_BASE"),
-                                    (Integer) rqTalentRow.get("ID_CV_FILE"));
+                                    (Integer) rqTalentRow.get("ID_CV_FILE"),
+                                    (Integer) rqTalentRow.get("ID_CV_FILE_ES"),
+                                    (Integer) rqTalentRow.get("ID_CV_FILE_EN"));
 
                             lstRqTalents.add(itemRqTalento);
                         }
@@ -162,8 +164,8 @@ public class RequirementRepository {
                                         // FileUtils.cargarArchivo((String) rqFileRow.get("LINK")),
                                         "",
                                         (String) rqFileRow.get("NOMBRE_ARCHIVO"),
-                                        (Integer) rqFileRow.get("ID_TIPO_ARCHIVO"));
-
+                                        (Integer) rqFileRow.get("ID_TIPO_ARCHIVO"),
+                                        (Integer) rqFileRow.get("ID_TIPO_ARCHIVO_RQ"));
                                 lstRqFiles.add(itemRqArchivo);
                             }
                         }
@@ -749,6 +751,7 @@ public class RequirementRepository {
         tvpRqFiles.addColumnMetadata("LINK", Types.VARCHAR);
         tvpRqFiles.addColumnMetadata("NOMBRE_ARCHIVO", Types.VARCHAR);
         tvpRqFiles.addColumnMetadata("ID_TIPO_ARCHIVO", Types.INTEGER);
+        tvpRqFiles.addColumnMetadata("ID_TIPO_ARCHIVO_RQ", Types.INTEGER);
         int indice = 1;
 
         for (FileRequest fileRequest : lstArchivos) {
@@ -759,7 +762,8 @@ public class RequirementRepository {
                     indice,
                     rutaArchivo,
                     fileRequest.getNombreArchivo(),
-                    fileRequest.getIdTipoArchivo());
+                    fileRequest.getIdTipoArchivo(),
+                    fileRequest.getIdTipoArchivoRQ());
 
             indice++;
         }

@@ -1,6 +1,6 @@
 package org.app.autfmi.model.response;
 
-import lombok.AllArgsConstructor;
+
 import lombok.Getter;
 import lombok.Setter;
 

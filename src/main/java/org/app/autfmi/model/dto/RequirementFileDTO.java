@@ -12,4 +12,5 @@ public class RequirementFileDTO {
     private String link;
     private String nombreArchivo;
     private Integer idTipoArchivo;
+    private Integer idTipoArchivoRq;
 }

@@ -183,7 +183,8 @@ public class RequirementRepository {
                                         (String) vacante.get("PERFIL_PROFESIONAL"),
                                         (Integer) vacante.get("CANTIDAD"),
                                         (Integer) vacante.get("TOTAL_HABILIDADES"),
-                                        (Integer) vacante.get("TOTAL_CARRERAS"));
+                                        (Integer) vacante.get("TOTAL_CARRERAS"),
+                                        (BigDecimal) vacante.get("TARIFA_FINAL"));
 
                                 lstRqVacantes.add(itemRqVacante);
                             }
@@ -775,11 +776,13 @@ public class RequirementRepository {
         SQLServerDataTable tvpRqVacantes = new SQLServerDataTable();
         tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("TARIFA_FINAL", Types.DECIMAL);
 
         for (VacanteRequirement vacanteRequirement : lstVacantes) {
             tvpRqVacantes.addRow(
                     vacanteRequirement.getIdPerfil(),
-                    vacanteRequirement.getCantidad());
+                    vacanteRequirement.getCantidad(),
+                    vacanteRequirement.getTarifaFinal());
         }
 
         return tvpRqVacantes;
@@ -792,13 +795,15 @@ public class RequirementRepository {
         tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
         tvpRqVacantes.addColumnMetadata("ID_ESTADO", Types.INTEGER);
+        tvpRqVacantes.addColumnMetadata("TARIFA_FINAL", Types.DECIMAL);
 
         for (VacanteRequirement vacanteRequirement : lstVacantes) {
             tvpRqVacantes.addRow(
                     vacanteRequirement.getIdRequerimientoVacante(),
                     vacanteRequirement.getIdPerfil(),
                     vacanteRequirement.getCantidad(),
-                    vacanteRequirement.getIdEstado());
+                    vacanteRequirement.getIdEstado(),
+                    vacanteRequirement.getTarifaFinal());
         }
 
         return tvpRqVacantes;

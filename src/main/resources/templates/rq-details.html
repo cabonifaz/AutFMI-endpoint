@@ -149,26 +149,48 @@
 
               <div style="margin-bottom: 32px;">
                 <h2
-                  style="font-size: 20px; font-weight: bold; color: #333333; border-bottom: 1px solid #eeeeee; padding-bottom: 8px; margin-top: 0; margin-bottom: 16px;">
-                  Vacantes</h2>
-                <table width="100%" border="0" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
-                  <thead style="background-color: #f3f4f6;">
-                    <tr>
-                      <th style="text-align: left; font-weight: 600; padding: 12px;">Perfil Profesional</th>
-                      <th style="text-align: center; font-weight: 600; padding: 12px;">Cantidad</th>
-                      <th style="text-align: right; font-weight: 600; padding: 12px;">Tipo Incial</th>
-                      <th style="text-align: right; font-weight: 600; padding: 12px;">Tarifa Final</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr th:each="vacante : ${vacantes}" style="border-bottom: 1px solid #e5e7eb;">
-                      <td style="padding: 12px; font-weight: 500;" th:text="${vacante.perfil}">Backend Developer</td>
-                      <td style="padding: 12px; text-align: center;" th:text="${vacante.cantidad}">1</td>
-                      <td style="padding: 12px; text-align: right;" th:text="${vacante.tarifaInicial}">S/. 40.00</td>
-                      <td style="padding: 12px; text-align: right;" th:text="${vacante.tarifaFinal}">S/. 40.00</td>
-                    </tr>
-                  </tbody>
-                </table>
+                  style="font-size:20px;font-weight:600;color:#333;border-bottom:1px solid #eee;padding-bottom:8px;margin:0 0 16px;">
+                  Vacantes
+                </h2>
+
+                <div th:if="${#lists.isEmpty(vacantes)}"
+                  style="text-align:center;color:#6b7280;background:#f9fafb;padding:24px;border-radius:6px;">
+                  <p style="margin:0;">No hay vacantes registradas para este requerimiento.</p>
+                </div>
+
+                <div th:each="vacante : ${vacantes}"
+                  style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
+                  <h3 style="margin:0 0 8px;font-size:18px;color:#111827;font-weight:600;" th:text="${vacante.perfil}">
+                    Backend Developer
+                  </h3>
+
+                  <p style="margin:4px 0 12px;color:#6b7280;">
+                    <strong style="color:#6b7280;">Cantidad:</strong>
+                    <span style="color:#1f2937;" th:text="${vacante.cantidad}">1</span>
+                  </p>
+
+                  <!-- Carreras: carrera + grado -->
+                  <div th:if="${vacante.carreras != null and !vacante.carreras.isEmpty()}" style="margin-bottom:10px;">
+                    <strong style="color:#6b7280;">Carreras y/o otras formaciones:</strong>
+                    <ul style="margin:6px 0 0;padding-left:20px;">
+                      <li th:each="c : ${vacante.carreras}" style="color:#1f2937;margin-bottom:4px;">
+                        <span th:text="${c.carrera}">Ingeniería de Sistemas</span>
+                        <small style="color:#6b7280;"> — <span th:text="${c.grado}">Carrera</span></small>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- Habilidades: habilidad + aniosExp -->
+                  <div th:if="${vacante.habilidades != null and !vacante.habilidades.isEmpty()}">
+                    <strong style="color:#6b7280;">Habilidades técnicas:</strong>
+                    <ul style="margin:6px 0 0;padding-left:20px;">
+                      <li th:each="h : ${vacante.habilidades}" style="color:#1f2937;margin-bottom:4px;">
+                        <span th:text="${h.habilidad}">Spring Boot</span>
+                        <small style="color:#6b7280;"> — <span th:text="${h.aniosExp}">2</span> años</small>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
 
               <div th:if="${postulantes != null}">

@@ -13,5 +13,7 @@ public interface IMailService {
       String userName,
       org.app.autfmi.model.dto.RequirementDTO rDto,
       List<Map<String, Object>> vacantesMapped,
-      List<Map<String, Object>> contactosMapList);
+      List<Map<String, Object>> contactosMapList,
+      List<Map<String, Object>> habilidadesMapped,
+      List<Map<String, Object>> carrerasMapped);
 }

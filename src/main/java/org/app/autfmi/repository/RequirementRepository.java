@@ -304,13 +304,13 @@ public class RequirementRepository {
                     for (Map<String, Object> vacante : vacantesResultSet) {
                         Map<String, Object> vacanteMap = new HashMap<>();
 
+                        vacanteMap.put("idPerfil", vacante.get("ID_REQUERIMIENTO_VACANTE"));
                         vacanteMap.put("perfil", vacante.get("PERFIL_PROFESIONAL"));
                         vacanteMap.put("cantidad", vacante.get("CANTIDAD"));
-                        vacanteMap.put("tarifaInicial", vacante.get("TARIFA_INICIAL"));
-                        vacanteMap.put("tarifaFinal", vacante.get("TARIFA_FINAL"));
 
                         vacantesMapList.add(vacanteMap);
                     }
+
                 }
 
                 // Contactos
@@ -334,13 +334,20 @@ public class RequirementRepository {
                     }
                 }
 
-                System.out.println("Contactos: " + contactosMapList.toString());
+                // --- Habilidades técnicas por vacante (result set 4)
+                List<Map<String, Object>> habilidadesResultSet = (List<Map<String, Object>>) result
+                        .get("#result-set-4");
+
+                // --- Carreras por vacante (result set 5)
+                List<Map<String, Object>> carrerasResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
 
                 // send mail
                 mailService.sendCreateRequirementNotification(
                         baseRequest.getUsername(),
                         rDto, vacantesMapList,
-                        contactosMapList);
+                        contactosMapList,
+                        habilidadesResultSet,
+                        carrerasResultSet);
 
             }
 

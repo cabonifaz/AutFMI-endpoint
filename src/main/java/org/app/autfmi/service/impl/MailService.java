@@ -32,7 +32,9 @@ public class MailService implements IMailService {
   @Override
   public void sendCreateRequirementNotification(String userName, RequirementDTO rDto,
       List<Map<String, Object>> vacantesMapped,
-      List<Map<String, Object>> contactosMapList) {
+      List<Map<String, Object>> contactosMapList,
+      List<Map<String, Object>> habilidadesMapped,
+      List<Map<String, Object>> carrerasMapped) {
 
     logger.info("Preparing to send create requirement notification email...");
     logger.info("Asunto: Creación de Requerimiento: " + rDto.getCodigoRQ());
@@ -63,8 +65,6 @@ public class MailService implements IMailService {
     rqData.put("estado", decodedState);
     variables.put("rqData", rqData);
 
-    logger.info("Requirement Data: " + rqData.toString());
-
     // --- Datos de gestión ---
     Map<String, Object> gestion = new HashMap<>();
 
@@ -94,6 +94,40 @@ public class MailService implements IMailService {
     variables.put("cliente", cliente);
 
     // --- Vacantes ---
+    // --- Vacantes + habilidades + carreras ---
+    for (Map<String, Object> vacante : vacantesMapped) {
+      Integer idVacante = (Integer) vacante.get("idPerfil");
+
+      // Filtrar habilidades técnicas para esta vacante
+      List<Map<String, Object>> habilidadesList = new ArrayList<>();
+      if (habilidadesMapped != null && !habilidadesMapped.isEmpty()) {
+        habilidadesMapped.stream()
+            .filter(h -> idVacante.equals(h.get("ID_REQUERIMIENTO_VACANTE")))
+            .forEach(h -> {
+              Map<String, Object> skillMap = new HashMap<>();
+              skillMap.put("habilidad", h.get("NOMBRE_HABILIDAD"));
+              skillMap.put("aniosExp", h.get("ANIOS_EXPERIENCIA"));
+              habilidadesList.add(skillMap);
+            });
+      }
+
+      // Filtrar carreras para esta vacante
+      List<Map<String, Object>> carrerasList = new ArrayList<>();
+      if (carrerasMapped != null && !carrerasMapped.isEmpty()) {
+        carrerasMapped.stream()
+            .filter(c -> idVacante.equals(c.get("ID_VACANTE")))
+            .forEach(c -> {
+              Map<String, Object> carreraMap = new HashMap<>();
+              carreraMap.put("carrera", c.get("CARRERA"));
+              carreraMap.put("grado", c.get("GRADO_ESTUDIO"));
+              carrerasList.add(carreraMap);
+            });
+      }
+
+      vacante.put("habilidades", habilidadesList);
+      vacante.put("carreras", carrerasList);
+    }
+
     variables.put("vacantes", vacantesMapped);
 
     // --- Postulantes ---
@@ -101,16 +135,18 @@ public class MailService implements IMailService {
     variables.put("postulantes", null);
 
     // Obtener destinatarios desde base de datos
-    String destinatario = "not_here";
+    String destinatario = "jejeje";
     List<String> cc = new ArrayList<>();
 
     logger.info("Starting mail utils");
 
-    logger.info("Body: ");
-    for (Map.Entry<String, Object> entry : variables.entrySet()) {
-      System.out.println("\tKey: " + entry.getKey() + ", Value: " + entry.getValue());
-    }
-
+    /*
+     * logger.info("Body: ");
+     * for (Map.Entry<String, Object> entry : variables.entrySet()) {
+     * System.out.println("\tKey: " + entry.getKey() + ", Value: " +
+     * entry.getValue());
+     * }
+     */
     mailUtils.sendEmailWithHtmlTemplate(
         destinatario,
         cc,

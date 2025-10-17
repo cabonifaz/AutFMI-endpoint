@@ -38,6 +38,14 @@ class RQStateMaster {
 
 }
 
+class CareerDegreeMaster {
+
+  public static final int BACHELORS = 1;
+  public static final int MASTERS = 2;
+  public static final int DOCTORATE = 3;
+
+}
+
 public class MasterDecoder {
 
   public static String decodeDuration(Integer idDuration) {

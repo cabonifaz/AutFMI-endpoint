@@ -135,7 +135,7 @@ public class MailService implements IMailService {
     variables.put("postulantes", null);
 
     // Obtener destinatarios desde base de datos
-    String destinatario = "jejeje";
+    String destinatario = "nope";
     List<String> cc = new ArrayList<>();
 
     logger.info("Starting mail utils");

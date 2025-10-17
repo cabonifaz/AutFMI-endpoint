@@ -54,41 +54,45 @@
                 <h2
                   style="font-size: 20px; font-weight: bold; color: #333333; border-bottom: 1px solid #eeeeee; padding-bottom: 8px; margin-top: 3; margin-bottom: 16px;">
                   Datos Generales del RQ</h2>
-                <table width="100%" cellpadding="5" cellspacing="0">
-                  <tr>
-                    <td width="50%" valign="top" style="padding-bottom: 12px;">
-                      <strong style="color: #6b7280;">Estado RQ:</strong>
-                      <p style="margin: 4px 0 0; color: #1f2937;" th:text="${rqData.estado}">dede</p>
-                    </td>
-                  </tr>
-                  <tr>
 
-                    <td width="50%" valign="top" style="padding-bottom: 12px;">
-                      <strong style="color: #6b7280;">Título:</strong>
-                      <p style="margin: 4px 0 0; color: #1f2937;" th:text="${rqData.titulo}">dede</p>
-                    </td>
-                    <td width="50%" valign="top" style="padding-bottom: 12px;">
-                      <strong style="color: #6b7280;">Código RQ:</strong>
-                      <p style="margin: 4px 0 0; color: #1f2937;" th:text="${rqData.codigo}">RQ-004078</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td width="50%" valign="top" style="padding-bottom: 12px;">
-                      <strong style="color: #6b7280;">Fecha de Solicitud:</strong>
-                      <p style="margin: 4px 0 0; color: #1f2937;" th:text="${rqData.fechaSolicitud}">10/16/2025</p>
-                    </td>
-                    <td width="50%" valign="top" style="padding-bottom: 12px;">
-                      <strong style="color: #6b7280;">Fecha de Vencimiento:</strong>
-                      <p style="margin: 4px 0 0; color: #1f2937;" th:text="${rqData.fechaVencimiento}">10/31/2025</p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" valign="top">
-                      <strong style="color: #6b7280;">Descripción:</strong>
-                      <p style="margin: 4px 0 0; color: #1f2937;" th:text="${rqData.descripcion}">dede</p>
-                    </td>
-                  </tr>
-                </table>
+                <!-- Título en fila separada para evitar problemas de espacio -->
+                <div
+                  style="margin-bottom: 16px; padding: 12px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                  <strong style="color: #6b7280;">Título:</strong>
+                  <p style="margin: 4px 0 0; color: #1f2937; word-wrap: break-word;" th:text="${rqData.titulo}">dede</p>
+                </div>
+
+                <!-- Grid de información principal -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                  <div style="padding: 12px; background-color: #f1f5f9; border-radius: 6px;">
+                    <strong style="color: #6b7280; display: block; margin-bottom: 4px;">Estado RQ:</strong>
+                    <span style="color: #1f2937; font-weight: 500;" th:text="${rqData.estado}">dede</span>
+                  </div>
+                  <div style="padding: 12px; background-color: #f1f5f9; border-radius: 6px;">
+                    <strong style="color: #6b7280; display: block; margin-bottom: 4px;">Código RQ:</strong>
+                    <span style="color: #1f2937; font-weight: 500; font-family: monospace;"
+                      th:text="${rqData.codigo}">RQ-004078</span>
+                  </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                  <div style="padding: 12px; background-color: #f1f5f9; border-radius: 6px;">
+                    <strong style="color: #6b7280; display: block; margin-bottom: 4px;">Fecha de Solicitud:</strong>
+                    <span style="color: #1f2937; font-weight: 500;" th:text="${rqData.fechaSolicitud}">10/16/2025</span>
+                  </div>
+                  <div style="padding: 12px; background-color: #f1f5f9; border-radius: 6px;">
+                    <strong style="color: #6b7280; display: block; margin-bottom: 4px;">Fecha de Vencimiento:</strong>
+                    <span style="color: #1f2937; font-weight: 500;"
+                      th:text="${rqData.fechaVencimiento}">10/31/2025</span>
+                  </div>
+                </div>
+
+                <!-- Descripción en fila separada -->
+                <div
+                  style="padding: 12px; background-color: #f8fafc; border-radius: 6px; border-left: 4px solid #10b981;">
+                  <strong style="color: #6b7280; display: block; margin-bottom: 4px;">Descripción:</strong>
+                  <p style="margin: 0; color: #1f2937; word-wrap: break-word;" th:text="${rqData.descripcion}">dede</p>
+                </div>
               </div>
 
               <div style="margin-bottom: 32px;">
@@ -126,25 +130,35 @@
                   Cliente y Contactos</h2>
                 <p style="margin: 0 0 16px;"><strong style="color: #6b7280;">Cliente:</strong> <span
                     style="font-weight: bold; color: #111827;" th:text="${cliente.nombre}">Banbif</span></p>
-                <table width="100%" border="0" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
-                  <thead style="background-color: #f3f4f6;">
-                    <tr>
-                      <th style="text-align: left; font-weight: 600; padding: 12px;">Nombre Completo</th>
-                      <th style="text-align: left; font-weight: 600; padding: 12px;">Celular</th>
-                      <th style="text-align: left; font-weight: 600; padding: 12px;">Correo</th>
-                      <th style="text-align: left; font-weight: 600; padding: 12px;">Cargo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr th:each="contacto : ${cliente.contactos}" style="border-bottom: 1px solid #e5e7eb;">
-                      <td style="padding: 12px;" th:text="${contacto.nombre}">Denis
-                        Alcántara Laura</td>
-                      <td style="padding: 12px;" th:text="${contacto.celular}">999000111</td>
-                      <td style="padding: 12px; color: #2563eb;" th:text="${contacto.correo}">di@alcantara.com</td>
-                      <td style="padding: 12px;" th:text="${contacto.cargo}">Dev</td>
-                    </tr>
-                  </tbody>
-                </table>
+
+                <!-- Mostrar contactos solo si no está vacía -->
+                <div th:if="${cliente.contactos != null and !cliente.contactos.isEmpty()}">
+                  <table width="100%" border="0" cellpadding="10" cellspacing="0" style="border-collapse: collapse;">
+                    <thead style="background-color: #f3f4f6;">
+                      <tr>
+                        <th style="text-align: left; font-weight: 600; padding: 12px;">Nombre Completo</th>
+                        <th style="text-align: left; font-weight: 600; padding: 12px;">Celular</th>
+                        <th style="text-align: left; font-weight: 600; padding: 12px;">Correo</th>
+                        <th style="text-align: left; font-weight: 600; padding: 12px;">Cargo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr th:each="contacto : ${cliente.contactos}" style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px;" th:text="${contacto.nombre}">Denis
+                          Alcántara Laura</td>
+                        <td style="padding: 12px;" th:text="${contacto.celular}">999000111</td>
+                        <td style="padding: 12px; color: #2563eb;" th:text="${contacto.correo}">di@alcantara.com</td>
+                        <td style="padding: 12px;" th:text="${contacto.cargo}">Dev</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Mensaje cuando no hay contactos -->
+                <div th:if="${cliente.contactos == null or cliente.contactos.isEmpty()}"
+                  style="text-align: center; color: #6b7280; background-color: #f9fafb; padding: 24px; border-radius: 6px;">
+                  <p style="margin: 0;">No se han seleccionado contactos.</p>
+                </div>
               </div>
 
               <div style="margin-bottom: 32px;">
@@ -159,36 +173,67 @@
                 </div>
 
                 <div th:each="vacante : ${vacantes}"
-                  style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
-                  <h3 style="margin:0 0 8px;font-size:18px;color:#111827;font-weight:600;" th:text="${vacante.perfil}">
-                    Backend Developer
-                  </h3>
+                  style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); transition: all 0.3s ease;">
 
-                  <p style="margin:4px 0 12px;color:#6b7280;">
-                    <strong style="color:#6b7280;">Cantidad:</strong>
-                    <span style="color:#1f2937;" th:text="${vacante.cantidad}">1</span>
-                  </p>
-
-                  <!-- Carreras: carrera + grado -->
-                  <div th:if="${vacante.carreras != null and !vacante.carreras.isEmpty()}" style="margin-bottom:10px;">
-                    <strong style="color:#6b7280;">Carreras y/o otras formaciones:</strong>
-                    <ul style="margin:6px 0 0;padding-left:20px;">
-                      <li th:each="c : ${vacante.carreras}" style="color:#1f2937;margin-bottom:4px;">
-                        <span th:text="${c.carrera}">Ingeniería de Sistemas</span>
-                        <small style="color:#6b7280;"> — <span th:text="${c.grado}">Carrera</span></small>
-                      </li>
-                    </ul>
+                  <!-- Header de la vacante -->
+                  <div
+                    style="background: linear-gradient(90deg, #1e293b 0%, #334155 100%); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                    <h3
+                      style="margin: 0; font-size: 20px; color: #ffffff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.1);"
+                      th:text="${vacante.perfil}">
+                      Backend Developer
+                    </h3>
+                    <div
+                      style="margin-top: 8px; display: inline-block; background-color: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                      <span th:text="'Cantidad: ' + ${vacante.cantidad}">Cantidad: 1</span>
+                    </div>
                   </div>
 
-                  <!-- Habilidades: habilidad + aniosExp -->
-                  <div th:if="${vacante.habilidades != null and !vacante.habilidades.isEmpty()}">
-                    <strong style="color:#6b7280;">Habilidades técnicas:</strong>
-                    <ul style="margin:6px 0 0;padding-left:20px;">
-                      <li th:each="h : ${vacante.habilidades}" style="color:#1f2937;margin-bottom:4px;">
-                        <span th:text="${h.habilidad}">Spring Boot</span>
-                        <small style="color:#6b7280;"> — <span th:text="${h.aniosExp}">2</span> años</small>
-                      </li>
-                    </ul>
+                  <!-- Contenido de la vacante -->
+                  <div style="padding: 0 4px;">
+                    <!-- Carreras -->
+                    <div th:if="${vacante.carreras != null and !vacante.carreras.isEmpty()}"
+                      style="margin-bottom: 16px;">
+                      <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div
+                          style="width: 4px; height: 20px; background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-radius: 2px; margin-right: 8px;">
+                        </div>
+                        <strong style="color: #065f46; font-size: 16px; font-weight: 600;">Carreras y/o otras
+                          formaciones</strong>
+                      </div>
+                      <ul style="margin: 0; padding-left: 24px; list-style: none;">
+                        <li th:each="c : ${vacante.carreras}"
+                          style="color: #1f2937; margin-bottom: 6px; position: relative;">
+                          <div
+                            style="position: absolute; left: -16px; top: 8px; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%;">
+                          </div>
+                          <span style="font-weight: 500;" th:text="${c.carrera}">Ingeniería de Sistemas</span>
+                          <span style="color: #6b7280;  font-weight: 500;"> — <span
+                              th:text="${c.grado}">Carrera</span></span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <!-- Habilidades -->
+                    <div th:if="${vacante.habilidades != null and !vacante.habilidades.isEmpty()}">
+                      <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <div
+                          style="width: 4px; height: 20px; background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-radius: 2px; margin-right: 8px;">
+                        </div>
+                        <strong style="color: #92400e; font-size: 16px; font-weight: 600;">Habilidades técnicas</strong>
+                      </div>
+                      <ul style="margin: 0; padding-left: 24px; list-style: none;">
+                        <li th:each="h : ${vacante.habilidades}"
+                          style="color: #1f2937; margin-bottom: 6px; position: relative;">
+                          <div
+                            style="position: absolute; left: -16px; top: 8px; width: 6px; height: 6px; background-color: #f59e0b; border-radius: 50%;">
+                          </div>
+                          <span style="font-weight: 500;" th:text="${h.habilidad}">Spring Boot</span>
+                          <span style="color: #6b7280;  font-weight: 500;"> — <span th:text="${h.aniosExp}">2</span>
+                            años de experiencia</span>
+                        </li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>

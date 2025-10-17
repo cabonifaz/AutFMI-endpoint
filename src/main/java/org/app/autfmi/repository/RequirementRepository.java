@@ -184,6 +184,7 @@ public class RequirementRepository {
                                         (Integer) vacante.get("CANTIDAD"),
                                         (Integer) vacante.get("TOTAL_HABILIDADES"),
                                         (Integer) vacante.get("TOTAL_CARRERAS"),
+                                        (BigDecimal) vacante.get("TARIFA_INICIAL"),
                                         (BigDecimal) vacante.get("TARIFA_FINAL"));
 
                                 lstRqVacantes.add(itemRqVacante);

@@ -18,6 +18,7 @@ import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
 import org.app.autfmi.model.response.VacanteCarreraResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
+import org.app.autfmi.service.impl.MailService;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
@@ -33,6 +34,7 @@ import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +44,7 @@ public class RequirementRepository {
     private final JdbcTemplate jdbcTemplate;
     private final MailUtils mailUtils;
     private final PDFUtils pdfUtils;
+    private final MailService mailService;
 
     public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
             String buscar, Date fechaSolicitud, Integer estado) {
@@ -267,8 +270,78 @@ public class RequirementRepository {
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
             String mensaje = (String) row.get("MENSAJE");
             if (idTipoMensaje == 2) {
+
                 Integer idNuevoRQ = (Integer) row.get("ID_NEW_RQ");
                 guardarArchivos(request.getLstArchivos(), idNuevoRQ, baseRequest.getIdEmpresa());
+
+                String rqCode = (String) row.get("CODIGO_RQ");
+
+                // Datos RQ
+                var rDto = new RequirementDTO();
+                rDto.setTitulo(request.getTitulo());
+                rDto.setCodigoRQ(rqCode);
+                rDto.setFechaSolicitud(request.getFechaSolicitud());
+                rDto.setFechaVencimiento(request.getFechaVencimiento());
+                rDto.setDescripcion(request.getDescripcion());
+                rDto.setIdEstado(request.getEstado());
+
+                // Cliente - nombre
+                rDto.setCliente(request.getCliente());
+
+                // Gestion
+                rDto.setDuracion(
+                        request.getDuracion() != null ? BigDecimal.valueOf(request.getDuracion()) : BigDecimal.ZERO);
+
+                rDto.setIdDuracion(request.getIdDuracion());
+                rDto.setIdModalidad(request.getIdModalidad());
+                rDto.setModalidadFact(request.getIdModalidadFact());
+
+                // Vacantes
+                List<Map<String, Object>> vacantesResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
+                List<Map<String, Object>> vacantesMapList = new ArrayList<>();
+
+                if (vacantesResultSet != null && !vacantesResultSet.isEmpty()) {
+                    for (Map<String, Object> vacante : vacantesResultSet) {
+                        Map<String, Object> vacanteMap = new HashMap<>();
+
+                        vacanteMap.put("perfil", vacante.get("PERFIL_PROFESIONAL"));
+                        vacanteMap.put("cantidad", vacante.get("CANTIDAD"));
+                        vacanteMap.put("tarifaInicial", vacante.get("TARIFA_INICIAL"));
+                        vacanteMap.put("tarifaFinal", vacante.get("TARIFA_FINAL"));
+
+                        vacantesMapList.add(vacanteMap);
+                    }
+                }
+
+                // Contactos
+                List<Map<String, Object>> contactosResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
+                List<Map<String, Object>> contactosMapList = new ArrayList<>();
+
+                if (contactosResultSet != null && !contactosResultSet.isEmpty()) {
+                    for (Map<String, Object> contacto : contactosResultSet) {
+                        Map<String, Object> contactoMap = new HashMap<>();
+                        String nombreCompleto = String.format("%s %s %s",
+                                contacto.getOrDefault("NOMBRES", ""),
+                                contacto.getOrDefault("APELLIDO_PATERNO", ""),
+                                contacto.getOrDefault("APELLIDO_MATERNO", "")).trim();
+
+                        contactoMap.put("nombre", nombreCompleto);
+                        contactoMap.put("celular", contacto.get("TELEFONO"));
+                        contactoMap.put("correo", contacto.get("CORREO"));
+                        contactoMap.put("cargo", contacto.get("CARGO"));
+
+                        contactosMapList.add(contactoMap);
+                    }
+                }
+
+                System.out.println("Contactos: " + contactosMapList.toString());
+
+                // send mail
+                mailService.sendCreateRequirementNotification(
+                        baseRequest.getUsername(),
+                        rDto, vacantesMapList,
+                        contactosMapList);
+
             }
 
             return new BaseResponse(idTipoMensaje, mensaje);

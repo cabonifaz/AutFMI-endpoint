@@ -23,6 +23,8 @@ import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -45,6 +47,7 @@ public class RequirementRepository {
     private final MailUtils mailUtils;
     private final PDFUtils pdfUtils;
     private final MailService mailService;
+    private static final Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
 
     public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
             String buscar, Date fechaSolicitud, Integer estado) {
@@ -374,6 +377,9 @@ public class RequirementRepository {
 
     public BaseResponse updateRequirement(RequirementRequest request, BaseRequest baseRequest)
             throws SQLServerException {
+
+        logger.info("Inicio REPOSITORY updateRequirement - ID_REQUERIMIENTO: {}", request.getIdRequerimiento());
+
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_UPD");
 
@@ -403,13 +409,120 @@ public class RequirementRepository {
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
+        // === Log de todos los result sets ===
+        // @marker @remove
+        result.forEach((key, value) -> {
+            if (key.startsWith("#result-set-")) {
+                List<Map<String, Object>> rs = (List<Map<String, Object>>) value;
+                logger.info(">> {} contiene {} filas", key, rs.size());
+                for (Map<String, Object> row : rs) {
+                    logger.info("{} -> {}", key, row);
+                }
+            } else {
+                logger.trace("Meta key: {} -> {}", key, value);
+            }
+        });
+        logger.info("=== Fin del log de result sets ===");
+
         if (resultSet != null && !resultSet.isEmpty()) {
             Map<String, Object> row = resultSet.get(0);
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
             String mensaje = (String) row.get("MENSAJE");
 
+            if (idTipoMensaje == 2) {
+                // Mapear los resultados para enviar email
+
+                // Datos RQ básicos
+                var rDto = new RequirementDTO();
+                rDto.setTitulo(request.getTitulo());
+                rDto.setCodigoRQ(request.getCodigoRQ());
+                rDto.setFechaSolicitud(request.getFechaSolicitud());
+                rDto.setFechaVencimiento(request.getFechaVencimiento());
+                rDto.setDescripcion(request.getDescripcion());
+                rDto.setIdEstado(request.getEstado());
+                rDto.setCliente(request.getCliente());
+                rDto.setDuracion(
+                        request.getDuracion() != null ? BigDecimal.valueOf(request.getDuracion()) : BigDecimal.ZERO);
+                rDto.setIdDuracion(request.getIdDuracion());
+                rDto.setIdModalidad(request.getIdModalidad());
+                rDto.setModalidadFact(request.getIdModalidadFact());
+
+                // Vacantes (result set 2)
+                List<Map<String, Object>> vacantesResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
+                List<Map<String, Object>> vacantesMapList = new ArrayList<>();
+
+                if (vacantesResultSet != null && !vacantesResultSet.isEmpty()) {
+                    for (Map<String, Object> vacante : vacantesResultSet) {
+                        Map<String, Object> vacanteMap = new HashMap<>();
+                        vacanteMap.put("idPerfil", vacante.get("ID_REQUERIMIENTO_VACANTE"));
+                        vacanteMap.put("perfil", vacante.get("PERFIL_PROFESIONAL"));
+                        vacanteMap.put("cantidad", vacante.get("CANTIDAD"));
+                        vacantesMapList.add(vacanteMap);
+                    }
+                }
+
+                // Contactos (result set 3)
+                List<Map<String, Object>> contactosResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
+                List<Map<String, Object>> contactosMapList = new ArrayList<>();
+
+                if (contactosResultSet != null && !contactosResultSet.isEmpty()) {
+                    for (Map<String, Object> contacto : contactosResultSet) {
+                        Map<String, Object> contactoMap = new HashMap<>();
+                        String nombreCompleto = String.format("%s %s %s",
+                                contacto.getOrDefault("NOMBRES", ""),
+                                contacto.getOrDefault("APELLIDO_PATERNO", ""),
+                                contacto.getOrDefault("APELLIDO_MATERNO", "")).trim();
+
+                        contactoMap.put("nombre", nombreCompleto);
+                        contactoMap.put("celular", contacto.get("TELEFONO"));
+                        contactoMap.put("correo", contacto.get("CORREO"));
+                        contactoMap.put("cargo", contacto.get("CARGO"));
+                        contactosMapList.add(contactoMap);
+                    }
+                }
+
+                // Habilidades técnicas por vacante (result set 4)
+                List<Map<String, Object>> habilidadesResultSet = (List<Map<String, Object>>) result
+                        .get("#result-set-4");
+
+                // Carreras por vacante (result set 5)
+                List<Map<String, Object>> carrerasResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
+
+                // Postulantes/talentos (result set 6)
+                List<Map<String, Object>> postulantsResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
+                List<Map<String, Object>> postulantesList = new ArrayList<>();
+
+                if (postulantsResultSet != null && !postulantsResultSet.isEmpty()) {
+                    for (Map<String, Object> postulante : postulantsResultSet) {
+                        Map<String, Object> postulanteMap = new HashMap<>();
+                        postulanteMap.put("nombres", postulante.get("NOMBRES_TALENTO"));
+                        postulanteMap.put("apellidos", postulante.get("APELLIDOS_TALENTO"));
+                        postulanteMap.put("dni", postulante.get("DNI"));
+                        postulanteMap.put("celular", postulante.get("CELULAR"));
+                        postulanteMap.put("correo", postulante.get("EMAIL"));
+                        postulanteMap.put("situacion", postulante.get("SITUACION"));
+                        postulanteMap.put("estado", postulante.get("ESTADO"));
+                        postulanteMap.put("perfil", postulante.get("PERFIL"));
+                        postulantesList.add(postulanteMap);
+                    }
+                }
+
+                // Enviar email de notificación
+                mailService.sendUpdateRequirementNotification(
+                        baseRequest.getUsername(),
+                        rDto,
+                        vacantesMapList,
+                        contactosMapList,
+                        habilidadesResultSet,
+                        carrerasResultSet,
+                        postulantesList);
+            }
+
+            logger.info("Fin REPOSITORY updateRequirement - ID_REQUERIMIENTO: {} - Resultado: {} - {}",
+                    request.getIdRequerimiento(), idTipoMensaje, mensaje);
             return new BaseResponse(idTipoMensaje, mensaje);
         }
+        logger.info("Fin REPOSITORY updateRequirement - No se obtuvieron resultados");
         return null;
     }
 

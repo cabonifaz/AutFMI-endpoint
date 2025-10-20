@@ -5,8 +5,6 @@ import jakarta.mail.internet.MimeMessage;
 
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.PostulantDTO;
-import org.app.autfmi.model.dto.RequirementDTO;
-import org.app.autfmi.model.dto.RequirementVacanteDTO;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +18,6 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -135,112 +132,6 @@ public class MailUtils {
         } catch (MessagingException e) {
             logger.error("Error al enviar correo a {}: {}", to, e.getMessage(), e);
         }
-    }
-
-    @Async
-    public void sendRequirementNotification(
-            RequirementDTO rDto,
-            String dest, Map<String, Object> rqData, List<PostulantDTO> lstPostulantes,
-            List<String> lstEmailsCC) {
-
-        Map<String, Object> variables = new HashMap<>();
-
-        String asunto = "Creación de Requerimiento";
-
-        // ==========================
-        // Datos del requerimiento
-        // ==========================
-        Map<String, Object> rqDataT = new HashMap<>();
-        rqDataT.put("codigo", rDto.getCodigoRQ());
-        rqDataT.put("titulo", rDto.getTitulo());
-        rqDataT.put("descripcion", rDto.getDescripcion());
-        rqDataT.put("fechaSolicitud", rDto.getFechaSolicitud());
-        rqDataT.put("fechaVencimiento", rDto.getFechaVencimiento());
-        variables.put("rqData", rqDataT);
-
-        // ==========================
-        // Datos de gestión
-        // ==========================
-        Map<String, Object> gestion = new HashMap<>();
-        gestion.put("duracion", rDto.getDuracion() + " meses");
-        gestion.put("modalidad", "Remoto");
-        gestion.put("modalidadesFacturacion", List.of("Planilla - Régimen General", "Recibo por Honorarios"));
-        variables.put("gestion", gestion);
-
-        // ==========================
-        // Datos del cliente y contactos
-        // ==========================
-        Map<String, Object> cliente = new HashMap<>();
-        cliente.put("nombre", "Banco Interamericano de Finanzas - BanBif");
-
-        List<Map<String, Object>> contactos = new ArrayList<>();
-
-        Map<String, Object> contacto1 = new HashMap<>();
-        contacto1.put("nombre", "Denis");
-        contacto1.put("apellido", "Alcántara Laura");
-        contacto1.put("celular", "999000111");
-        contacto1.put("correo", "denis.alcantara@banbif.com");
-        contacto1.put("cargo", "Jefe de Tecnología");
-        contactos.add(contacto1);
-
-        Map<String, Object> contacto2 = new HashMap<>();
-        contacto2.put("nombre", "Lucía");
-        contacto2.put("apellido", "Ramos Fernández");
-        contacto2.put("celular", "988123456");
-        contacto2.put("correo", "lucia.ramos@banbif.com");
-        contacto2.put("cargo", "Gerente de RRHH");
-        contactos.add(contacto2);
-
-        cliente.put("contactos", contactos);
-        variables.put("cliente", cliente);
-
-        // ==========================
-        // Vacantes del requerimiento
-        // ==========================
-        List<Map<String, Object>> vacantes = new ArrayList<>();
-
-        for (RequirementVacanteDTO v : rDto.getLstRqVacantes()) {
-            vacantes.add(new HashMap<String, Object>() {
-                {
-                    put("perfil", v.getPerfilProfesional());
-                    put("cantidad", v.getCantidad());
-                    put("tarifaFinal", "S/. " + v.getTarifaFinal().toString());
-                    put("tipoTarifa", "Por hora");
-                }
-            });
-
-        }
-
-        variables.put("vacantes", vacantes);
-
-        // ==========================
-        // Postulantes
-        // ==========================
-        List<Map<String, Object>> postulantes = new ArrayList<>();
-
-        Map<String, Object> postulante1 = new HashMap<>();
-        postulante1.put("nombre", "José Pérez");
-        postulante1.put("correo", "jose.perez@fractal.com");
-        postulante1.put("perfil", "Backend Developer");
-        postulante1.put("estado", "En revisión");
-        postulantes.add(postulante1);
-
-        Map<String, Object> postulante2 = new HashMap<>();
-        postulante2.put("nombre", "María Torres");
-        postulante2.put("correo", "maria.torres@fractal.com");
-        postulante2.put("perfil", "QA Automation Engineer");
-        postulante2.put("estado", "Preseleccionada");
-        postulantes.add(postulante2);
-
-        variables.put("postulantes", postulantes);
-
-        // src/main/resources/templates/
-        sendEmailWithHtmlTemplate(
-                dest,
-                lstEmailsCC,
-                asunto,
-                "rq-details",
-                variables);
     }
 
 }

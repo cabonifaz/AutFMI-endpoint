@@ -300,22 +300,53 @@
         </h2>
 
         <!-- Sin postulantes -->
-        <div th:if="${#lists.isEmpty(postulantes)}"
+        <div th:if="${postulantes == null or #lists.isEmpty(postulantes)}"
           style="text-align: center; color: #666666; padding: 24px; border: 1px solid #e5e7eb;">
-          <p style="margin: 0;">No hay postulantes disponibles para este requerimiento.</p>
+          <p style="margin: 0;">No hay postulantes asignados a este requerimiento.</p>
         </div>
 
         <!-- Lista de postulantes (tabla necesaria para datos tabulares) -->
-        <div th:if="${!#lists.isEmpty(postulantes)}">
-          <table width="100%" cellpadding="12" cellspacing="0" style="border: 1px solid #e5e7eb;">
-            <tr th:each="postulante : ${postulantes}" style="border-bottom: 1px solid #e5e7eb;">
-              <td>
-                <p style="margin: 0 0 4px 0;">
-                  <strong style="color: #000000;" th:text="${postulante.nombre}">Nombre</strong>
-                </p>
-                <p style="margin: 0; color: #666666;" th:text="${postulante.estado}">Estado</p>
-              </td>
-            </tr>
+        <div th:if="${postulantes != null and !#lists.isEmpty(postulantes)}">
+          <table width="100%" border="0" cellpadding="12" cellspacing="0" style="border: 1px solid #e5e7eb;">
+            <thead>
+              <tr style="background-color: #f9fafb;">
+                <th
+                  style="text-align: left; font-weight: 600; padding: 12px; border-bottom: 2px solid #e5e7eb; color: #000000;">
+                  Nombre Completo</th>
+                <th
+                  style="text-align: left; font-weight: 600; padding: 12px; border-bottom: 2px solid #e5e7eb; color: #000000;">
+                  DNI</th>
+                <th
+                  style="text-align: left; font-weight: 600; padding: 12px; border-bottom: 2px solid #e5e7eb; color: #000000;">
+                  Celular</th>
+                <th
+                  style="text-align: left; font-weight: 600; padding: 12px; border-bottom: 2px solid #e5e7eb; color: #000000;">
+                  Correo</th>
+                <th
+                  style="text-align: left; font-weight: 600; padding: 12px; border-bottom: 2px solid #e5e7eb; color: #000000;">
+                  Perfil</th>
+                <th
+                  style="text-align: left; font-weight: 600; padding: 12px; border-bottom: 2px solid #e5e7eb; color: #000000;">
+                  Estado/Situación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:each="postulante : ${postulantes}" style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 12px; color: #000000;">
+                  <span th:text="${postulante.nombres}">Juan</span>
+                  <span th:text="${postulante.apellidos}">Pérez García</span>
+                </td>
+                <td style="padding: 12px; color: #000000;" th:text="${postulante.dni}">12345678</td>
+                <td style="padding: 12px; color: #000000;" th:text="${postulante.celular}">999123456</td>
+                <td style="padding: 12px; color: #000000;" th:text="${postulante.correo}">juan.perez@email.com</td>
+                <td style="padding: 12px; color: #000000;" th:text="${postulante.perfil}">Backend Developer</td>
+                <td style="padding: 12px;">
+                  <span style="color: #000000;" th:text="${postulante.estado}">Confirmado</span>
+                  <br style="margin: 4px 0;">
+                  <small style="color: #666666;" th:text="${postulante.situacion}">Libre</small>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>

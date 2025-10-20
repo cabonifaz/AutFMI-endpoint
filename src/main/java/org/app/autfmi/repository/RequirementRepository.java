@@ -263,7 +263,10 @@ public class RequirementRepository {
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("MODALIDAD_FACT", request.getIdModalidadFact())
                 .addValue("LST_VACANTE_SKILLS", tvpRqVacSkill)
-                .addValue("LST_VACANTE_CARRERAS", tvpCarreras);
+                .addValue("LST_VACANTE_CARRERAS", tvpCarreras)
+                // Duracion de contrato
+                .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

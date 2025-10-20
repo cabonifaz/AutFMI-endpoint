@@ -2,13 +2,16 @@ package org.app.autfmi.service.impl;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.app.autfmi.model.dto.RequirementDTO;
+import org.app.autfmi.model.response.ParametrosListResponse;
+import org.app.autfmi.repository.ParametrosRepository;
 import org.app.autfmi.service.IMailService;
+import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.MasterDecoder;
 import org.slf4j.Logger;
@@ -25,6 +28,9 @@ public class MailService implements IMailService {
 
   @Autowired
   private MailUtils mailUtils;
+
+  @Autowired
+  private ParametrosRepository paramsRepository;
 
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
@@ -135,26 +141,19 @@ public class MailService implements IMailService {
     variables.put("postulantes", null);
 
     // Obtener destinatarios desde base de datos
-    String destinatario = "nope";
-    List<String> cc = new ArrayList<>();
+    List<String> destinatarios = getDestinatariosFromParams();
+    logger.info("Enviando notificación a los siguientes destinatarios: " + Arrays.toString(destinatarios.toArray()));
 
-    logger.info("Starting mail utils");
+    for (String destinatario : destinatarios) {
+      mailUtils.sendEmailWithHtmlTemplate(
+          destinatario,
+          null,
+          "Creación de Requerimiento: " + rDto.getCodigoRQ(),
+          "rq-details",
+          variables);
+    }
 
-    /*
-     * logger.info("Body: ");
-     * for (Map.Entry<String, Object> entry : variables.entrySet()) {
-     * System.out.println("\tKey: " + entry.getKey() + ", Value: " +
-     * entry.getValue());
-     * }
-     */
-    mailUtils.sendEmailWithHtmlTemplate(
-        destinatario,
-        cc,
-        "Creación de Requerimiento: " + rDto.getCodigoRQ(),
-        "rq-details",
-        variables);
-
-    logger.info("Finished mail utils.");
+    logger.info("Notificación completada para creación de requerimiento.");
   }
 
   @Async
@@ -262,19 +261,72 @@ public class MailService implements IMailService {
     variables.put("postulantes", postulanteList);
 
     // Obtener destinatarios desde base de datos
-    String destinatario = "nope";
-    List<String> cc = new ArrayList<>();
+    // Obtener destinatarios desde base de datos
+    List<String> destinatarios = getDestinatariosFromParams();
+    logger.info("Enviando notificación a los siguientes destinatarios: " + Arrays.toString(destinatarios.toArray()));
 
     logger.info("Starting mail utils for update");
 
-    mailUtils.sendEmailWithHtmlTemplate(
-        destinatario,
-        cc,
-        "Actualización de Requerimiento: " + rDto.getCodigoRQ(),
-        "rq-details",
-        variables);
+    for (String destinatario : destinatarios) {
+      mailUtils.sendEmailWithHtmlTemplate(
+          destinatario,
+          null,
+          "Actualización de Requerimiento: " + rDto.getCodigoRQ(),
+          "rq-details",
+          variables);
+    }
 
     logger.info("Finished mail utils for update.");
+  }
+
+  private List<String> getDestinatariosFromParams() {
+    logger.info("=== Iniciando getDestinatariosFromParams ===");
+
+    if (paramsRepository == null) {
+      logger.error("paramsRepository es NULL - no se puede obtener destinatarios desde BD");
+      return Arrays.asList("jean.velasquez@fractalservicios.pe"); // fallback
+    }
+
+    logger.info("paramsRepository inicializado correctamente");
+
+    try {
+      logger.info("Llamando a paramsRepository.listParametros con constante: {}", Constante.NOTIFICACION_RQ_EMAILS);
+      ParametrosListResponse paramsResponse = paramsRepository.listParametros(Constante.NOTIFICACION_RQ_EMAILS);
+      List<String> emails = new ArrayList<>();
+
+      if (paramsResponse != null) {
+        logger.info("Respuesta de parámetros recibida - Tipo mensaje: {}",
+            paramsResponse.getBaseResponse().getIdTipoMensaje());
+
+        if (paramsResponse.getBaseResponse().getIdTipoMensaje() == 2) {
+          logger.info("Parámetros encontrados: {}", paramsResponse.getListParametros().size());
+
+          for (var parametro : paramsResponse.getListParametros()) {
+            if (parametro.getString1() != null && !parametro.getString1().isEmpty()) {
+              logger.info("Agregando email: {}", parametro.getString1());
+              emails.add(parametro.getString1());
+            }
+          }
+        } else {
+          logger.warn("No se encontraron parámetros válidos - Mensaje: {}",
+              paramsResponse.getBaseResponse().getMensaje());
+        }
+      } else {
+        logger.error("paramsResponse es NULL");
+      }
+
+      if (emails.isEmpty()) {
+        logger.warn("No se encontraron emails en parámetros, usando email por defecto");
+        emails.add("jean.velasquez@fractalservicios.pe");
+      }
+
+      logger.info("Emails finales obtenidos: {}", emails.toString());
+      return emails;
+
+    } catch (Exception e) {
+      logger.error("Error al obtener destinatarios desde parámetros: {}", e.getMessage(), e);
+      return Arrays.asList("jean.velasquez@fractalservicios.pe"); // fallback
+    }
   }
 
 }

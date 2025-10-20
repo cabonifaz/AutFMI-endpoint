@@ -409,21 +409,6 @@ public class RequirementRepository {
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        // === Log de todos los result sets ===
-        // @marker @remove
-        result.forEach((key, value) -> {
-            if (key.startsWith("#result-set-")) {
-                List<Map<String, Object>> rs = (List<Map<String, Object>>) value;
-                logger.info(">> {} contiene {} filas", key, rs.size());
-                for (Map<String, Object> row : rs) {
-                    logger.info("{} -> {}", key, row);
-                }
-            } else {
-                logger.trace("Meta key: {} -> {}", key, value);
-            }
-        });
-        logger.info("=== Fin del log de result sets ===");
-
         if (resultSet != null && !resultSet.isEmpty()) {
             Map<String, Object> row = resultSet.get(0);
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");

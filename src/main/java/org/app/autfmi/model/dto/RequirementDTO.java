@@ -30,4 +30,8 @@ public class RequirementDTO {
     private List<RequirementTalentDTO> lstRqTalento;
     private List<RequirementFileDTO> lstRqArchivo;
     private List<ClientContactItemDTO> lstRqContactos;
+
+    // Duracion de contrato
+    private Integer idDuracionContrato;
+    private BigDecimal duracionContrato;
 }

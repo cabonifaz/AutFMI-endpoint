@@ -29,4 +29,8 @@ public class RequirementRequest {
     private String idModalidadFact;
     private List<VacanteSkill> lstVacanteSkills;
     private List<VacanteCarreraRequest> lstCarreras;
+
+    // Duracion de contrato
+    private Integer idDuracionContrato;
+    private Double duracionContrato;
 }

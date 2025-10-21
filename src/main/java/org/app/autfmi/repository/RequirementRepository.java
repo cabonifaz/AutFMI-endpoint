@@ -263,7 +263,10 @@ public class RequirementRepository {
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("MODALIDAD_FACT", request.getIdModalidadFact())
                 .addValue("LST_VACANTE_SKILLS", tvpRqVacSkill)
-                .addValue("LST_VACANTE_CARRERAS", tvpCarreras);
+                .addValue("LST_VACANTE_CARRERAS", tvpCarreras)
+                // Duracion de contrato
+                .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -404,7 +407,9 @@ public class RequirementRepository {
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("USUARIO", baseRequest.getUsername())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
-                .addValue("MODALIDAD_FACT", request.getIdModalidadFact());
+                .addValue("MODALIDAD_FACT", request.getIdModalidadFact())
+                .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -921,7 +926,9 @@ public class RequirementRepository {
                 lstRqVacantes,
                 lstRqTalents,
                 lstRqFiles,
-                lstContactos);
+                lstContactos,
+                (Integer) requerimiento.get("ID_DUR_CONTRATO"),
+                (BigDecimal) requerimiento.get("DURACION_CONTRATO"));
     }
 
     private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)

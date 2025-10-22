@@ -1270,6 +1270,7 @@ public class RequirementRepository {
                 Integer idVac = (Integer) row.get("ID_VACANTE");
                 Integer idProfile = (Integer) row.get("ID_PERFIL");
                 Integer idReqVacSkill = (Integer) row.get("ID_VACANTE_HABILIDAD");
+                Integer isOptional = (Integer) row.get("OPCIONAL");
 
                 // Aquí mapear a DTO VacanteSkill
                 VacanteSkillDTO skill = new VacanteSkillDTO();
@@ -1280,6 +1281,7 @@ public class RequirementRepository {
                 skill.setHabilidad(skillName);
                 skill.setIdEstadoRegistro(idRegState);
                 skill.setAnios(years);
+                skill.setIsOptional(isOptional == 1);
                 habilidades.add(skill);
             }
         }

@@ -1335,6 +1335,7 @@ public class RequirementRepository {
             tvp.addColumnMetadata("CARRERA", java.sql.Types.VARCHAR);
             tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", java.sql.Types.INTEGER);
             tvp.addColumnMetadata("ID_ESTADO_REGISTRO", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("OPCIONAL", java.sql.Types.INTEGER);
 
             // Llenar el TVP con las carreras recibidas
             for (VacanteCarreraDTO carrera : careers) {
@@ -1342,7 +1343,8 @@ public class RequirementRepository {
                         carrera.getIdVacanteCarrera(), // Puede ser null si es nueva
                         carrera.getCarrera(),
                         carrera.getIdGradoEstudios(),
-                        carrera.getIdEstadoRegistro());
+                        carrera.getIdEstadoRegistro(),
+                        carrera.getIsOptional() ? 1 : 0);
             }
 
             // Ejecutar el SP
@@ -1421,6 +1423,10 @@ public class RequirementRepository {
                     dto.setCarrera((String) row.get("CARRERA"));
                     dto.setIdGradoEstudios((Integer) row.get("ID_GRADO_ESTUDIOS"));
                     dto.setIdEstadoRegistro((Integer) row.get("ID_ESTADO_REGISTRO"));
+
+                    Integer isOptional = (Integer) row.get("OPCIONAL");
+                    dto.setIsOptional(isOptional == 1);
+
                     return dto;
                 }).toList();
 

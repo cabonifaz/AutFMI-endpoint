@@ -1,7 +1,11 @@
 package org.app.autfmi.util;
 
 public class Constante {
-    //REPOSITORIO
+
+    // ID_MAESTROS
+    public static final String NOTIFICACION_RQ_EMAILS = "42";
+
+    // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";
     public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";
 
@@ -27,9 +31,7 @@ public class Constante {
     public static final String CARGAR_ARCHIVOS = "24";
     public static final String ELIMINAR_ARCHIVOS = "25";
 
-
     public static final String LISTAR_TARIFARIO = "26";
-
 
     public static final String DOMINIO_CORREO = "@fractalservicios.pe";
 
@@ -45,7 +47,7 @@ public class Constante {
     public static final String FORM_TEMPLATE_INS_SOFTWARE = """
             <!DOCTYPE html>
             <html lang="es">
-            
+
             <head>
                 <title>{{title}}</title>
                 <style>
@@ -66,37 +68,37 @@ public class Constante {
                         line-height: 18px;
                         vertical-align: middle;
                     }
-            
+
                     .checkbox::before {
                         content: attr(data-content);
                     }
-            
+
                     table {
                         width: 100%;
                         border-collapse: collapse;
                     }
-            
+
                     td,
                     th {
                         padding: 5px;
                         text-align: left;
                         text-align: center;
                     }
-            
+
                     .table-header {
                         background-color: #2D5294;
                         color: #fff;
                         text-align: center;
                     }
-            
+
                     .label {
                         width: 25%;
                     }
-            
+
                     .value {
                         width: 75%;
                     }
-            
+
                     h1 {
                         font-size: 16px;
                         font-weight: bold;
@@ -105,18 +107,18 @@ public class Constante {
                         background-color: #2D5294;
                         color: #fff;
                     }
-            
+
                     .accesorios {
                         text-decoration: underline;
                     }
-            
+
                     @page {
                         size: A4;
                         margin: 10mm;
                     }
                 </style>
             </head>
-            
+
             <body>
                 <div>
                     <table style="border: 1px solid #ddd;">
@@ -202,9 +204,9 @@ public class Constante {
                             <td>{{marca}}</td>
                         </tr>
                     </table>
-            
+
                     <div style="height: 32px;"></div>
-            
+
                     <table border="1">
                         <tr>
                             <th class="table-header">ANEXO</th>
@@ -267,7 +269,7 @@ public class Constante {
                         </tr>
                         {{listaProducto}}
                     </table>
-            
+
                     <div style="height: 100px;"></div>
                     <div style="text-align: center;">
                         <p style="font-weight: bold; text-decoration: underline;">{{nombreFirma}}</p>
@@ -278,7 +280,7 @@ public class Constante {
                     </div>
                 </div>
             </body>
-            
+
             </html>
             """;
 
@@ -570,7 +572,7 @@ public class Constante {
                             </td>
                         </tr>
                     </table>
-            
+
                     <h1>DATOS DEL COLABORADOR</h1>
                     <table class="no-page-break">
                         <tr>
@@ -582,7 +584,7 @@ public class Constante {
                             <td>{{unidad}}</td>
                         </tr>
                     </table>
-            
+
                     <h1>INGRESO</h1>
                     <table class="no-page-break">
                         <tr>
@@ -635,7 +637,7 @@ public class Constante {
                             <td>{{objetoContrato}}</td>
                         </tr>
                     </table>
-            
+
                     <h1>DECLARACIÓN EN SUNAT (*)</h1>
                     <table class="no-page-break">
                         <tr>
@@ -647,7 +649,7 @@ public class Constante {
                             <td>{{sedeDeclarar}}</td>
                         </tr>
                     </table>
-            
+
                     <h1>MOVIMIENTO</h1>
                     <table class="no-page-break">
                         <tr>
@@ -684,7 +686,7 @@ public class Constante {
                             <td>{{fechaMovimiento}}</td>
                         </tr>
                     </table>
-            
+
                     <h1>CESE</h1>
                     <table style="margin-bottom: 10px;">
                         <tr>
@@ -696,7 +698,7 @@ public class Constante {
                             <td>{{fechaCese}}</td>
                         </tr>
                     </table>
-            
+
                     <table style="margin-bottom: 10px;">
                         <tr style="border: none;">
                             <td style="width: 100%; text-align: center; border: none;">
@@ -707,7 +709,7 @@ public class Constante {
                             </td>
                         </tr>
                     </table>
-            
+
                     <p style="text-align: justify; font-size: 10px;">
                         (*) DECLARACION EN SUNAT - En esta sección deberá informar al colaborador que se encuentra en Planilla
                         y será declarado en SUNAT. Responda la pregunta [1], en caso su respuesta sea afirmativa, por favor
@@ -719,48 +721,44 @@ public class Constante {
             </html>
             """;
 
-
-    //TRAZABILIDAD
+    // TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";
-
-
-
 
     // CORREO
     public static final String LIST_TALENT_ROW = """
-        <tr>
-            <td>{{numFila}}</td>
-            <td>{{nombres}}</td>
-            <td>{{apellidos}}</td>
-            <td>{{docIdentidad}}</td>
-            <td>{{numCelular}}</td>
-            <td>{{correo}}</td>
-            <td>{{fchInicioLabores}}</td>
-            <td>{{tiempoContrato}} (inicialmente)</td>
-            <td>{{cargo}}</td>
-            <td>{{remuneracion}}</td>
-            <td>{{modalidad}}</td>
-            <td>{{tieneEquipo}}</td>
-        </tr>
-    """;
+                <tr>
+                    <td>{{numFila}}</td>
+                    <td>{{nombres}}</td>
+                    <td>{{apellidos}}</td>
+                    <td>{{docIdentidad}}</td>
+                    <td>{{numCelular}}</td>
+                    <td>{{correo}}</td>
+                    <td>{{fchInicioLabores}}</td>
+                    <td>{{tiempoContrato}} (inicialmente)</td>
+                    <td>{{cargo}}</td>
+                    <td>{{remuneracion}}</td>
+                    <td>{{modalidad}}</td>
+                    <td>{{tieneEquipo}}</td>
+                </tr>
+            """;
     public static final String CUERPO_CORREO = """
             <!DOCTYPE html>
             <html lang="es">
-            
+
             <head>
                 <style>
                     table {
                         width: 100%;
                         border-collapse: collapse;
                     }
-            
+
                     td,
                     th {
                         padding: 5px;
                         text-align: left;
                         text-align: center;
                     }
-            
+
                     .table-header {
                         background-color: #2D5294;
                         color: #fff;
@@ -768,7 +766,7 @@ public class Constante {
                     }
                 </style>
             </head>
-            
+
             <body>
                 <div>
                     Estimado [GESTOR],
@@ -782,7 +780,7 @@ public class Constante {
                 </div>
                 <br>
                 <br>
-                
+
                 <table border="1">
                     <tr>
                         <th class="table-header">Item</th>
@@ -800,7 +798,7 @@ public class Constante {
                     </tr>
                     {{listaTalentos}}
                 </table>
-                
+
                 <br>
                 <div>
                     Saludos,
@@ -808,7 +806,7 @@ public class Constante {
                 <br>
                 <br>
             </body>
-            
+
             </html>
             """;
 }

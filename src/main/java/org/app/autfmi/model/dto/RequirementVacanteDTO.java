@@ -16,5 +16,6 @@ public class RequirementVacanteDTO {
     private Integer cantidad;
     private Integer totalHabilidades;
     private Integer totalCarreras;
+    private BigDecimal tarifaInicial;
     private BigDecimal tarifaFinal;
 }

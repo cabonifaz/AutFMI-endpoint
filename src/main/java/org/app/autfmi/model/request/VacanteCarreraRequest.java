@@ -11,4 +11,5 @@ public class VacanteCarreraRequest {
     private Integer idPerfil;
     private String carrera;
     private Integer idGrado;
+    private Boolean isOptional;
 }

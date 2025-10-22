@@ -368,12 +368,15 @@ public class RequirementRepository {
         tvp.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvp.addColumnMetadata("CARRERA", Types.VARCHAR);
         tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", Types.INTEGER);
+        tvp.addColumnMetadata("OPCIONAL", Types.INTEGER);
 
         for (VacanteCarreraRequest carrera : carreras) {
+            Integer opcional = carrera.getIsOptional() ? 1 : 0;
             tvp.addRow(
                     carrera.getIdPerfil(),
                     carrera.getCarrera(),
-                    carrera.getIdGrado());
+                    carrera.getIdGrado(),
+                    opcional);
         }
         return tvp;
     }

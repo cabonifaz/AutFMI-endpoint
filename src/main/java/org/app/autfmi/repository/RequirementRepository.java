@@ -1301,13 +1301,15 @@ public class RequirementRepository {
             tvp.addColumnMetadata("ID_HABILIDAD", java.sql.Types.INTEGER);
             tvp.addColumnMetadata("A_EXP", java.sql.Types.INTEGER);
             tvp.addColumnMetadata("ID_ESTADO_REGISTRO", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("OPCIONAL", java.sql.Types.INTEGER);
 
             for (VacanteSkillDTO s : skills) {
                 tvp.addRow(
                         s.getIdVacanteHabilidad(),
                         s.getIdHabilidad(),
                         s.getAnios(),
-                        s.getIdEstadoRegistro());
+                        s.getIdEstadoRegistro(),
+                        s.getIsOptional() ? 1 : 0);
             }
             SqlParameterSource params = new MapSqlParameterSource()
                     .addValue("ID_VACANTE", idVacante)

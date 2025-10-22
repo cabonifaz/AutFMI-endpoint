@@ -1228,13 +1228,15 @@ public class RequirementRepository {
         tvpRqVacSkill.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqVacSkill.addColumnMetadata("ID_SKILL", Types.INTEGER);
         tvpRqVacSkill.addColumnMetadata("ANIOS", Types.INTEGER);
+        tvpRqVacSkill.addColumnMetadata("OPCIONAL", Types.INTEGER);
 
         // Recorrer la lista en Java y llenar el TVP
         for (VacanteSkill skillReq : lstVacanteSkills) {
             tvpRqVacSkill.addRow(
                     skillReq.getIdPerfil(),
                     skillReq.getIdSkill(),
-                    skillReq.getAnios());
+                    skillReq.getAnios(),
+                    skillReq.getIsOptional() ? 1 : 0);
         }
 
         return tvpRqVacSkill;

@@ -461,6 +461,8 @@ public class RequirementRepository {
 
         SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantesUpdate(request.getLstVacantes());
 
+        SQLServerDataTable lstFactuacion = loadLstFacturacionTable(request.getLstFacturacion());
+
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
                 .addValue("ID_CLIENTE", request.getIdCliente())
@@ -482,7 +484,8 @@ public class RequirementRepository {
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("MODALIDAD_FACT", request.getIdModalidadFact())
                 .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
-                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato())
+                .addValue("LST_FACTURACION", lstFactuacion);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

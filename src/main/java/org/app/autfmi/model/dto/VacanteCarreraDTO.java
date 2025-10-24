@@ -14,4 +14,5 @@ public class VacanteCarreraDTO {
     private String carrera;
     private Integer idGradoEstudios;
     private Integer idEstadoRegistro;
+    private Boolean isOptional;
 }

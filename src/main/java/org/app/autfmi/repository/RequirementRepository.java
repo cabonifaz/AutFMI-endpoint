@@ -221,16 +221,81 @@ public class RequirementRepository {
                         }
                     }
 
+                    // ========================================
+                    // Bloque: Facturación
+                    // ========================================
+                    List<RQFacturacionDTO> lstFacturacion = new ArrayList<>();
+
+                    List<Map<String, Object>> resultSet7 = (List<Map<String, Object>>) result.get("#result-set-7");
+                    if (resultSet7 != null && !resultSet7.isEmpty()) {
+                        for (Map<String, Object> factRow : resultSet7) {
+                            RQFacturacionDTO itemFact = new RQFacturacionDTO(
+                                    (Integer) factRow.get("ID_REQUERIMIENTO_FACTURACION"),
+                                    (Integer) factRow.get("ID_REQUERIMIENTO"),
+                                    (Integer) factRow.get("ID_MODALIDAD"),
+                                    (Integer) factRow.get("ID_GRUPO_MODALIDAD"),
+                                    (Boolean) factRow.get("DECLARA_SUNAT"),
+                                    (String) factRow.get("SEDE_SUNAT"),
+                                    (BigDecimal) factRow.get("MONTO_BASE"),
+                                    (BigDecimal) factRow.get("MONTO_MOVILIDAD"),
+                                    (BigDecimal) factRow.get("MONTO_MENSUAL"),
+                                    (BigDecimal) factRow.get("MONTO_TRIMESTRAL"),
+                                    (BigDecimal) factRow.get("MONTO_SEMESTRAL"),
+                                    (Integer) factRow.get("ID_ESTADO_REGISTRO"),
+                                    (String) factRow.get("MODALIDAD"),
+                                    (String) factRow.get("GRUPO_MODALIDAD"));
+
+                            lstFacturacion.add(itemFact);
+                        }
+                    }
+
                     return new RequirementResponse(
                             idTipoMensaje,
                             mensaje,
                             mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes,
-                                    lstContactos));
+                                    lstContactos,
+                                    lstFacturacion));
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
         }
         return null;
+    }
+
+    private SQLServerDataTable loadLstFacturacionTable(List<RQFacturacionDTO> lstFacturacion)
+            throws SQLServerException {
+        SQLServerDataTable table = new SQLServerDataTable();
+
+        table.addColumnMetadata("ID_REQUERIMIENTO_FACTURACION", Types.INTEGER);
+        table.addColumnMetadata("ID_REQUERIMIENTO", Types.INTEGER);
+        table.addColumnMetadata("ID_MODALIDAD", Types.INTEGER);
+        table.addColumnMetadata("ID_GRUPO_MODALIDAD", Types.INTEGER);
+        table.addColumnMetadata("DECLARA_SUNAT", Types.BIT);
+        table.addColumnMetadata("SEDE_SUNAT", Types.VARCHAR);
+        table.addColumnMetadata("MONTO_BASE", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_MOVILIDAD", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_MENSUAL", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_TRIMESTRAL", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_SEMESTRAL", Types.DOUBLE);
+        table.addColumnMetadata("ID_ESTADO_REGISTRO", Types.INTEGER);
+
+        for (RQFacturacionDTO facturacion : lstFacturacion) {
+            table.addRow(
+                    facturacion.getIdRequerimientoFacturacion(),
+                    facturacion.getIdRequerimiento(),
+                    facturacion.getIdModalidad(),
+                    facturacion.getIdGrupoModalidad(),
+                    facturacion.getDeclaraSunat(),
+                    facturacion.getSedeSunat(),
+                    facturacion.getMontoBase(),
+                    facturacion.getMontoMovilidad(),
+                    facturacion.getMontoMensual(),
+                    facturacion.getMontoTrimestral(),
+                    facturacion.getMontoSemestral(),
+                    facturacion.getIdEstadoRegistro());
+        }
+
+        return table;
     }
 
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
@@ -239,6 +304,8 @@ public class RequirementRepository {
         SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantes(request.getLstVacantes());
         SQLServerDataTable tvpRqVacSkill = loadTvpRqVacSkill(request.getLstVacanteSkills());
         SQLServerDataTable tvpCarreras = loadTvpLstCarreras(request.getLstCarreras());
+
+        SQLServerDataTable tvpFacturacion = loadLstFacturacionTable(request.getLstFacturacion());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", request.getIdCliente())
@@ -266,7 +333,10 @@ public class RequirementRepository {
                 .addValue("LST_VACANTE_CARRERAS", tvpCarreras)
                 // Duracion de contrato
                 .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
-                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato())
+
+                // Facturacion asociada a la modalidad de contrato
+                .addValue("LST_FACTURACION", tvpFacturacion);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -368,12 +438,15 @@ public class RequirementRepository {
         tvp.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvp.addColumnMetadata("CARRERA", Types.VARCHAR);
         tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", Types.INTEGER);
+        tvp.addColumnMetadata("OPCIONAL", Types.INTEGER);
 
         for (VacanteCarreraRequest carrera : carreras) {
+            Integer opcional = carrera.getIsOptional() ? 1 : 0;
             tvp.addRow(
                     carrera.getIdPerfil(),
                     carrera.getCarrera(),
-                    carrera.getIdGrado());
+                    carrera.getIdGrado(),
+                    opcional);
         }
         return tvp;
     }
@@ -387,6 +460,8 @@ public class RequirementRepository {
                 .withProcedureName("SP_REQUERIMIENTO_UPD");
 
         SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantesUpdate(request.getLstVacantes());
+
+        SQLServerDataTable lstFactuacion = loadLstFacturacionTable(request.getLstFacturacion());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
@@ -409,7 +484,8 @@ public class RequirementRepository {
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("MODALIDAD_FACT", request.getIdModalidadFact())
                 .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
-                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato())
+                .addValue("LST_FACTURACION", lstFactuacion);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -906,7 +982,8 @@ public class RequirementRepository {
             List<RequirementTalentDTO> lstRqTalents,
             List<RequirementFileDTO> lstRqFiles,
             List<RequirementVacanteDTO> lstRqVacantes,
-            List<ClientContactItemDTO> lstContactos) {
+            List<ClientContactItemDTO> lstContactos,
+            List<RQFacturacionDTO> lstRQFacturacion) {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
@@ -928,7 +1005,8 @@ public class RequirementRepository {
                 lstRqFiles,
                 lstContactos,
                 (Integer) requerimiento.get("ID_DUR_CONTRATO"),
-                (BigDecimal) requerimiento.get("DURACION_CONTRATO"));
+                (BigDecimal) requerimiento.get("DURACION_CONTRATO"),
+                lstRQFacturacion);
     }
 
     private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)
@@ -1225,13 +1303,15 @@ public class RequirementRepository {
         tvpRqVacSkill.addColumnMetadata("ID_PERFIL", Types.INTEGER);
         tvpRqVacSkill.addColumnMetadata("ID_SKILL", Types.INTEGER);
         tvpRqVacSkill.addColumnMetadata("ANIOS", Types.INTEGER);
+        tvpRqVacSkill.addColumnMetadata("OPCIONAL", Types.INTEGER);
 
         // Recorrer la lista en Java y llenar el TVP
         for (VacanteSkill skillReq : lstVacanteSkills) {
             tvpRqVacSkill.addRow(
                     skillReq.getIdPerfil(),
                     skillReq.getIdSkill(),
-                    skillReq.getAnios());
+                    skillReq.getAnios(),
+                    skillReq.getIsOptional() ? 1 : 0);
         }
 
         return tvpRqVacSkill;
@@ -1265,6 +1345,7 @@ public class RequirementRepository {
                 Integer idVac = (Integer) row.get("ID_VACANTE");
                 Integer idProfile = (Integer) row.get("ID_PERFIL");
                 Integer idReqVacSkill = (Integer) row.get("ID_VACANTE_HABILIDAD");
+                Integer isOptional = (Integer) row.get("OPCIONAL");
 
                 // Aquí mapear a DTO VacanteSkill
                 VacanteSkillDTO skill = new VacanteSkillDTO();
@@ -1275,6 +1356,7 @@ public class RequirementRepository {
                 skill.setHabilidad(skillName);
                 skill.setIdEstadoRegistro(idRegState);
                 skill.setAnios(years);
+                skill.setIsOptional(isOptional == 1);
                 habilidades.add(skill);
             }
         }
@@ -1294,13 +1376,15 @@ public class RequirementRepository {
             tvp.addColumnMetadata("ID_HABILIDAD", java.sql.Types.INTEGER);
             tvp.addColumnMetadata("A_EXP", java.sql.Types.INTEGER);
             tvp.addColumnMetadata("ID_ESTADO_REGISTRO", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("OPCIONAL", java.sql.Types.INTEGER);
 
             for (VacanteSkillDTO s : skills) {
                 tvp.addRow(
                         s.getIdVacanteHabilidad(),
                         s.getIdHabilidad(),
                         s.getAnios(),
-                        s.getIdEstadoRegistro());
+                        s.getIdEstadoRegistro(),
+                        s.getIsOptional() ? 1 : 0);
             }
             SqlParameterSource params = new MapSqlParameterSource()
                     .addValue("ID_VACANTE", idVacante)
@@ -1332,6 +1416,7 @@ public class RequirementRepository {
             tvp.addColumnMetadata("CARRERA", java.sql.Types.VARCHAR);
             tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", java.sql.Types.INTEGER);
             tvp.addColumnMetadata("ID_ESTADO_REGISTRO", java.sql.Types.INTEGER);
+            tvp.addColumnMetadata("OPCIONAL", java.sql.Types.INTEGER);
 
             // Llenar el TVP con las carreras recibidas
             for (VacanteCarreraDTO carrera : careers) {
@@ -1339,7 +1424,8 @@ public class RequirementRepository {
                         carrera.getIdVacanteCarrera(), // Puede ser null si es nueva
                         carrera.getCarrera(),
                         carrera.getIdGradoEstudios(),
-                        carrera.getIdEstadoRegistro());
+                        carrera.getIdEstadoRegistro(),
+                        carrera.getIsOptional() ? 1 : 0);
             }
 
             // Ejecutar el SP
@@ -1418,6 +1504,10 @@ public class RequirementRepository {
                     dto.setCarrera((String) row.get("CARRERA"));
                     dto.setIdGradoEstudios((Integer) row.get("ID_GRADO_ESTUDIOS"));
                     dto.setIdEstadoRegistro((Integer) row.get("ID_ESTADO_REGISTRO"));
+
+                    Integer isOptional = (Integer) row.get("OPCIONAL");
+                    dto.setIsOptional(isOptional == 1);
+
                     return dto;
                 }).toList();
 

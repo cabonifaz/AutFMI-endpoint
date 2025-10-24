@@ -74,12 +74,18 @@ public class MailService implements IMailService {
     // --- Datos de gestión ---
     Map<String, Object> gestion = new HashMap<>();
 
-    Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0).intValue();
+    if (rDto.getDuracion() == null || rDto.getIdDuracion() == null) {
+      logger.warn("RQ no tiene duración: {}", rDto.getCodigoRQ());
+      gestion.put("duracion", "Sin duración especificada");
+    } else {
+      Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0)
+          .intValue();
 
-    // -- Gestion duracion
-    Integer idDuration = rDto.getIdDuracion();
-    String decodedDuration = MasterDecoder.decodeDuration(idDuration);
-    gestion.put("duracion", duration + " " + decodedDuration);
+      // -- Gestion duracion
+      Integer idDuration = rDto.getIdDuracion();
+      String decodedDuration = MasterDecoder.decodeDuration(idDuration);
+      gestion.put("duracion", duration + " " + decodedDuration);
+    }
 
     // -- Gestion modalidad
     Integer idModalidad = rDto.getIdModalidad();
@@ -195,12 +201,19 @@ public class MailService implements IMailService {
     // --- Datos de gestión ---
     Map<String, Object> gestion = new HashMap<>();
 
-    Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0).intValue();
-
     // -- Gestion duracion
-    Integer idDuration = rDto.getIdDuracion();
-    String decodedDuration = MasterDecoder.decodeDuration(idDuration);
-    gestion.put("duracion", duration + " " + decodedDuration);
+    if (rDto.getDuracion() == null || rDto.getIdDuracion() == null) {
+      logger.warn("RQ no tiene duración: {}", rDto.getCodigoRQ());
+      gestion.put("duracion", "Sin duración especificada");
+    } else {
+      Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0)
+          .intValue();
+
+      // -- Gestion duracion
+      Integer idDuration = rDto.getIdDuracion();
+      String decodedDuration = MasterDecoder.decodeDuration(idDuration);
+      gestion.put("duracion", duration + " " + decodedDuration);
+    }
 
     // -- Gestion modalidad
     Integer idModalidad = rDto.getIdModalidad();

@@ -221,11 +221,40 @@ public class RequirementRepository {
                         }
                     }
 
+                    // ========================================
+                    // Bloque: Facturación
+                    // ========================================
+                    List<RQFacturacionDTO> lstFacturacion = new ArrayList<>();
+
+                    List<Map<String, Object>> resultSet7 = (List<Map<String, Object>>) result.get("#result-set-7");
+                    if (resultSet7 != null && !resultSet7.isEmpty()) {
+                        for (Map<String, Object> factRow : resultSet7) {
+                            RQFacturacionDTO itemFact = new RQFacturacionDTO(
+                                    (Integer) factRow.get("ID_REQUERIMIENTO_FACTURACION"),
+                                    (Integer) factRow.get("ID_REQUERIMIENTO"),
+                                    (Integer) factRow.get("ID_MODALIDAD"),
+                                    (Integer) factRow.get("ID_GRUPO_MODALIDAD"),
+                                    (Boolean) factRow.get("DECLARA_SUNAT"),
+                                    (String) factRow.get("SEDE_SUNAT"),
+                                    (BigDecimal) factRow.get("MONTO_BASE"),
+                                    (BigDecimal) factRow.get("MONTO_MOVILIDAD"),
+                                    (BigDecimal) factRow.get("MONTO_MENSUAL"),
+                                    (BigDecimal) factRow.get("MONTO_TRIMESTRAL"),
+                                    (BigDecimal) factRow.get("MONTO_SEMESTRAL"),
+                                    (Integer) factRow.get("ID_ESTADO_REGISTRO"),
+                                    (String) factRow.get("MODALIDAD"),
+                                    (String) factRow.get("GRUPO_MODALIDAD"));
+
+                            lstFacturacion.add(itemFact);
+                        }
+                    }
+
                     return new RequirementResponse(
                             idTipoMensaje,
                             mensaje,
                             mapToRequirementDTO(requirementData, lstRqTalents, lstRqFiles, lstRqVacantes,
-                                    lstContactos));
+                                    lstContactos,
+                                    lstFacturacion));
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -241,7 +270,7 @@ public class RequirementRepository {
         table.addColumnMetadata("ID_REQUERIMIENTO", Types.INTEGER);
         table.addColumnMetadata("ID_MODALIDAD", Types.INTEGER);
         table.addColumnMetadata("ID_GRUPO_MODALIDAD", Types.INTEGER);
-        table.addColumnMetadata("DECLARA_SUNAT", Types.INTEGER);
+        table.addColumnMetadata("DECLARA_SUNAT", Types.BIT);
         table.addColumnMetadata("SEDE_SUNAT", Types.VARCHAR);
         table.addColumnMetadata("MONTO_BASE", Types.DOUBLE);
         table.addColumnMetadata("MONTO_MOVILIDAD", Types.DOUBLE);
@@ -950,7 +979,8 @@ public class RequirementRepository {
             List<RequirementTalentDTO> lstRqTalents,
             List<RequirementFileDTO> lstRqFiles,
             List<RequirementVacanteDTO> lstRqVacantes,
-            List<ClientContactItemDTO> lstContactos) {
+            List<ClientContactItemDTO> lstContactos,
+            List<RQFacturacionDTO> lstRQFacturacion) {
         return new RequirementDTO(
                 (Integer) requerimiento.get("ID_CLIENTE"),
                 (String) requerimiento.get("CLIENTE"),
@@ -972,7 +1002,8 @@ public class RequirementRepository {
                 lstRqFiles,
                 lstContactos,
                 (Integer) requerimiento.get("ID_DUR_CONTRATO"),
-                (BigDecimal) requerimiento.get("DURACION_CONTRATO"));
+                (BigDecimal) requerimiento.get("DURACION_CONTRATO"),
+                lstRQFacturacion);
     }
 
     private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)

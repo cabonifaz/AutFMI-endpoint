@@ -233,12 +233,50 @@ public class RequirementRepository {
         return null;
     }
 
+    private SQLServerDataTable loadLstFacturacionTable(List<RQFacturacionDTO> lstFacturacion)
+            throws SQLServerException {
+        SQLServerDataTable table = new SQLServerDataTable();
+
+        table.addColumnMetadata("ID_REQUERIMIENTO_FACTURACION", Types.INTEGER);
+        table.addColumnMetadata("ID_REQUERIMIENTO", Types.INTEGER);
+        table.addColumnMetadata("ID_MODALIDAD", Types.INTEGER);
+        table.addColumnMetadata("ID_GRUPO_MODALIDAD", Types.INTEGER);
+        table.addColumnMetadata("DECLARA_SUNAT", Types.INTEGER);
+        table.addColumnMetadata("SEDE_SUNAT", Types.VARCHAR);
+        table.addColumnMetadata("MONTO_BASE", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_MOVILIDAD", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_MENSUAL", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_TRIMESTRAL", Types.DOUBLE);
+        table.addColumnMetadata("MONTO_SEMESTRAL", Types.DOUBLE);
+        table.addColumnMetadata("ID_ESTADO_REGISTRO", Types.INTEGER);
+
+        for (RQFacturacionDTO facturacion : lstFacturacion) {
+            table.addRow(
+                    facturacion.getIdRequerimientoFacturacion(),
+                    facturacion.getIdRequerimiento(),
+                    facturacion.getIdModalidad(),
+                    facturacion.getIdGrupoModalidad(),
+                    facturacion.getDeclaraSunat(),
+                    facturacion.getSedeSunat(),
+                    facturacion.getMontoBase(),
+                    facturacion.getMontoMovilidad(),
+                    facturacion.getMontoMensual(),
+                    facturacion.getMontoTrimestral(),
+                    facturacion.getMontoSemestral(),
+                    facturacion.getIdEstadoRegistro());
+        }
+
+        return table;
+    }
+
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_INS");
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
         SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantes(request.getLstVacantes());
         SQLServerDataTable tvpRqVacSkill = loadTvpRqVacSkill(request.getLstVacanteSkills());
         SQLServerDataTable tvpCarreras = loadTvpLstCarreras(request.getLstCarreras());
+
+        SQLServerDataTable tvpFacturacion = loadLstFacturacionTable(request.getLstFacturacion());
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_CLIENTE", request.getIdCliente())
@@ -266,7 +304,10 @@ public class RequirementRepository {
                 .addValue("LST_VACANTE_CARRERAS", tvpCarreras)
                 // Duracion de contrato
                 .addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
-                .addValue("DURACION_CONTRATO", request.getDuracionContrato());
+                .addValue("DURACION_CONTRATO", request.getDuracionContrato())
+
+                // Facturacion asociada a la modalidad de contrato
+                .addValue("LST_FACTURACION", tvpFacturacion);
 
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

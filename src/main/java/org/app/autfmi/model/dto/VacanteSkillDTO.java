@@ -16,4 +16,5 @@ public class VacanteSkillDTO {
     private String habilidad;
     private Integer idEstadoRegistro;
     private Integer anios;
+    private Boolean isOptional;
 }

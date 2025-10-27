@@ -12,4 +12,5 @@ public class VacanteSkill {
     private int idPerfil;
     private int idSkill;
     private int anios;
+    private Boolean isOptional;
 }

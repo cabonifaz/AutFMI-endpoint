@@ -34,4 +34,6 @@ public class RequirementDTO {
     // Duracion de contrato
     private Integer idDuracionContrato;
     private BigDecimal duracionContrato;
+
+    private List<RQFacturacionDTO> lstRqFacturacion;
 }

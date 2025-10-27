@@ -40,7 +40,8 @@ public class MailService implements IMailService {
       List<Map<String, Object>> vacantesMapped,
       List<Map<String, Object>> contactosMapList,
       List<Map<String, Object>> habilidadesMapped,
-      List<Map<String, Object>> carrerasMapped) {
+      List<Map<String, Object>> carrerasMapped,
+      String correoEjecutor) {
 
     logger.info("Preparing to send create requirement notification email...");
     logger.info("Asunto: Creación de Requerimiento: " + rDto.getCodigoRQ());
@@ -74,12 +75,18 @@ public class MailService implements IMailService {
     // --- Datos de gestión ---
     Map<String, Object> gestion = new HashMap<>();
 
-    Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0).intValue();
+    if (rDto.getDuracion() == null || rDto.getIdDuracion() == null) {
+      logger.warn("RQ no tiene duración: {}", rDto.getCodigoRQ());
+      gestion.put("duracion", "Sin duración especificada");
+    } else {
+      Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0)
+          .intValue();
 
-    // -- Gestion duracion
-    Integer idDuration = rDto.getIdDuracion();
-    String decodedDuration = MasterDecoder.decodeDuration(idDuration);
-    gestion.put("duracion", duration + " " + decodedDuration);
+      // -- Gestion duracion
+      Integer idDuration = rDto.getIdDuracion();
+      String decodedDuration = MasterDecoder.decodeDuration(idDuration);
+      gestion.put("duracion", duration + " " + decodedDuration);
+    }
 
     // -- Gestion modalidad
     Integer idModalidad = rDto.getIdModalidad();
@@ -153,6 +160,17 @@ public class MailService implements IMailService {
           variables);
     }
 
+    // Enviar copia al ejecutor si su correo está disponible
+    if (correoEjecutor != null && !correoEjecutor.isEmpty()) {
+      logger.info("Enviando copia al ejecutor del requerimiento: " + correoEjecutor);
+      mailUtils.sendEmailWithHtmlTemplate(
+          correoEjecutor,
+          null,
+          "Creación de Requerimiento: " + rDto.getCodigoRQ(),
+          "rq-details",
+          variables);
+    }
+
     logger.info("Notificación completada para creación de requerimiento.");
   }
 
@@ -161,7 +179,8 @@ public class MailService implements IMailService {
   public void sendUpdateRequirementNotification(String userName, RequirementDTO rDto,
       List<Map<String, Object>> vacantesMapped, List<Map<String, Object>> contactosMapList,
       List<Map<String, Object>> habilidadesMapped, List<Map<String, Object>> carrerasMapped,
-      List<Map<String, Object>> postulanteList) {
+      List<Map<String, Object>> postulanteList,
+      String correoEjecutor) {
 
     logger.info("Preparing to send update requirement notification email...");
     logger.info("Asunto: Actualización de Requerimiento: " + rDto.getCodigoRQ());
@@ -195,12 +214,19 @@ public class MailService implements IMailService {
     // --- Datos de gestión ---
     Map<String, Object> gestion = new HashMap<>();
 
-    Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0).intValue();
-
     // -- Gestion duracion
-    Integer idDuration = rDto.getIdDuracion();
-    String decodedDuration = MasterDecoder.decodeDuration(idDuration);
-    gestion.put("duracion", duration + " " + decodedDuration);
+    if (rDto.getDuracion() == null || rDto.getIdDuracion() == null) {
+      logger.warn("RQ no tiene duración: {}", rDto.getCodigoRQ());
+      gestion.put("duracion", "Sin duración especificada");
+    } else {
+      Integer duration = BigDecimal.valueOf(rDto.getDuracion() != null ? rDto.getDuracion().doubleValue() : 0)
+          .intValue();
+
+      // -- Gestion duracion
+      Integer idDuration = rDto.getIdDuracion();
+      String decodedDuration = MasterDecoder.decodeDuration(idDuration);
+      gestion.put("duracion", duration + " " + decodedDuration);
+    }
 
     // -- Gestion modalidad
     Integer idModalidad = rDto.getIdModalidad();
@@ -270,6 +296,17 @@ public class MailService implements IMailService {
     for (String destinatario : destinatarios) {
       mailUtils.sendEmailWithHtmlTemplate(
           destinatario,
+          null,
+          "Actualización de Requerimiento: " + rDto.getCodigoRQ(),
+          "rq-details",
+          variables);
+    }
+
+    // Enviar copia al ejecutor si su correo está disponible
+    if (correoEjecutor != null && !correoEjecutor.isEmpty()) {
+      logger.info("Enviando copia al ejecutor del requerimiento: " + correoEjecutor);
+      mailUtils.sendEmailWithHtmlTemplate(
+          correoEjecutor,
           null,
           "Actualización de Requerimiento: " + rDto.getCodigoRQ(),
           "rq-details",

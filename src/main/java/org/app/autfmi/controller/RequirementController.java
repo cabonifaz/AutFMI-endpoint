@@ -70,6 +70,8 @@ public class RequirementController {
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(e.getStackTrace());
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);

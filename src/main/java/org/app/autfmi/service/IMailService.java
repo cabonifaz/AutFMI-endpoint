@@ -8,21 +8,23 @@ import org.app.autfmi.util.MailUtils;
 
 public interface IMailService {
 
-  public MailUtils mailUtils = new MailUtils();
+        public MailUtils mailUtils = new MailUtils();
 
-  void sendCreateRequirementNotification(
-      String userName,
-      RequirementDTO rDto,
-      List<Map<String, Object>> vacantesMapped,
-      List<Map<String, Object>> contactosMapList,
-      List<Map<String, Object>> habilidadesMapped,
-      List<Map<String, Object>> carrerasMapped);
+        void sendCreateRequirementNotification(
+                        String userName,
+                        RequirementDTO rDto,
+                        List<Map<String, Object>> vacantesMapped,
+                        List<Map<String, Object>> contactosMapList,
+                        List<Map<String, Object>> habilidadesMapped,
+                        List<Map<String, Object>> carrerasMapped,
+                        String correoEjecutor);
 
-  void sendUpdateRequirementNotification(String userName,
-      RequirementDTO rDto,
-      List<Map<String, Object>> vacantesMapped,
-      List<Map<String, Object>> contactosMapList,
-      List<Map<String, Object>> habilidadesMapped,
-      List<Map<String, Object>> carrerasMapped,
-      List<Map<String, Object>> postulanteList);
+        void sendUpdateRequirementNotification(String userName,
+                        RequirementDTO rDto,
+                        List<Map<String, Object>> vacantesMapped,
+                        List<Map<String, Object>> contactosMapList,
+                        List<Map<String, Object>> habilidadesMapped,
+                        List<Map<String, Object>> carrerasMapped,
+                        List<Map<String, Object>> postulanteList,
+                        String correoEjecutor);
 }

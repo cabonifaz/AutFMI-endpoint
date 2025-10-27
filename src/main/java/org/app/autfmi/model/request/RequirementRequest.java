@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.List;
 
+import org.app.autfmi.model.dto.RQFacturacionDTO;
+
 @Data
 @AllArgsConstructor
 public class RequirementRequest {
@@ -33,4 +35,7 @@ public class RequirementRequest {
     // Duracion de contrato
     private Integer idDuracionContrato;
     private Double duracionContrato;
+
+    // Facturacion asociada a la modalidad de contrato
+    private List<RQFacturacionDTO> lstFacturacion;
 }

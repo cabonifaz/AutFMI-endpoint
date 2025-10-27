@@ -417,13 +417,21 @@ public class RequirementRepository {
                 // --- Carreras por vacante (result set 5)
                 List<Map<String, Object>> carrerasResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
 
+                // --- Correo del ejecutor (result set 6)
+                List<Map<String, Object>> correoResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
+                String correoEjecutor = null;
+                if (correoResultSet != null && !correoResultSet.isEmpty()) {
+                    correoEjecutor = (String) correoResultSet.get(0).get("CORREO");
+                }
+
                 // send mail
                 mailService.sendCreateRequirementNotification(
                         baseRequest.getUsername(),
                         rDto, vacantesMapList,
                         contactosMapList,
                         habilidadesResultSet,
-                        carrerasResultSet);
+                        carrerasResultSet,
+                        correoEjecutor);
 
             }
 
@@ -573,6 +581,15 @@ public class RequirementRepository {
                     }
                 }
 
+                // result set 7 correo del usuario ejecutor
+                List<Map<String, Object>> correoResultSet = (List<Map<String, Object>>) result.get("#result-set-7");
+                String correoEjecutor = null;
+
+                if (correoResultSet != null && !correoResultSet.isEmpty()) {
+                    Map<String, Object> rw = correoResultSet.get(0);
+                    correoEjecutor = (String) rw.get("CORREO");
+                }
+
                 // Enviar email de notificación
                 mailService.sendUpdateRequirementNotification(
                         baseRequest.getUsername(),
@@ -581,7 +598,7 @@ public class RequirementRepository {
                         contactosMapList,
                         habilidadesResultSet,
                         carrerasResultSet,
-                        postulantesList);
+                        postulantesList, correoEjecutor);
             }
 
             logger.info("Fin REPOSITORY updateRequirement - ID_REQUERIMIENTO: {} - Resultado: {} - {}",

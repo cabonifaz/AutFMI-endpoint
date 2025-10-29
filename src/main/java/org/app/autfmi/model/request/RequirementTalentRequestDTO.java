@@ -7,7 +7,6 @@ import org.app.autfmi.model.dto.SolicitudEquipoDTO;
 
 import java.math.BigDecimal;
 
-
 @Data
 @AllArgsConstructor
 public class RequirementTalentRequestDTO {
@@ -71,4 +70,8 @@ public class RequirementTalentRequestDTO {
 
     @JsonProperty()
     private SolicitudEquipoDTO solicitudEquipo;
+
+    // ID_ESTADO_REGISTRO PARA ACTUALIZACIONES
+    private Integer idEstadoRegistro;
+
 }

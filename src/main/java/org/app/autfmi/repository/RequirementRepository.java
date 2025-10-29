@@ -1154,6 +1154,9 @@ public class RequirementRepository {
         tvpRqTalents.addColumnMetadata("BIT_INTERNET_MOVIL", Types.BIT);
         tvpRqTalents.addColumnMetadata("ACCESORIOS", Types.VARCHAR);
 
+        // ID_ESTADO_REGISTRO PARA ACTUALIZACIONES
+        tvpRqTalents.addColumnMetadata("ID_ESTADO_REGISTRO", Types.INTEGER);
+
         int indice = 1;
 
         System.out.println("CARGANDO DATOS A TABLA TVP");
@@ -1211,7 +1214,9 @@ public class RequirementRepository {
                     se != null ? se.getAnexo() : null,
                     se != null ? se.getBitCelular() : null,
                     se != null ? se.getBitInternetMovil() : null,
-                    se != null ? se.getAccesorios() : null);
+                    se != null ? se.getAccesorios() : null,
+                    // ID_ESTADO_REGISTRO PARA ACTUALIZACIONES
+                    talentRequest.getIdEstadoRegistro());
 
             indice++;
         }

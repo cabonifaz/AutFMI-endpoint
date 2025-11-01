@@ -474,6 +474,11 @@ public class Constante {
                         </tr>
                     </table>
                 </div>
+                <div style="position: fixed; bottom: 10px; width: 100%; margin-top: 16px;">
+                    <p style="text-align: center; font-size: 10px;">
+                        Documento generado por el sistema de gestión de AUTFMI
+                    </p>
+                </div>
             </body>
             </html>
             """;
@@ -608,6 +613,9 @@ public class Constante {
                             <td style="padding: 0;">
                                 <table class="inner-table">
                                     <tr>
+                                        Moneda: {{tipoMoneda}}
+                                    </tr>
+                                    <tr>
                                         <th>Base</th>
                                         <th>Movilidad</th>
                                         <th>Bono Trimestral</th>
@@ -715,6 +723,11 @@ public class Constante {
                         y será declarado en SUNAT. Responda la pregunta [1], en caso su respuesta sea afirmativa, por favor
                         responda a la pregunta [2] tener en cuenta que si la respuesta es "Oficina del Cliente" se debe
                         contar con un contrato entre empresas.
+                    </p>
+                </div>
+                <div style="position: fixed; bottom: 10px; width: 100%; margin-top: 16px;">
+                    <p style="text-align: center; font-size: 10px;">
+                        Documento generado por el sistema de gestión de AUTFMI
                     </p>
                 </div>
             </body>

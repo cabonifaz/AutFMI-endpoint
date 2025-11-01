@@ -21,7 +21,8 @@ import java.util.function.Consumer;
 public class HistoryRepository {
     private final JdbcTemplate jdbcTemplate;
 
-    private Map<String, Object> executeProcedure(BaseRequest baseRequest, String SP, Consumer<MapSqlParameterSource> parameterBuilder) {
+    private Map<String, Object> executeProcedure(BaseRequest baseRequest, String SP,
+            Consumer<MapSqlParameterSource> parameterBuilder) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName(SP);
 
         MapSqlParameterSource params = new MapSqlParameterSource();
@@ -64,8 +65,7 @@ public class HistoryRepository {
                 .addValue("ID_MOV_AREA", request.getIdMovArea())
                 .addValue("MOV_AREA", request.getMovArea())
                 .addValue("HORARIO", request.getHorario())
-                .addValue("FCH_HISTORIAL", request.getFchMovimiento())
-        );
+                .addValue("FCH_HISTORIAL", request.getFchMovimiento()));
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
 
@@ -101,8 +101,7 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
@@ -147,8 +146,7 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
@@ -237,8 +235,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"),
+                (String) report.get("MONEDA"));
     }
 
     public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {
@@ -268,7 +266,8 @@ public class HistoryRepository {
                             default -> "historial";
                         };
 
-                        return new BaseReport(new BaseResponse(1, "El talento no tiene reportes de " + tipo + " previos"));
+                        return new BaseReport(
+                                new BaseResponse(1, "El talento no tiene reportes de " + tipo + " previos"));
                     }
 
                     Map<String, Object> reportRow = reportData.get(0);
@@ -308,12 +307,15 @@ public class HistoryRepository {
                 BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
 
                 if (idTipoMensaje == 2) {
-                    List<Map<String, Object>> resultSetSolicitud = (List<Map<String, Object>>) result.get("#result-set-2");
-                    List<Map<String, Object>> resultSetSolicitudSoftwareList = (List<Map<String, Object>>) result.get("#result-set-3");
+                    List<Map<String, Object>> resultSetSolicitud = (List<Map<String, Object>>) result
+                            .get("#result-set-2");
+                    List<Map<String, Object>> resultSetSolicitudSoftwareList = (List<Map<String, Object>>) result
+                            .get("#result-set-3");
                     List<Map<String, Object>> resultSetGestor = (List<Map<String, Object>>) result.get("#result-set-4");
 
                     boolean validSolicitud = resultSetSolicitud != null && !resultSetSolicitud.isEmpty();
-                    boolean validSoftwareList = resultSetSolicitudSoftwareList != null && !resultSetSolicitudSoftwareList.isEmpty();
+                    boolean validSoftwareList = resultSetSolicitudSoftwareList != null
+                            && !resultSetSolicitudSoftwareList.isEmpty();
                     boolean validGestor = resultSetGestor != null && !resultSetGestor.isEmpty();
 
                     if (validSolicitud && validSoftwareList && validGestor) {

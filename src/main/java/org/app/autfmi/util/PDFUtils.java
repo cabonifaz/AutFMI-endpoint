@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.lang.NonNull;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -50,7 +51,7 @@ public class PDFUtils {
         return base64Image;
     }
 
-    public byte[] crearPDF(String htmlContent, String title ) {
+    public byte[] crearPDF(String htmlContent, String title) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         try {
@@ -81,7 +82,12 @@ public class PDFUtils {
         return Base64.getEncoder().encodeToString(byteArchivo);
     }
 
-    public void enviarCorreoConPDF(List<FileDTO> lstfiles, String to, List<String> copyTo, String subject, String text) throws MessagingException {
+    public void enviarCorreoConPDF(List<FileDTO> lstfiles,
+            @NonNull String to,
+            @NonNull List<String> copyTo,
+            @NonNull String subject,
+            @NonNull String text)
+            throws MessagingException {
         try {
             for (FileDTO lstfile : lstfiles) {
                 lstfile.setByteArchivo(crearPDF(lstfile.getHtmlTemplate(), ""));
@@ -93,7 +99,7 @@ public class PDFUtils {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-        helper.setFrom(emisorCorreo);
+        helper.setFrom(emisorCorreo != null ? emisorCorreo : "");
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(text);
@@ -131,24 +137,25 @@ public class PDFUtils {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
                 // DATOS COLABORADOR
-                .replace("{{nombres}}", report.getNombres())
-                .replace("{{apellidos}}", report.getApellidos())
-                .replace("{{unidad}}", report.getUnidad())
+                .replace("{{nombres}}", SafeValues.safeString(report.getNombres()))
+                .replace("{{apellidos}}", SafeValues.safeString(report.getApellidos()))
+                .replace("{{unidad}}", SafeValues.safeString(report.getUnidad()))
                 // INGRESO
-                .replace("{{modalidad}}", report.getModalidad())
-                .replace("{{motivoIngreso}}", report.getMotivo())
-                .replace("{{cargo}}", report.getCargo())
-                .replace("{{horarioTrabajo}}", report.getHorario())
-                .replace("{{montoBaseIn}}", report.getMontoBase().toString())
-                .replace("{{montoMovilidadIn}}", report.getMontoMovilidad().toString())
-                .replace("{{montoTrimestralIn}}", report.getMontoTrimestral().toString())
-                .replace("{{fechaInicioContrato}}", report.getFechaInicioContrato())
-                .replace("{{fechaTerminoContrato}}", report.getFechaFinContrato())
-                .replace("{{proyectoServicio}}", report.getProyectoServicio())
-                .replace("{{objetoContrato}}", report.getObjetoContrato())
+                .replace("{{modalidad}}", SafeValues.safeString(report.getModalidad()))
+                .replace("{{motivoIngreso}}", SafeValues.safeString(report.getMotivo()))
+                .replace("{{cargo}}", SafeValues.safeString(report.getCargo()))
+                .replace("{{horarioTrabajo}}", SafeValues.safeString(report.getHorario()))
+                .replace("{{montoBaseIn}}", SafeValues.safeString(report.getMontoBase().toString()))
+                .replace("{{tipoMoneda}}", SafeValues.safeString(report.getMoneda()))
+                .replace("{{montoMovilidadIn}}", SafeValues.safeString(report.getMontoMovilidad().toString()))
+                .replace("{{montoTrimestralIn}}", SafeValues.safeString(report.getMontoTrimestral().toString()))
+                .replace("{{fechaInicioContrato}}", SafeValues.safeString(report.getFechaInicioContrato()))
+                .replace("{{fechaTerminoContrato}}", SafeValues.safeString(report.getFechaFinContrato()))
+                .replace("{{proyectoServicio}}", SafeValues.safeString(report.getProyectoServicio()))
+                .replace("{{objetoContrato}}", SafeValues.safeString(report.getObjetoContrato()))
                 // SUNAT
-                .replace("{{declaradoSunat}}", report.getDeclararSunat() == 1 ? "Si" : "No")
-                .replace("{{sedeDeclarar}}", report.getSedeDeclararSunat())
+                .replace("{{declaradoSunat}}", SafeValues.safeString(report.getDeclararSunat() == 1 ? "Si" : "No"))
+                .replace("{{sedeDeclarar}}", SafeValues.safeString(report.getSedeDeclararSunat()))
                 // MOVIMIENTO
                 .replace("{{montoBaseMov}}", "Monto")
                 .replace("{{montoMovilidadMov}}", "Monto")
@@ -161,8 +168,8 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
-                .replace("{{nombreFirma}}", report.getFirmante())
-                .replace("{{firmante}}", report.getFirmante());
+                .replace("{{nombreFirma}}", SafeValues.safeString(report.getFirmante()))
+                .replace("{{firmante}}", SafeValues.safeString(report.getFirmante()));
 
         return htmlTemplate;
     }
@@ -247,25 +254,31 @@ public class PDFUtils {
 
     public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report) {
         htmlTemplate = htmlTemplate
-                //DATOS DEL SOLICITANTE
+                // DATOS DEL SOLICITANTE
                 .replace("{{solicitante}}", report.getNombres() == null ? "" : report.getFirmante())
                 .replace("{{area}}", report.getArea() == null ? "" : report.getArea())
                 .replace("{{fechaSolicitud}}", report.getFechaSolicitud() == null ? "" : report.getFechaSolicitud())
 
-                //CREACIÓN DE USUARIOS
-                .replace("{{nombresCreacion}}", report.getNombresCreacion() == null ? "" :  report.getNombresCreacion())
-                .replace("{{apellidosCreacion}}", report.getApellidosCreacion() == null ? "" : report.getApellidosCreacion())
-                .replace("{{nombreUsuarioCreacion}}", report.getNombreUsuarioCreacion() == null ? "" : report.getNombreUsuarioCreacion())
+                // CREACIÓN DE USUARIOS
+                .replace("{{nombresCreacion}}", report.getNombresCreacion() == null ? "" : report.getNombresCreacion())
+                .replace("{{apellidosCreacion}}",
+                        report.getApellidosCreacion() == null ? "" : report.getApellidosCreacion())
+                .replace("{{nombreUsuarioCreacion}}",
+                        report.getNombreUsuarioCreacion() == null ? "" : report.getNombreUsuarioCreacion())
                 .replace("{{correoCreacion}}", report.getCorreoCreacion() == null ? "" : report.getCorreoCreacion())
                 .replace("{{areaCreacion}}", report.getAreaCreacion() == null ? "" : report.getAreaCreacion())
 
-                //MODIFICACIÓN DE USUARIOS
-                .replace("{{usuarioActualModificacion}}", report.getUsuarioActualModificacion() == null ? "" : report.getUsuarioActualModificacion())
-                .replace("{{usuarioNuevoModificacion}}", report.getUsuarioNuevoModificacion() == null ? "" : report.getUsuarioNuevoModificacion())
-                .replace("{{correoActualModificacion}}", report.getCorreoActualModificacion() == null ? "" : report.getCorreoActualModificacion())
-                .replace("{{correoNuevoModificacion}}", report.getCorreoNuevoModificacion() == null ? "" : report.getNombres())
+                // MODIFICACIÓN DE USUARIOS
+                .replace("{{usuarioActualModificacion}}",
+                        report.getUsuarioActualModificacion() == null ? "" : report.getUsuarioActualModificacion())
+                .replace("{{usuarioNuevoModificacion}}",
+                        report.getUsuarioNuevoModificacion() == null ? "" : report.getUsuarioNuevoModificacion())
+                .replace("{{correoActualModificacion}}",
+                        report.getCorreoActualModificacion() == null ? "" : report.getCorreoActualModificacion())
+                .replace("{{correoNuevoModificacion}}",
+                        report.getCorreoNuevoModificacion() == null ? "" : report.getNombres())
 
-                //DESACTIVACIÓN DE USUARIOS
+                // DESACTIVACIÓN DE USUARIOS
                 .replace("{{nombresCese}}", report.getNombresCese() == null ? "" : report.getNombresCese())
                 .replace("{{apellidosCese}}", report.getApellidosCese() == null ? "" : report.getApellidosCese())
                 .replace("{{usuarioCese}}", report.getUsuarioCese() == null ? "" : report.getUsuarioCese())
@@ -294,14 +307,15 @@ public class PDFUtils {
         // lista de productos
         List<String> listaProductos = new ArrayList<>();
 
-        for (int i = 0; i < report.getLstSoftware().size(); i++) {
-            SolicitudSoftwareRequest requestSoftware = report.getLstSoftware().get(i);
+        if (report.getLstSoftware() != null) {
+            for (int i = 0; i < report.getLstSoftware().size(); i++) {
+                SolicitudSoftwareRequest requestSoftware = report.getLstSoftware().get(i);
 
-            listaProductos.add(Constante.LIST_ITEM
-                    .replace("{{numeroItem}}", String.valueOf(i + 1))
-                    .replace("{{producto}}", requestSoftware.getProducto())
-                    .replace("{{version}}", requestSoftware.getProdVersion())
-            );
+                listaProductos.add(Constante.LIST_ITEM
+                        .replace("{{numeroItem}}", String.valueOf(i + 1))
+                        .replace("{{producto}}", requestSoftware.getProducto())
+                        .replace("{{version}}", requestSoftware.getProdVersion()));
+            }
         }
 
         htmlTemplate = htmlTemplate

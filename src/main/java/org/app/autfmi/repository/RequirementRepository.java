@@ -20,6 +20,7 @@ import org.app.autfmi.model.response.VacanteCarreraResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.service.impl.MailService;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.SafeValues;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
@@ -29,6 +30,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Repository;
 
@@ -43,6 +45,8 @@ import java.util.Map;
 @Repository
 @RequiredArgsConstructor
 public class RequirementRepository {
+
+    @NonNull
     private final JdbcTemplate jdbcTemplate;
     private final MailUtils mailUtils;
     private final PDFUtils pdfUtils;
@@ -655,6 +659,16 @@ public class RequirementRepository {
                     List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result
                             .get("#result-set-8"); // REPORTE EQUIPO SOFTWARES
 
+                    // @remove
+                    for (int i = 1; i <= 8; i++) {
+                        List<Map<String, Object>> set = (List<Map<String, Object>>) result.get("#result-set-" + i);
+                        if (set != null && !set.isEmpty()) {
+                            System.out.println("Result set #" + i + ": " + set.size() + " registros");
+                            System.out.println(set.get(0));
+                        } else {
+                            System.out.println("Result set #" + i + ": vacío");
+                        }
+                    }
                     if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null
                             && !gestorRqSet.isEmpty()) {
                         Map<String, Object> gestorRqRow = gestorRqSet.get(0);
@@ -690,118 +704,165 @@ public class RequirementRepository {
 
                         // ENVIAR CORREO
                         if (request.getFlagCorreo()) {
-                            mailUtils.sendRequirementPostulantMail(gestorRq, "Ingreso de nuevo talento", postulantList,
-                                    contactosList);
+
+                            try {
+                                mailUtils.sendRequirementPostulantMail(gestorRq, "Ingreso de nuevo talento",
+                                        postulantList,
+                                        contactosList);
+                            } catch (Exception e) {
+                                logger.error("Error enviando correo de talentos para RQ: {}. Error: {}",
+                                        gestorRq.getCodigoRQ(), e.getStackTrace());
+                                return new BaseResponse(2,
+                                        "Registro completado, pero falló el envío de correo para talentos confirmados",
+                                        e.getMessage());
+                            }
 
                             // ENVIAR CORREO CON REPORTE DE NUEVOS INGRESOS
                             if (reportSet != null && !reportSet.isEmpty()) {
                                 List<FileDTO> lstfiles = new ArrayList<>();
                                 SolicitudData data = new SolicitudData();
-                                for (Map<String, Object> reportRow : reportSet) {
-                                    EntryReport report = mapToEntryReport(reportRow);
-                                    // FORM FILE
-                                    FileDTO fileFormulario = new FileDTO(
-                                            "FT-GT-12 Formulario de Ingreso",
-                                            pdfUtils.replaceEntryRequestValues(
-                                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), report),
-                                            null);
 
-                                    // SOLICITUD FILE
-                                    data.setNombres(report.getNombres());
-                                    data.setApellidos(report.getApellidos());
-                                    data.setArea(report.getUnidad());
-                                    data.setFechaSolicitud(report.getFechaInicioContrato());
+                                try {
 
-                                    data.setNombresCreacion(report.getNombres());
-                                    data.setApellidosCreacion(report.getApellidos());
-                                    data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
-                                    data.setCorreoCreacion(report.getEmailEmpleado());
-                                    data.setAreaCreacion(report.getUnidad());
-                                    data.setFirmante(report.getFirmante());
+                                    for (Map<String, Object> reportRow : reportSet) {
+                                        EntryReport report = mapToEntryReport(reportRow);
+                                        // FORM FILE
+                                        FileDTO fileFormulario = new FileDTO(
+                                                "FT-GT-12 Formulario de Ingreso",
+                                                pdfUtils.replaceEntryRequestValues(
+                                                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
+                                                        report),
+                                                null);
 
-                                    FileDTO fileSolicitud = new FileDTO(
-                                            "FT-GS-01 Solicitud de Creación de Usuario",
-                                            pdfUtils.replaceSolicitudPDFValues(
-                                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
-                                            null);
+                                        // SOLICITUD FILE
+                                        data.setNombres(report.getNombres());
+                                        data.setApellidos(report.getApellidos());
+                                        data.setArea(report.getUnidad());
+                                        data.setFechaSolicitud(report.getFechaInicioContrato());
 
-                                    lstfiles.add(fileFormulario);
-                                    lstfiles.add(fileSolicitud);
+                                        data.setNombresCreacion(report.getNombres());
+                                        data.setApellidosCreacion(report.getApellidos());
+                                        data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
+                                        data.setCorreoCreacion(report.getEmailEmpleado());
+                                        data.setAreaCreacion(report.getUnidad());
+                                        data.setFirmante(report.getFirmante());
+
+                                        FileDTO fileSolicitud = new FileDTO(
+                                                "FT-GS-01 Solicitud de Creación de Usuario",
+                                                pdfUtils.replaceSolicitudPDFValues(
+                                                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
+                                                        data),
+                                                null);
+
+                                        lstfiles.add(fileFormulario);
+                                        lstfiles.add(fileSolicitud);
+                                    }
+
+                                    // ENVIAR CORREO CON PDF's
+                                    logger.info("Enviando correos con PDF");
+                                    if (gestorDocsCorreo != null && !gestorDocsCorreo.isEmpty()) {
+                                        pdfUtils.enviarCorreoConPDF(
+                                                lstfiles,
+                                                gestorDocsCorreo,
+                                                copyTo,
+                                                "Ingreso de empleado",
+                                                "Formulario de nuevo ingreso de empleado.");
+                                        logger.info("Correos enviados con PDF");
+                                    } else {
+                                        logger.error("Gestor de correo no configurado");
+                                        throw new NullPointerException("Gestor de correo no configurado");
+                                    }
+
+                                } catch (Exception e) {
+                                    logger.error("Error enviando correo con PDF de ingreso para RQ: {}. Error: {}",
+                                            gestorRq.getCodigoRQ(), e.getStackTrace());
+                                    return new BaseResponse(2,
+                                            "Registro completado, pero falló el envío de correo con PDF de ingreso",
+                                            e.getMessage());
                                 }
-
-                                // ENVIAR CORREO CON PDF's
-                                pdfUtils.enviarCorreoConPDF(
-                                        lstfiles,
-                                        gestorDocsCorreo,
-                                        copyTo,
-                                        "Ingreso de empleado",
-                                        "Formulario de nuevo ingreso de empleado.");
                             }
 
                             // Solicitudes Equipo
                             if (solicitudesEquipoSet != null && !solicitudesEquipoSet.isEmpty()) {
 
-                                List<FileDTO> lstSolicitudEquipoFiles = new ArrayList<>();
-                                String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+                                try {
 
-                                for (Map<String, Object> solicitudRow : solicitudesEquipoSet) {
-                                    SolicitudEquipoReport report = new SolicitudEquipoReport();
-                                    // datos gestor
-                                    report.setCorreoGestor(gestorDocsCorreo);
-                                    report.setNombreApellidoGestor(gestorDocsFullName);
-                                    // datos reporte
-                                    report.setNombreEmpleado((String) solicitudRow.get("NOMBRE_EMPLEADO"));
-                                    report.setApellidosEmpleado((String) solicitudRow.get("APELLIDOS_EMPLEADO"));
-                                    report.setCliente((String) solicitudRow.get("CLIENTE"));
-                                    report.setArea((String) solicitudRow.get("AREA"));
-                                    report.setPuesto((String) solicitudRow.get("PUESTO"));
-                                    report.setFechaSolicitud((String) solicitudRow.get("FECHA_SOLICITUD"));
-                                    report.setFechaEntrega((String) solicitudRow.get("FECHA_ENTREGA"));
-                                    report.setIdTipoEquipo((Integer) solicitudRow.get("ID_TIPO_EQUIPO"));
-                                    report.setProcesador((String) solicitudRow.get("PROCESADOR"));
-                                    report.setRam((String) solicitudRow.get("RAM"));
-                                    report.setHd((String) solicitudRow.get("HD"));
-                                    report.setMarca((String) solicitudRow.get("MARCA"));
-                                    report.setIdAnexo((Integer) solicitudRow.get("ID_ANEXO"));
-                                    report.setCelular((Boolean) solicitudRow.get("CELULAR"));
-                                    report.setInternetMovil((Boolean) solicitudRow.get("INTERNET_MOVIL"));
-                                    report.setAccesorios((String) solicitudRow.get("ACCESORIOS"));
+                                    List<FileDTO> lstSolicitudEquipoFiles = new ArrayList<>();
+                                    String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
 
-                                    // lista de software por solicitud
-                                    List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
-                                    if (equipoSoftwaresSet != null && !equipoSoftwaresSet.isEmpty()) {
-                                        for (Map<String, Object> softwareRow : equipoSoftwaresSet) {
-                                            Integer solicitudSoftwareId = (Integer) softwareRow
-                                                    .get("ID_EQUIPO_SOLICITUD");
-                                            Integer solicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
+                                    for (Map<String, Object> solicitudRow : solicitudesEquipoSet) {
+                                        SolicitudEquipoReport report = new SolicitudEquipoReport();
+                                        // datos gestor
+                                        report.setCorreoGestor(gestorDocsCorreo);
+                                        report.setNombreApellidoGestor(gestorDocsFullName);
+                                        // datos reporte
+                                        report.setNombreEmpleado((String) solicitudRow.get("NOMBRE_EMPLEADO"));
+                                        report.setApellidosEmpleado((String) solicitudRow.get("APELLIDOS_EMPLEADO"));
+                                        report.setCliente((String) solicitudRow.get("CLIENTE"));
+                                        report.setArea((String) solicitudRow.get("AREA"));
+                                        report.setPuesto((String) solicitudRow.get("PUESTO"));
+                                        report.setFechaSolicitud((String) solicitudRow.get("FECHA_SOLICITUD"));
+                                        report.setFechaEntrega((String) solicitudRow.get("FECHA_ENTREGA"));
+                                        report.setIdTipoEquipo((Integer) solicitudRow.get("ID_TIPO_EQUIPO"));
+                                        report.setProcesador((String) solicitudRow.get("PROCESADOR"));
+                                        report.setRam((String) solicitudRow.get("RAM"));
+                                        report.setHd((String) solicitudRow.get("HD"));
+                                        report.setMarca((String) solicitudRow.get("MARCA"));
+                                        report.setIdAnexo((Integer) solicitudRow.get("ID_ANEXO"));
+                                        report.setCelular((Boolean) solicitudRow.get("CELULAR"));
+                                        report.setInternetMovil((Boolean) solicitudRow.get("INTERNET_MOVIL"));
+                                        report.setAccesorios((String) solicitudRow.get("ACCESORIOS"));
 
-                                            // Solo agregar si pertenece a esta solicitud
-                                            if (solicitudSoftwareId != null
-                                                    && solicitudSoftwareId.equals(solicitudId)) {
-                                                SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
-                                                software.setIdItem((Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
-                                                software.setProducto((String) softwareRow.get("PRODUCTO"));
-                                                software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
-                                                lstSoftware.add(software);
+                                        // lista de software por solicitud
+                                        List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
+                                        if (equipoSoftwaresSet != null && !equipoSoftwaresSet.isEmpty()) {
+                                            for (Map<String, Object> softwareRow : equipoSoftwaresSet) {
+                                                Integer solicitudSoftwareId = (Integer) softwareRow
+                                                        .get("ID_EQUIPO_SOLICITUD");
+                                                Integer solicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
+
+                                                // Solo agregar si pertenece a esta solicitud
+                                                if (solicitudSoftwareId != null
+                                                        && solicitudSoftwareId.equals(solicitudId)) {
+                                                    SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
+                                                    software.setIdItem(
+                                                            (Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
+                                                    software.setProducto((String) softwareRow.get("PRODUCTO"));
+                                                    software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
+                                                    lstSoftware.add(software);
+                                                }
                                             }
+                                            report.setLstSoftware(lstSoftware);
                                         }
-                                        report.setLstSoftware(lstSoftware);
+
+                                        FileDTO fileFormulario = new FileDTO(
+                                                "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
+                                                pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
+                                                null);
+
+                                        lstSolicitudEquipoFiles.add(fileFormulario);
                                     }
 
-                                    FileDTO fileFormulario = new FileDTO(
-                                            "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
-                                            pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
-                                            null);
+                                    if (gestorDocsCorreo == null || gestorDocsCorreo.isEmpty()) {
+                                        logger.error("Gestor de correo no configurado");
+                                        throw new NullPointerException("Gestor de correo no configurado");
 
-                                    lstSolicitudEquipoFiles.add(fileFormulario);
+                                    }
+
+                                    pdfUtils.enviarCorreoConPDF(
+                                            lstSolicitudEquipoFiles,
+                                            gestorDocsCorreo,
+                                            copyTo,
+                                            "Requerimiento de Software y Hardware",
+                                            "Formulario Requerimiento de Software y Hardware.");
+                                } catch (Exception e) {
+                                    logger.error(
+                                            "Error enviando correo con PDF de solicitud de equipo para RQ: {}. Error: {}",
+                                            gestorRq.getCodigoRQ(), e.getStackTrace());
+                                    return new BaseResponse(2,
+                                            "Registro completado, pero falló el envío de correo con PDF de solicitud de equipo",
+                                            e.getMessage());
                                 }
-
-                                pdfUtils.enviarCorreoConPDF(
-                                        lstSolicitudEquipoFiles,
-                                        gestorDocsCorreo,
-                                        copyTo,
-                                        "Requerimiento de Software y Hardware",
-                                        "Formulario Requerimiento de Software y Hardware.");
                             }
                         }
                     }
@@ -812,7 +873,10 @@ public class RequirementRepository {
             System.out.println(Constante.TXT_SEPARADOR);
             return baseResponse;
         } catch (Exception e) {
-            return new BaseResponse(3, e.getMessage());
+            logger.error("ERROR REPOSITORY saveRequirementTalents: {}", e.getMessage());
+            logger.error("Error{}", e);
+            return new BaseResponse(3, "Ha ocurrido un error en el proceso de guardado de talentos.",
+                    e.getMessage());
         }
     }
 
@@ -840,7 +904,8 @@ public class RequirementRepository {
                 (String) report.get("FIRMANTE"),
                 null,
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO"));
+                (String) report.get("EMAIL_EMPLEADO"),
+                (String) SafeValues.safeString(report.get("MONEDA")));
     }
 
     public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {

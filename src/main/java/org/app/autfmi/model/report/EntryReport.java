@@ -32,4 +32,5 @@ public class EntryReport implements IReport {
     private String firma;
     private String usernameEmpleado;
     private String emailEmpleado;
+    private String moneda;
 }

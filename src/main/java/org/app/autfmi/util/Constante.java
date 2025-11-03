@@ -612,9 +612,6 @@ public class Constante {
                             <th class="label">Estructura Salarial</th>
                             <td style="padding: 0;">
                                 <table class="inner-table">
-                                    <tr style="padding: 0 3px;">
-                                        Moneda: {{tipoMoneda}}
-                                    </tr>
                                     <tr>
                                         <th>Base</th>
                                         <th>Movilidad</th>

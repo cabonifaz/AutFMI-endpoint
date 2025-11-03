@@ -225,9 +225,9 @@ public class HistoryRepository {
                 (String) report.get("MOTIVO"),
                 (String) report.get("CARGO"),
                 (String) report.get("HORARIO"),
-                (Double) report.get("MONTO_BASE"),
-                (Double) report.get("MONTO_MOVILIDAD"),
-                (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("MONTO_BASE"),
+                (String) report.get("MONTO_MOVILIDAD"),
+                (String) report.get("MONTO_TRIMESTRAL"),
                 (String) report.get("FCH_INICIO_CONTRATO"),
                 (String) report.get("FCH_TERMINO_CONTRATO"),
                 (String) report.get("PROYECTO_SERVICIO"),
@@ -238,8 +238,7 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO"),
-                (String) report.get("MONEDA"));
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {

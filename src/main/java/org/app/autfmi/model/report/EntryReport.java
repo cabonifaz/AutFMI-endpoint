@@ -18,9 +18,9 @@ public class EntryReport implements IReport {
     private String motivo;
     private String cargo;
     private String horario;
-    private Double montoBase;
-    private Double montoMovilidad;
-    private Double montoTrimestral;
+    private String montoBase;
+    private String montoMovilidad;
+    private String montoTrimestral;
     private String fechaInicioContrato;
     private String fechaFinContrato;
     private String proyectoServicio;
@@ -32,5 +32,4 @@ public class EntryReport implements IReport {
     private String firma;
     private String usernameEmpleado;
     private String emailEmpleado;
-    private String moneda;
 }

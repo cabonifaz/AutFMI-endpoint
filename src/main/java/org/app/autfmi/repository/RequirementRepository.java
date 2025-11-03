@@ -20,7 +20,6 @@ import org.app.autfmi.model.response.VacanteCarreraResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.service.impl.MailService;
 import org.app.autfmi.util.Constante;
-import org.app.autfmi.util.SafeValues;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
@@ -615,8 +614,7 @@ public class RequirementRepository {
 
     public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) {
         try {
-            System.out.println(Constante.TXT_SEPARADOR);
-            System.out.println("INICIO REPOSITORY saveRequirementTalents");
+            logger.info("SaveRequirementTalents started - ID_REQUERIMIENTO: {}", request.getIdRequerimiento());
 
             BaseResponse baseResponse = new BaseResponse();
             SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -881,9 +879,9 @@ public class RequirementRepository {
                 (String) report.get("MOTIVO"),
                 (String) report.get("CARGO"),
                 (String) report.get("HORARIO"),
-                (Double) report.get("MONTO_BASE"),
-                (Double) report.get("MONTO_MOVILIDAD"),
-                (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("MONTO_BASE"),
+                (String) report.get("MONTO_MOVILIDAD"),
+                (String) report.get("MONTO_TRIMESTRAL"),
                 (String) report.get("FCH_INICIO_CONTRATO"),
                 (String) report.get("FCH_TERMINO_CONTRATO"),
                 (String) report.get("PROYECTO_SERVICIO"),
@@ -894,8 +892,7 @@ public class RequirementRepository {
                 (String) report.get("FIRMANTE"),
                 null,
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO"),
-                (String) SafeValues.safeString(report.get("MONEDA")));
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {

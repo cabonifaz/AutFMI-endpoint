@@ -659,16 +659,6 @@ public class RequirementRepository {
                     List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result
                             .get("#result-set-8"); // REPORTE EQUIPO SOFTWARES
 
-                    // @remove
-                    for (int i = 1; i <= 8; i++) {
-                        List<Map<String, Object>> set = (List<Map<String, Object>>) result.get("#result-set-" + i);
-                        if (set != null && !set.isEmpty()) {
-                            System.out.println("Result set #" + i + ": " + set.size() + " registros");
-                            System.out.println(set.get(0));
-                        } else {
-                            System.out.println("Result set #" + i + ": vacío");
-                        }
-                    }
                     if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null
                             && !gestorRqSet.isEmpty()) {
                         Map<String, Object> gestorRqRow = gestorRqSet.get(0);

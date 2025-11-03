@@ -114,7 +114,19 @@ public class Constante {
 
                     @page {
                         size: A4;
-                        margin: 10mm;
+                        margin: 10mm 10mm 15mm 10mm;
+                        @bottom-center {
+                            content: element(footer);
+                        }
+                    }
+                     /* Footer persistente */
+                    .footer {
+                        display: block;
+                        position: running(footer);
+                        text-align: center;
+                        font-size: 10px;
+                        color: #666;
+                        background: #F3F4F6;
                     }
                 </style>
             </head>
@@ -279,6 +291,11 @@ public class Constante {
                         <p style="font-weight: bold;">Gerencia de Operaciones</p>
                     </div>
                 </div>
+
+                <!-- Footer persistente en todas las páginas -->
+                <div class="footer">
+                    Generado con FMI © 2025 — Fecha de emisión: {{fechaEmision}}
+                </div>
             </body>
 
             </html>
@@ -323,6 +340,19 @@ public class Constante {
                     @page {
                         size: A4;
                         margin: 10mm;
+                        @bottom-center {
+                            content: element(footer);
+                        }
+                    }
+
+                    /* Footer persistente */
+                    .footer {
+                        display: block;
+                        position: running(footer);
+                        text-align: center;
+                        font-size: 10px;
+                        color: #666;
+                        background: #F3F4F6;
                     }
                 </style>
             </head>
@@ -474,10 +504,9 @@ public class Constante {
                         </tr>
                     </table>
                 </div>
-                <div style="position: fixed; bottom: 10px; width: 100%; margin-top: 16px;">
-                    <p style="text-align: center; font-size: 10px;">
-                        Documento generado por el sistema de gestión de AUTFMI
-                    </p>
+                <!-- Footer persistente en todas las páginas -->
+                <div class="footer">
+                    Generado con FMI © 2025 — Fecha de emisión: {{fechaEmision}}
                 </div>
             </body>
             </html>
@@ -543,11 +572,24 @@ public class Constante {
                     }
                     @page {
                         size: A4;
-                        margin: 10mm;
+                        margin: 10mm 10mm 15mm 10mm;
+                        @bottom-center {
+                            content: element(footer);
+                        }
                     }
                     .content-container {
                         max-width: 100%;
                         overflow: hidden;
+                    }
+
+                    /* Footer persistente */
+                    .footer {
+                        display: block;
+                        position: running(footer);
+                        text-align: center;
+                        font-size: 10px;
+                        color: #666;
+                        background: #F3F4F6;
                     }
                 </style>
             </head>
@@ -722,10 +764,9 @@ public class Constante {
                         contar con un contrato entre empresas.
                     </p>
                 </div>
-                <div style="position: fixed; bottom: 10px; width: 100%; margin-top: 16px;">
-                    <p style="text-align: center; font-size: 10px;">
-                        Documento generado por el sistema de gestión de AUTFMI
-                    </p>
+                <!-- Footer persistente en todas las páginas -->
+                <div class="footer">
+                    Generado con FMI © 2025 — Fecha de emisión: {{fechaEmision}}
                 </div>
             </body>
             </html>

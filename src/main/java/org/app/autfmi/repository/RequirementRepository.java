@@ -715,8 +715,9 @@ public class RequirementRepository {
                                     for (Map<String, Object> reportRow : reportSet) {
                                         EntryReport report = mapToEntryReport(reportRow);
                                         // FORM FILE
+                                        String fullname = report.getNombres() + " " + report.getApellidos();
                                         FileDTO fileFormulario = new FileDTO(
-                                                "FT-GT-12 Formulario de Ingreso",
+                                                "FT-GT-12-FMI-" + fullname,
                                                 pdfUtils.replaceEntryRequestValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
                                                         report),
@@ -736,7 +737,7 @@ public class RequirementRepository {
                                         data.setFirmante(report.getFirmante());
 
                                         FileDTO fileSolicitud = new FileDTO(
-                                                "FT-GS-01 Solicitud de Creación de Usuario",
+                                                "FT-GS-01-FMI-" + fullname,
                                                 pdfUtils.replaceSolicitudPDFValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
                                                         data),
@@ -822,9 +823,10 @@ public class RequirementRepository {
                                             }
                                             report.setLstSoftware(lstSoftware);
                                         }
-
+                                        String fullname = report.getNombreEmpleado() + " "
+                                                + report.getApellidosEmpleado();
                                         FileDTO fileFormulario = new FileDTO(
-                                                "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
+                                                "FT-GS-03-FMI-" + fullname,
                                                 pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
                                                 null);
 
@@ -857,8 +859,7 @@ public class RequirementRepository {
                 }
             }
 
-            System.out.println("FIN REPOSITORY saveRequirementTalents");
-            System.out.println(Constante.TXT_SEPARADOR);
+            logger.info("Finished task: saveRequirementTalents");
             return baseResponse;
         } catch (Exception e) {
             logger.error("ERROR REPOSITORY saveRequirementTalents: {}", e.getMessage());

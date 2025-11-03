@@ -133,6 +133,13 @@ public class PDFUtils {
         };
     }
 
+    /**
+     * Reemplaza los valores del reporte de ingreso en la plantilla HTML
+     * 
+     * @param htmlTemplate La plantilla HTML con marcadores de posición
+     * @param report       El objeto EntryReport que contiene los datos a insertar
+     * @return La plantilla HTML con los valores reemplazados
+     */
     public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
@@ -168,11 +175,20 @@ public class PDFUtils {
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
                 .replace("{{nombreFirma}}", SafeValues.safeString(report.getFirmante()))
-                .replace("{{firmante}}", SafeValues.safeString(report.getFirmante()));
+                .replace("{{firmante}}", SafeValues.safeString(report.getFirmante()))
+                .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;
     }
 
+    /**
+     * Reemplaza los valores del reporte de movimiento en la plantilla HTML
+     * 
+     * @param htmlTemplate La plantilla HTML con marcadores de posición
+     * @param report       El objeto MovementReport que contiene los datos a
+     *                     insertar
+     * @return La plantilla HTML con los valores reemplazados
+     */
     public String replaceMovementRequestValues(String htmlTemplate, MovementReport report) {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Movimiento")
@@ -208,10 +224,18 @@ public class PDFUtils {
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
                 .replace("{{nombreFirma}}", report.getFirmante())
-                .replace("{{firmante}}", report.getFirmante());
+                .replace("{{firmante}}", report.getFirmante())
+                .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
         return htmlTemplate;
     }
 
+    /**
+     * Reemplaza los valores del reporte de cese en la plantilla HTML
+     * 
+     * @param htmlTemplate La plantilla HTML con marcadores de posición
+     * @param report       El objeto CeseReport que contiene los datos a insertar
+     * @return La plantilla HTML con los valores reemplazados
+     */
     public String replaceOutRequestValues(String htmlTemplate, CeseReport report) {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Cese")
@@ -247,10 +271,18 @@ public class PDFUtils {
                 .replace("{{fechaCese}}", report.getFechaHistorial())
                 // FOOTER
                 .replace("{{nombreFirma}}", report.getFirmante())
-                .replace("{{firmante}}", report.getFirmante());
+                .replace("{{firmante}}", report.getFirmante())
+                .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
         return htmlTemplate;
     }
 
+    /**
+     * Reemplaza los valores del reporte de solicitud en la plantilla HTML
+     * 
+     * @param htmlTemplate La plantilla HTML con marcadores de posición
+     * @param report       El objeto SolicitudData que contiene los datos a insertar
+     * @return La plantilla HTML con los valores reemplazados
+     */
     public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report) {
         htmlTemplate = htmlTemplate
                 // DATOS DEL SOLICITANTE
@@ -285,10 +317,20 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", report.getMotivoCese() == null ? "" : report.getMotivoCese())
 
                 // FOOTER
-                .replace("{{nombreFirma}}", report.getFirmante() == null ? "" : report.getFirmante());
+                .replace("{{nombreFirma}}", report.getFirmante() == null ? "" : report.getFirmante())
+                .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;
     }
+
+    /**
+     * Reemplaza los valores del reporte de solicitud de equipo en la plantilla HTML
+     *
+     * @param htmlTemplate La plantilla HTML con marcadores de posición
+     * @param report       El objeto SolicitudEquipoReport que contiene los datos a
+     *                     insertar
+     * @return La plantilla HTML con los valores reemplazados
+     */
 
     public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoReport report) {
         String nombresApellidos = report.getNombreEmpleado() + ' ' + report.getApellidosEmpleado();
@@ -340,7 +382,8 @@ public class PDFUtils {
                 .replace("{{accesorios}}", report.getAccesorios())
                 .replace("{{listaProducto}}", String.join("\n", listaProductos))
                 .replace("{{nombreFirma}}", report.getNombreApellidoGestor())
-                .replace("{{nombreGestor}}", report.getNombreApellidoGestor());
+                .replace("{{nombreGestor}}", report.getNombreApellidoGestor())
+                .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;
     }

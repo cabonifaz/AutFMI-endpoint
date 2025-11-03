@@ -5,6 +5,8 @@ import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.util.Common;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -20,6 +22,7 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class HistoryRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final Logger logger = LoggerFactory.getLogger(HistoryRepository.class);
 
     private Map<String, Object> executeProcedure(BaseRequest baseRequest, String SP,
             Consumer<MapSqlParameterSource> parameterBuilder) {
@@ -294,6 +297,11 @@ public class HistoryRepository {
         try {
             Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_SEL", params -> {
                 params.addValue("ID_EQUIPO_SOLICITUD", idSolicitudEquipo);
+                params.addValue("ID_ROL", baseRequest.getIdRol());
+                params.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+                params.addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                params.addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
+                params.addValue("MOSTRAR_MENSAJES", 1);
             });
 
             List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -368,8 +376,10 @@ public class HistoryRepository {
             report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
             return report;
         } catch (Exception ex) {
+            this.logger.error("Error on last history: {}", ex.getMessage());
+            this.logger.error("Stack trace: ", ex);
             SolicitudEquipoReport report = new SolicitudEquipoReport();
-            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
+            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta", ex.getMessage()));
             return report;
         }
     }

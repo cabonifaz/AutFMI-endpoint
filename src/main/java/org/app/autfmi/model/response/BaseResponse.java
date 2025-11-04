@@ -10,4 +10,11 @@ import lombok.NoArgsConstructor;
 public class BaseResponse { // Super class
     private Integer idTipoMensaje;
     private String mensaje; // add result type object
+    private String detalleMensaje;
+
+    public BaseResponse(Integer idTipoMensaje, String mensaje) {
+        this.idTipoMensaje = idTipoMensaje;
+        this.mensaje = mensaje;
+    }
+
 }

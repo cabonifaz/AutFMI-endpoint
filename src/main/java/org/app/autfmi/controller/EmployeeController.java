@@ -11,6 +11,8 @@ import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
 import org.app.autfmi.service.impl.EmployeeService;
 import org.app.autfmi.util.JwtHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ import java.util.Collections;
 @Tag(name = "Empleado")
 public class EmployeeController {
     private final EmployeeService employeeService;
+    private final Logger logger = LoggerFactory.getLogger(EmployeeController.class);
 
     @GetMapping("/data")
     public ResponseEntity<BaseResponse> getEmployee(@RequestParam Integer idTalento) {
@@ -31,65 +34,62 @@ public class EmployeeController {
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
+            this.logger.error("Error in getEmployee: ", e);
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/entry")
     public ResponseEntity<BaseResponse> saveEmployeeEntry(
             @RequestBody EmployeeEntryRequest employeeEntryRequest,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = employeeService.saveEmployeeEntry(token, employeeEntryRequest);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
+            this.logger.error("Error in saveEmployeeEntry: ", e);
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/movement")
     public ResponseEntity<BaseResponse> saveEmployeeMovement(
             @RequestBody EmployeeMovementRequest employeeMovementRequest,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = employeeService.saveEmployeeMovement(token, employeeMovementRequest);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
+            this.logger.error("Error in saveEmployeeMovement: ", e);
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("/contractTermination")
     public ResponseEntity<BaseResponse> saveEmployeeContractTermination(
             @RequestBody EmployeeContractEndRequest employeeContractEndRequest,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = employeeService.saveEmployeeContractEnd(token, employeeContractEndRequest);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
+            this.logger.error("Error in saveEmployeeContractTermination: ", e);
             e.printStackTrace();
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
     }
@@ -98,54 +98,53 @@ public class EmployeeController {
     public ResponseEntity<FilePDFResponse> getLastHistory(
             @RequestParam Integer idTipoHistorial,
             @RequestParam Integer idTalento,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             FilePDFResponse response = employeeService.getLastHistory(token, idTipoHistorial, idTalento);
 
+            this.logger.info("Response generated for getLastHistory");
+            this.logger.info("Response details: {}", response.getBaseResponse().toString());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
+            this.logger.error("Error in getLastHistory: ", e);
             return new ResponseEntity<>(
                     new FilePDFResponse(new BaseResponse(3, e.getMessage()), Collections.emptyList()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @PostMapping("solicitud/equipo")
     public ResponseEntity<BaseResponse> solicitudEquipo(
             @RequestBody SolicitudEquipoRequest solicitudEquipoRequest,
-            HttpServletRequest httpServletRequest
-    ) {
+            HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = employeeService.solicitudEquipo(token, solicitudEquipoRequest);
-
+            this.logger.info("Response generated for solicitudEquipo");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
+            this.logger.error("Error in solicitudEquipo: ", e);
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/lastSolicitudEquipo")
     public ResponseEntity<FilePDFResponse> getLastSolicitudEquipo(
             HttpServletRequest httpServletRequest,
-            @RequestParam Integer idSolicitudEquipo
-    ) {
+            @RequestParam Integer idSolicitudEquipo) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             FilePDFResponse response = employeeService.getLastSolicitudEquipo(token, idSolicitudEquipo);
-
+            this.logger.info("Response generated for getLastSolicitudEquipo");
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (Exception e) {
+        } catch (Exception e) {
+            this.logger.error("Error in getLastSolicitudEquipo: ", e);
             return new ResponseEntity<>(
                     new FilePDFResponse(new BaseResponse(3, e.getMessage()), Collections.emptyList()),
-                    HttpStatus.INTERNAL_SERVER_ERROR
-            );
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

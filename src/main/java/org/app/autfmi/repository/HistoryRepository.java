@@ -243,6 +243,8 @@ public class HistoryRepository {
 
     public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {
         try {
+            this.logger.info("Fetching last employee history register for TipoHistorial: {} and Talento: {}",
+                    idTipoHistorial, idTalento);
             Map<String, Object> result = executeProcedure(baseRequest, "SP_HISTORIAL_SEL", params -> {
                 params.addValue("ID_TIPO_HISTORIAL", idTipoHistorial)
                         .addValue("ID_TALENTO", idTalento);
@@ -284,10 +286,12 @@ public class HistoryRepository {
                     return new BaseReport(response);
                 }
             }
-
+            this.logger.error("No message returned from stored procedure SP_HISTORIAL_SEL");
+            this.logger.error("Error: {}", result);
             return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
 
         } catch (Exception ex) {
+            this.logger.error("Error in getLastHistory: ", ex);
             return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
         }
     }

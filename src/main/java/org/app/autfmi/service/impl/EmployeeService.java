@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
+import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
@@ -41,17 +42,19 @@ public class EmployeeService implements IEmployeeService {
 
         @Override
         public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) throws MessagingException {
+                this.logger.info("Processing employee entry");
                 UserDTO user = jwt.decodeToken(token);
                 String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
                 BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
                 EntryReport report = historyRepository.registerEntry(baseRequest, request);
 
                 if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
+                        GestorDTO gs = new GestorDTO(null, report.getFirmante());
                         FileDTO fileFormulario = new FileDTO(
                                         "FT-GT-12 Formulario de Ingreso",
                                         pdfUtils.replaceEntryRequestValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                                                        report),
+                                                        report, gs),
                                         null);
 
                         SolicitudData data = new SolicitudData();
@@ -72,7 +75,7 @@ public class EmployeeService implements IEmployeeService {
                                         "FT-GS-01 Solicitud de Creación de Usuario",
                                         pdfUtils.replaceSolicitudPDFValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-                                                        data),
+                                                        data, null),
                                         null);
 
                         List<FileDTO> lstfiles = new ArrayList<>();
@@ -107,13 +110,13 @@ public class EmployeeService implements IEmployeeService {
                                         null);
                         lstfiles.add(fileFormulario);
 
-                        // FileDTO fileSolicitud = new FileDTO(
-                        // "FT-GS-01 Solicitud de Modificación de Usuario",
-                        // pdfUtils.replaceMovementRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-                        // report),
-                        // null
-                        // );
-                        // lstfiles.add(fileSolicitud);
+                        FileDTO fileSolicitud = new FileDTO(
+                                        "FT-GS-01 Solicitud de Modificación de Usuario",
+                                        pdfUtils.replaceMovementRequestValues(
+                                                        pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
+                                                        report),
+                                        null);
+                        lstfiles.add(fileSolicitud);
 
                         pdfUtils.enviarCorreoConPDF(
                                         lstfiles,
@@ -134,11 +137,14 @@ public class EmployeeService implements IEmployeeService {
                 CeseReport report = historyRepository.registerContractTermination(baseRequest, request);
 
                 if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
+
+                        GestorDTO gs = new GestorDTO(report.getFirmante(), report.getFirmante());
+
                         FileDTO fileFormulario = new FileDTO(
                                         "FT-GT-12 Formulario de Cese",
                                         pdfUtils.replaceOutRequestValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                                                        report),
+                                                        report, gs),
                                         null);
 
                         SolicitudData data = new SolicitudData();
@@ -157,7 +163,7 @@ public class EmployeeService implements IEmployeeService {
                                         "FT-GS-01 Solicitud de Desactivación de Usuario",
                                         pdfUtils.replaceSolicitudPDFValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-                                                        data),
+                                                        data, null),
                                         null);
 
                         List<FileDTO> lstfiles = new ArrayList<>();
@@ -191,9 +197,13 @@ public class EmployeeService implements IEmployeeService {
                         // map request to report
                         SolicitudEquipoReport report = mapToSolicitudEquipoReport(request, solicitudEquipoResponse);
 
+                        String fullname = solicitudEquipoResponse.getNombres() + " "
+                                        + solicitudEquipoResponse.getApellidos();
+                        GestorDTO gs = new GestorDTO(null, fullname);
+
                         FileDTO fileFormulario = new FileDTO(
                                         "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
-                                        pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
+                                        pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
                                         null);
 
                         lstfiles.add(fileFormulario);
@@ -242,6 +252,7 @@ public class EmployeeService implements IEmployeeService {
 
         @Override
         public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento) {
+                this.logger.info("Processing getLastHistory");
                 UserDTO user = jwt.decodeToken(token);
                 BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
                 IReport report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial,
@@ -251,12 +262,13 @@ public class EmployeeService implements IEmployeeService {
                 List<FilePDFDTO> lstfiles = new ArrayList<>();
 
                 if (report instanceof EntryReport entry) {
+                        GestorDTO gs = new GestorDTO(null, entry.getFirmante());
                         String formularioFileB64 = pdfUtils.filePDFToBase64(
                                         pdfUtils.crearPDF(
                                                         pdfUtils.replaceEntryRequestValues(
                                                                         pdfUtils.getHtmlTemplate(
                                                                                         PDFUtils.TemplateType.FORMULARIO),
-                                                                        entry),
+                                                                        entry, gs),
                                                         "FT-GT-12 Formulario de Ingreso"));
 
                         SolicitudData data = new SolicitudData();
@@ -271,13 +283,16 @@ public class EmployeeService implements IEmployeeService {
                         data.setAreaCreacion(entry.getUnidad());
                         data.setFirmante(entry.getFirmante());
 
-                        String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                                        pdfUtils.crearPDF(
-                                                        pdfUtils.replaceSolicitudPDFValues(
-                                                                        pdfUtils.getHtmlTemplate(
-                                                                                        PDFUtils.TemplateType.SOLICITUD),
-                                                                        data),
-                                                        "FT-GS-01 Solicitud de Creación de Usuario"));
+                        // GestorDTO gs = new GestorDTO(null, data.getFirmante());
+                        String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD);
+                        String formattedTemplate = pdfUtils.replaceSolicitudPDFValues(
+                                        template,
+                                        data, gs);
+
+                        byte[] fileBytes = pdfUtils.crearPDF(formattedTemplate,
+                                        "FT-GS-01 Solicitud de Creación de Usuario");
+
+                        String solicitudFileB64 = pdfUtils.filePDFToBase64(fileBytes);
 
                         lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Ingreso", formularioFileB64));
                         lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Creación de Usuario", solicitudFileB64));
@@ -296,12 +311,13 @@ public class EmployeeService implements IEmployeeService {
                         response.setBaseResponse(movement.getResponse());
 
                 } else if (report instanceof CeseReport cese) {
+                        GestorDTO gs = new GestorDTO(null, cese.getFirmante());
                         String formularioFileB64 = pdfUtils.filePDFToBase64(
                                         pdfUtils.crearPDF(
                                                         pdfUtils.replaceOutRequestValues(
                                                                         pdfUtils.getHtmlTemplate(
                                                                                         PDFUtils.TemplateType.FORMULARIO),
-                                                                        cese),
+                                                                        cese, gs),
                                                         "FT-GT-12 Formulario de Cese"));
 
                         SolicitudData data = new SolicitudData();
@@ -321,7 +337,7 @@ public class EmployeeService implements IEmployeeService {
                                                         pdfUtils.replaceSolicitudPDFValues(
                                                                         pdfUtils.getHtmlTemplate(
                                                                                         PDFUtils.TemplateType.SOLICITUD),
-                                                                        data),
+                                                                        data, gs),
                                                         "FT-GS-01 Solicitud de Desactivación de Usuario"));
 
                         lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Cese", formularioFileB64));
@@ -353,8 +369,11 @@ public class EmployeeService implements IEmployeeService {
                         String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
                         String fileName = "FT-GS-03 Formulario de Requerimiento de Software y Hardware";
 
+                        GestorDTO gs = new GestorDTO(null,
+                                        report.getNombreApellidoGestor());
                         String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                                        pdfUtils.crearPDF(pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
+                                        pdfUtils.crearPDF(
+                                                        pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
                                                         fileName));
 
                         lstfiles.add(new FilePDFDTO(fileName, solicitudFileB64));

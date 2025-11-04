@@ -649,13 +649,29 @@ public class RequirementRepository {
                     List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS
                                                                                                                        // CONFIRMADOS
                     List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
-                    List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // GESTOR
-                                                                                                                       // DOCUMENTOS
-                    List<Map<String, Object>> reportSet = (List<Map<String, Object>>) result.get("#result-set-6"); // REPORTES
+                    List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // Gestor
+
+                    // Gestor del cliente
+                    List<Map<String, Object>> clientGs = (List<Map<String, Object>>) result
+                            .get("#result-set-6");
+                    // DOCUMENTOS
+                    List<Map<String, Object>> reportSet = (List<Map<String, Object>>) result.get("#result-set-7"); // REPORTES
                     List<Map<String, Object>> solicitudesEquipoSet = (List<Map<String, Object>>) result
-                            .get("#result-set-7"); // REPORTE SOLICITUDES EQUIPO
+                            .get("#result-set-8"); // REPORTE SOLICITUDES EQUIPO
                     List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result
-                            .get("#result-set-8"); // REPORTE EQUIPO SOFTWARES
+                            .get("#result-set-9"); // REPORTE EQUIPO SOFTWARES
+
+                    // Mapear los datos del gestor
+                    GestorDTO gs = null;
+                    if (clientGs != null && !clientGs.isEmpty()) {
+                        Map<String, Object> gsRow = clientGs.get(0);
+                        String gsSignature = (String) gsRow.get("NOMBRE_FIRMANTE");
+                        String gsFullname = (String) gsRow.get("NOMBRE_FIRMANTE");
+
+                        gs = new GestorDTO(gsSignature, gsFullname);
+                    } else {
+                        throw new NullPointerException("No se encontró el gestor del cliente");
+                    }
 
                     if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null
                             && !gestorRqSet.isEmpty()) {
@@ -716,11 +732,12 @@ public class RequirementRepository {
                                         EntryReport report = mapToEntryReport(reportRow);
                                         // FORM FILE
                                         String fullname = report.getNombres() + " " + report.getApellidos();
+
                                         FileDTO fileFormulario = new FileDTO(
                                                 "FT-GT-12-FMI-" + fullname,
                                                 pdfUtils.replaceEntryRequestValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                                                        report),
+                                                        report, gs),
                                                 null);
 
                                         // SOLICITUD FILE
@@ -740,7 +757,7 @@ public class RequirementRepository {
                                                 "FT-GS-01-FMI-" + fullname,
                                                 pdfUtils.replaceSolicitudPDFValues(
                                                         pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-                                                        data),
+                                                        data, gs),
                                                 null);
 
                                         lstfiles.add(fileFormulario);
@@ -827,7 +844,7 @@ public class RequirementRepository {
                                                 + report.getApellidosEmpleado();
                                         FileDTO fileFormulario = new FileDTO(
                                                 "FT-GS-03-FMI-" + fullname,
-                                                pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
+                                                pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
                                                 null);
 
                                         lstSolicitudEquipoFiles.add(fileFormulario);

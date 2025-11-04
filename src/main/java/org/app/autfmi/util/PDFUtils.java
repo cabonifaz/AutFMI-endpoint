@@ -5,6 +5,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,9 +139,10 @@ public class PDFUtils {
      * 
      * @param htmlTemplate La plantilla HTML con marcadores de posición
      * @param report       El objeto EntryReport que contiene los datos a insertar
+     * @param gs           El objeto GestorDTO que contiene información del gestor
      * @return La plantilla HTML con los valores reemplazados
      */
-    public String replaceEntryRequestValues(String htmlTemplate, EntryReport report) {
+    public String replaceEntryRequestValues(String htmlTemplate, EntryReport report, GestorDTO gs) {
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Ingreso")
                 // DATOS COLABORADOR
@@ -174,8 +176,8 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
-                .replace("{{nombreFirma}}", SafeValues.safeString(report.getFirmante()))
-                .replace("{{firmante}}", SafeValues.safeString(report.getFirmante()))
+                .replace("{{nombreFirma}}", SafeValues.safeString(gs.getFullname()))
+                .replace("{{firmante}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;
@@ -215,16 +217,16 @@ public class PDFUtils {
                 .replace("{{montoBaseMov}}", report.getMontoBase().toString())
                 .replace("{{montoMovilidadMov}}", report.getMontoMovilidad().toString())
                 .replace("{{montoTrimestralMov}}", report.getMontoTrimestral().toString())
-                .replace("{{puesto}}", report.getPuesto())
-                .replace("{{area}}", report.getArea())
-                .replace("{{jornada}}", report.getHorario())
+                .replace("{{puesto}}", SafeValues.safeString(report.getPuesto()))
+                .replace("{{area}}", SafeValues.safeString(report.getArea()))
+                .replace("{{jornada}}", SafeValues.safeString(report.getHorario()))
                 .replace("{{fechaMovimiento}}", report.getFechaHistorial())
                 // CESE
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
                 // FOOTER
-                .replace("{{nombreFirma}}", report.getFirmante())
-                .replace("{{firmante}}", report.getFirmante())
+                .replace("{{nombreFirma}}", SafeValues.safeString(report.getFirmante()))
+                .replace("{{firmante}}", SafeValues.safeString(report.getFirmante()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
         return htmlTemplate;
     }
@@ -234,9 +236,14 @@ public class PDFUtils {
      * 
      * @param htmlTemplate La plantilla HTML con marcadores de posición
      * @param report       El objeto CeseReport que contiene los datos a insertar
+     * @param gs           El objeto GestorDTO que contiene información del gestor
      * @return La plantilla HTML con los valores reemplazados
      */
-    public String replaceOutRequestValues(String htmlTemplate, CeseReport report) {
+    public String replaceOutRequestValues(
+            String htmlTemplate,
+            CeseReport report,
+            @NonNull GestorDTO gs) {
+
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GT-12 Formulario de Cese")
                 // DATOS COLABORADOR
@@ -267,11 +274,11 @@ public class PDFUtils {
                 .replace("{{jornada}}", "Escribir la nueva jornada")
                 .replace("{{fechaMovimiento}}", "Escribir la fecha de movimiento")
                 // CESE
-                .replace("{{motivoCese}}", report.getMotivo())
-                .replace("{{fechaCese}}", report.getFechaHistorial())
+                .replace("{{motivoCese}}", SafeValues.safeString(report.getMotivo()))
+                .replace("{{fechaCese}}", SafeValues.safeString(report.getFechaHistorial()))
                 // FOOTER
-                .replace("{{nombreFirma}}", report.getFirmante())
-                .replace("{{firmante}}", report.getFirmante())
+                .replace("{{nombreFirma}}", SafeValues.safeString(gs.getFullname()))
+                .replace("{{firmante}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
         return htmlTemplate;
     }
@@ -281,9 +288,10 @@ public class PDFUtils {
      * 
      * @param htmlTemplate La plantilla HTML con marcadores de posición
      * @param report       El objeto SolicitudData que contiene los datos a insertar
+     * @param gs           El objeto GestorDTO que contiene información del gestor
      * @return La plantilla HTML con los valores reemplazados
      */
-    public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report) {
+    public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report, GestorDTO gs) {
         htmlTemplate = htmlTemplate
                 // DATOS DEL SOLICITANTE
                 .replace("{{solicitante}}", report.getNombres() == null ? "" : report.getFirmante())
@@ -317,7 +325,7 @@ public class PDFUtils {
                 .replace("{{motivoCese}}", report.getMotivoCese() == null ? "" : report.getMotivoCese())
 
                 // FOOTER
-                .replace("{{nombreFirma}}", report.getFirmante() == null ? "" : report.getFirmante())
+                .replace("{{nombreFirma}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;
@@ -329,10 +337,12 @@ public class PDFUtils {
      * @param htmlTemplate La plantilla HTML con marcadores de posición
      * @param report       El objeto SolicitudEquipoReport que contiene los datos a
      *                     insertar
+     * @param gs           El objeto GestorDTO que contiene información del gestor
      * @return La plantilla HTML con los valores reemplazados
      */
 
-    public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoReport report) {
+    public String replaceSolicitudEquipoPDFValues(String htmlTemplate, SolicitudEquipoReport report,
+            @NonNull GestorDTO gs) {
         String nombresApellidos = report.getNombreEmpleado() + ' ' + report.getApellidosEmpleado();
         String checkboxCheckedSymbol = "X";
 
@@ -381,8 +391,8 @@ public class PDFUtils {
                 .replace("{{symbolIntNo}}", internetNo)
                 .replace("{{accesorios}}", report.getAccesorios())
                 .replace("{{listaProducto}}", String.join("\n", listaProductos))
-                .replace("{{nombreFirma}}", report.getNombreApellidoGestor())
-                .replace("{{nombreGestor}}", report.getNombreApellidoGestor())
+                .replace("{{nombreFirma}}", SafeValues.safeString(gs.getSignature()))
+                .replace("{{nombreGestor}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;

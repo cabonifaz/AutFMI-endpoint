@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class Common {
@@ -51,5 +52,11 @@ public class Common {
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         LocalDate parsedDate = LocalDate.parse(date, inputFormatter);
         return parsedDate.format(outputFormatter);
+    }
+
+    public static String getCurrentDateFormatted() {
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+        return currentDate.format(formatter);
     }
 }

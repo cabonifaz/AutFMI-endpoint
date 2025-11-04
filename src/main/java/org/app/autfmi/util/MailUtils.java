@@ -46,18 +46,18 @@ public class MailUtils {
 
             for (PostulantDTO postulante : lstPostulantes) {
                 listaTalentosRQ.add(Constante.LIST_TALENT_ROW
-                        .replace("{{numFila}}", indice + "")
-                        .replace("{{nombres}}", postulante.getNombres())
-                        .replace("{{apellidos}}", postulante.getApellidos())
-                        .replace("{{docIdentidad}}", postulante.getDni())
-                        .replace("{{numCelular}}", postulante.getCelular())
-                        .replace("{{correo}}", postulante.getEmail())
-                        .replace("{{fchInicioLabores}}", postulante.getFechaInicioLabores())
-                        .replace("{{tiempoContrato}}", postulante.getTiempoContrato())
-                        .replace("{{cargo}}", postulante.getCargo())
-                        .replace("{{remuneracion}}", postulante.getRemuneracion().toString())
-                        .replace("{{modalidad}}", postulante.getModalidad())
-                        .replace("{{tieneEquipo}}", postulante.getTieneEquipo()));
+                        .replace("{{numFila}}", SafeValues.safeString(indice + ""))
+                        .replace("{{nombres}}", SafeValues.safeString(postulante.getNombres()))
+                        .replace("{{apellidos}}", SafeValues.safeString(postulante.getApellidos()))
+                        .replace("{{docIdentidad}}", SafeValues.safeString(postulante.getDni()))
+                        .replace("{{numCelular}}", SafeValues.safeString(postulante.getCelular()))
+                        .replace("{{correo}}", SafeValues.safeString(postulante.getEmail()))
+                        .replace("{{fchInicioLabores}}", SafeValues.safeString(postulante.getFechaInicioLabores()))
+                        .replace("{{tiempoContrato}}", SafeValues.safeString(postulante.getTiempoContrato()))
+                        .replace("{{cargo}}", SafeValues.safeString(postulante.getCargo()))
+                        .replace("{{remuneracion}}", SafeValues.safeString(postulante.getRemuneracion().toString()))
+                        .replace("{{modalidad}}", SafeValues.safeString(postulante.getModalidad()))
+                        .replace("{{tieneEquipo}}", SafeValues.safeString(postulante.getTieneEquipo())));
                 indice++;
             }
 
@@ -77,9 +77,10 @@ public class MailUtils {
             helper.setText(mensajeCorreo, true);
 
             mailSender.send(message);
+            logger.info("Email sent to: {}", gestor.getCorreo());
         } catch (Exception e) {
-            System.err.println("ERROR AL ENVIAR CORREO");
-            System.err.println(e.getMessage());
+            logger.error("Email not sent to: {}", gestor.getCorreo());
+            logger.error("Error al enviar correo: {}", e.getMessage(), e);
         }
     }
 

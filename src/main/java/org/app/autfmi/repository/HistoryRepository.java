@@ -5,6 +5,8 @@ import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.util.Common;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
@@ -20,8 +22,10 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class HistoryRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final Logger logger = LoggerFactory.getLogger(HistoryRepository.class);
 
-    private Map<String, Object> executeProcedure(BaseRequest baseRequest, String SP, Consumer<MapSqlParameterSource> parameterBuilder) {
+    private Map<String, Object> executeProcedure(BaseRequest baseRequest, String SP,
+            Consumer<MapSqlParameterSource> parameterBuilder) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName(SP);
 
         MapSqlParameterSource params = new MapSqlParameterSource();
@@ -64,8 +68,7 @@ public class HistoryRepository {
                 .addValue("ID_MOV_AREA", request.getIdMovArea())
                 .addValue("MOV_AREA", request.getMovArea())
                 .addValue("HORARIO", request.getHorario())
-                .addValue("FCH_HISTORIAL", request.getFchMovimiento())
-        );
+                .addValue("FCH_HISTORIAL", request.getFchMovimiento()));
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
 
@@ -101,8 +104,7 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
@@ -147,8 +149,7 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
@@ -224,9 +225,9 @@ public class HistoryRepository {
                 (String) report.get("MOTIVO"),
                 (String) report.get("CARGO"),
                 (String) report.get("HORARIO"),
-                (Double) report.get("MONTO_BASE"),
-                (Double) report.get("MONTO_MOVILIDAD"),
-                (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("MONTO_BASE"),
+                (String) report.get("MONTO_MOVILIDAD"),
+                (String) report.get("MONTO_TRIMESTRAL"),
                 (String) report.get("FCH_INICIO_CONTRATO"),
                 (String) report.get("FCH_TERMINO_CONTRATO"),
                 (String) report.get("PROYECTO_SERVICIO"),
@@ -237,12 +238,13 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO")
-        );
+                (String) report.get("EMAIL_EMPLEADO"));
     }
 
     public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {
         try {
+            this.logger.info("Fetching last employee history register for TipoHistorial: {} and Talento: {}",
+                    idTipoHistorial, idTalento);
             Map<String, Object> result = executeProcedure(baseRequest, "SP_HISTORIAL_SEL", params -> {
                 params.addValue("ID_TIPO_HISTORIAL", idTipoHistorial)
                         .addValue("ID_TALENTO", idTalento);
@@ -268,7 +270,8 @@ public class HistoryRepository {
                             default -> "historial";
                         };
 
-                        return new BaseReport(new BaseResponse(1, "El talento no tiene reportes de " + tipo + " previos"));
+                        return new BaseReport(
+                                new BaseResponse(1, "El talento no tiene reportes de " + tipo + " previos"));
                     }
 
                     Map<String, Object> reportRow = reportData.get(0);
@@ -283,10 +286,12 @@ public class HistoryRepository {
                     return new BaseReport(response);
                 }
             }
-
+            this.logger.error("No message returned from stored procedure SP_HISTORIAL_SEL");
+            this.logger.error("Error: {}", result);
             return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
 
         } catch (Exception ex) {
+            this.logger.error("Error in getLastHistory: ", ex);
             return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
         }
     }
@@ -295,6 +300,11 @@ public class HistoryRepository {
         try {
             Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_SEL", params -> {
                 params.addValue("ID_EQUIPO_SOLICITUD", idSolicitudEquipo);
+                params.addValue("ID_ROL", baseRequest.getIdRol());
+                params.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+                params.addValue("ID_USUARIO", baseRequest.getIdUsuario());
+                params.addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
+                params.addValue("MOSTRAR_MENSAJES", 1);
             });
 
             List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -308,12 +318,15 @@ public class HistoryRepository {
                 BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
 
                 if (idTipoMensaje == 2) {
-                    List<Map<String, Object>> resultSetSolicitud = (List<Map<String, Object>>) result.get("#result-set-2");
-                    List<Map<String, Object>> resultSetSolicitudSoftwareList = (List<Map<String, Object>>) result.get("#result-set-3");
+                    List<Map<String, Object>> resultSetSolicitud = (List<Map<String, Object>>) result
+                            .get("#result-set-2");
+                    List<Map<String, Object>> resultSetSolicitudSoftwareList = (List<Map<String, Object>>) result
+                            .get("#result-set-3");
                     List<Map<String, Object>> resultSetGestor = (List<Map<String, Object>>) result.get("#result-set-4");
 
                     boolean validSolicitud = resultSetSolicitud != null && !resultSetSolicitud.isEmpty();
-                    boolean validSoftwareList = resultSetSolicitudSoftwareList != null && !resultSetSolicitudSoftwareList.isEmpty();
+                    boolean validSoftwareList = resultSetSolicitudSoftwareList != null
+                            && !resultSetSolicitudSoftwareList.isEmpty();
                     boolean validGestor = resultSetGestor != null && !resultSetGestor.isEmpty();
 
                     if (validSolicitud && validSoftwareList && validGestor) {
@@ -366,8 +379,10 @@ public class HistoryRepository {
             report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
             return report;
         } catch (Exception ex) {
+            this.logger.error("Error on last history: {}", ex.getMessage());
+            this.logger.error("Stack trace: ", ex);
             SolicitudEquipoReport report = new SolicitudEquipoReport();
-            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
+            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta", ex.getMessage()));
             return report;
         }
     }

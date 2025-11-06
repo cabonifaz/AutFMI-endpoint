@@ -68,7 +68,8 @@ public class RequirementReportMapper {
       for (Map<String, Object> row : resultSet) {
         careers.add(new RequirementVacanteCareerReport(
             (Integer) row.get("ID_VACANTE"),
-            (String) row.get("CARRERA")));
+            (String) row.get("CARRERA"),
+            (String) row.get("GRADO")));
       }
     }
     return careers;

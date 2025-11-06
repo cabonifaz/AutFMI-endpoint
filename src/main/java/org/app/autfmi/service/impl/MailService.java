@@ -275,7 +275,8 @@ public class MailService implements IMailService {
     if (report.getVacanteCareers() != null) {
       for (var career : report.getVacanteCareers()) {
         carrerasPorVacante.computeIfAbsent(career.getIdVacante(), k -> new ArrayList<>())
-            .add(Map.of("carrera", career.getCarrera(), "grado", "Carrera"));
+            .add(Map.of("carrera", SafeValues.safeString(career.getCarrera()), "grado",
+                SafeValues.safeString(career.getGrado())));
       }
     }
 

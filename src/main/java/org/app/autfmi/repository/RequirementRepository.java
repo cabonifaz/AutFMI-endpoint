@@ -316,7 +316,7 @@ public class RequirementRepository {
         ObjectMapper objectMapper = new ObjectMapper();
         agentJson = objectMapper.writeValueAsString(request);
 
-        logger.info("SaveRequirementByAgent started");
+        logger.info("SaveRequirementByAgent started for: {}", request.getTitulo());
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_REQUERIMIENTO_INS_SMART");
 

@@ -20,6 +20,8 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +35,7 @@ public class RequirementService implements IRequirementService {
 
     private final RequirementRepository requirementRepository;
     private final JwtHelper jwt;
+    private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
 
     @Autowired
     private MailService mailService;
@@ -66,6 +69,12 @@ public class RequirementService implements IRequirementService {
     @Override
     public BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) throws SQLServerException {
         try {
+
+            this.logger.info("Iniciando saveRequirementByAgent para: {}", request.getTitulo());
+            this.logger.info("Contacts size: {}", request.getLstContactos().size());
+            this.logger.info("Vacantes size: {}", request.getLstVacantes().size());
+            this.logger.info("Vacantes details: {}", request.getLstVacantes().toString());
+
             UserDTO user = jwt.decodeToken(token);
             String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
             BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
@@ -89,10 +98,16 @@ public class RequirementService implements IRequirementService {
 
             return new BaseResponse(2, "Requerimiento creado/editado correctamente");
         } catch (SQLServerException e) {
+            this.logger.error("SQLServerException al guardar requerimiento por agente: {}", e.getMessage());
+            this.logger.error("Error: {}", e);
             return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
         } catch (JsonProcessingException e) {
+            this.logger.error("JsonProcessingException al procesar JSON: {}", e.getMessage());
+            this.logger.error("Error: {}", e);
             return new BaseResponse(3, "Error al procesar JSON", e.getMessage());
         } catch (Exception e) {
+            this.logger.error("Exception al guardar requerimiento por agente: {}", e.getMessage());
+            this.logger.error("Error: {}", e);
             return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
         }
     }

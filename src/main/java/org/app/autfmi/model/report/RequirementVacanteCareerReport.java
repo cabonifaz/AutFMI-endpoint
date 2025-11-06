@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class RequirementVacanteCareerReport {
   private Integer idVacante;
   private String carrera;
+  private String grado;
 }

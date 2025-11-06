@@ -1,11 +1,15 @@
 package org.app.autfmi.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
+import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
@@ -16,8 +20,10 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,6 +33,9 @@ public class RequirementService implements IRequirementService {
 
     private final RequirementRepository requirementRepository;
     private final JwtHelper jwt;
+
+    @Autowired
+    private MailService mailService;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
@@ -52,6 +61,40 @@ public class RequirementService implements IRequirementService {
         String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.saveRequirement(request, baseRequest);
+    }
+
+    @Override
+    public BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) throws SQLServerException {
+        try {
+            UserDTO user = jwt.decodeToken(token);
+            String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
+            BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+            RequirementReport report = requirementRepository.saveRequirementByAgent(request, baseRequest);
+
+            List<String> toAddresses = new ArrayList<>();
+
+            for (var manager : report.getManagers()) {
+                toAddresses.add(manager.getEmail());
+            }
+
+            String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();
+
+            // Enviar notificación por correo electrónico utilizando el servicio de correo
+            this.mailService.sendRequirementNotificationV2(
+                    report,
+                    subject,
+                    toAddresses,
+                    new ArrayList<>(),
+                    "CREAR_EDITAR_REQUERIMIENTO_AGENTE");
+
+            return new BaseResponse(2, "Requerimiento creado/editado correctamente");
+        } catch (SQLServerException e) {
+            return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
+        } catch (JsonProcessingException e) {
+            return new BaseResponse(3, "Error al procesar JSON", e.getMessage());
+        } catch (Exception e) {
+            return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
+        }
     }
 
     @Override

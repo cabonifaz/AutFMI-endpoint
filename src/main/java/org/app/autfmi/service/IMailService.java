@@ -3,7 +3,7 @@ package org.app.autfmi.service;
 import java.util.List;
 import java.util.Map;
 import org.app.autfmi.model.dto.RequirementDTO;
-
+import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.util.MailUtils;
 
 public interface IMailService {
@@ -27,4 +27,7 @@ public interface IMailService {
                         List<Map<String, Object>> carrerasMapped,
                         List<Map<String, Object>> postulanteList,
                         String correoEjecutor);
+
+        void sendRequirementNotificationV2(RequirementReport report, String subject, List<String> toAddresses,
+                        List<String> ccAddresses, String action);
 }

@@ -5,9 +5,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
 import org.app.autfmi.model.report.EntryReport;
+import org.app.autfmi.model.report.RequirementReport;
+import org.app.autfmi.model.report.RequirementReportMapper;
 import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
@@ -299,6 +303,79 @@ public class RequirementRepository {
         }
 
         return table;
+    }
+
+    /*
+     * Crea o actualiza un requerimiento desde un agente externo
+     * N8N en Octubre 2025
+     */
+    public RequirementReport saveRequirementByAgent(AgentRQRequest request, BaseRequest baseRequest)
+            throws SQLServerException, JsonProcessingException {
+        String agentJson = null;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        agentJson = objectMapper.writeValueAsString(request);
+
+        logger.info("SaveRequirementByAgent started");
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_INS_SMART");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("AGENT_JSON", agentJson);
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+        List<Map<String, Object>> rs1 = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (rs1 == null || rs1.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Object> row = rs1.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+
+        // Obtener todos los result sets
+        List<Map<String, Object>> detailsResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
+        List<Map<String, Object>> contactsResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
+        List<Map<String, Object>> skillsResultSet = (List<Map<String, Object>>) result.get("#result-set-4");
+        List<Map<String, Object>> careersResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
+        List<Map<String, Object>> postulantsResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
+        List<Map<String, Object>> managersResultSet = (List<Map<String, Object>>) result.get("#result-set-7");
+        List<Map<String, Object>> actionUserResultSet = (List<Map<String, Object>>) result.get("#result-set-8");
+
+        // Mapear usando RequirementReportMapper
+        RequirementReport requirementReport = RequirementReportMapper.mapCompleteReport(
+                detailsResultSet != null && !detailsResultSet.isEmpty() ? detailsResultSet.get(0) : null,
+                contactsResultSet,
+                skillsResultSet,
+                careersResultSet,
+                postulantsResultSet,
+                managersResultSet,
+                actionUserResultSet != null && !actionUserResultSet.isEmpty() ? actionUserResultSet.get(0) : null);
+
+        logger.info("RequirementReport mapeado exitosamente:");
+        logger.info("- Detalles RQ: {}",
+                requirementReport.getRequirementDetails() != null
+                        ? requirementReport.getRequirementDetails().getCodigoRQ()
+                        : "No disponible");
+        logger.info("- Contactos: {} registros", requirementReport.getContacts().size());
+        logger.info("- Habilidades: {} registros", requirementReport.getVacanteSkills().size());
+        logger.info("- Carreras: {} registros", requirementReport.getVacanteCareers().size());
+        logger.info("- Postulantes: {} registros", requirementReport.getPostulants().size());
+        logger.info("- Gestores: {} registros", requirementReport.getManagers().size());
+        logger.info("- Usuario acción: {}",
+                requirementReport.getActionUser() != null ? requirementReport.getActionUser().getUsuario()
+                        : "No disponible");
+
+        BaseResponse response = new BaseResponse(idTipoMensaje, mensaje);
+        logger.info("RP: SaveRequiremtByAgent finished: {}", response);
+        return requirementReport;
     }
 
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {

@@ -138,6 +138,19 @@ public class RequirementReportMapper {
     return summary;
   }
 
+  public static List<String> mapExtraMailList(List<Map<String, Object>> resultSet) {
+    List<String> emails = new ArrayList<>();
+    if (resultSet != null && !resultSet.isEmpty()) {
+      for (Map<String, Object> row : resultSet) {
+        String email = (String) row.get("CORREO");
+        if (email != null && !email.isEmpty()) {
+          emails.add(email);
+        }
+      }
+    }
+    return emails;
+  }
+
   /**
    * Construye las vacantes completas consolidando resumen, habilidades y carreras
    * Protege contra NullPointerException
@@ -188,9 +201,12 @@ public class RequirementReportMapper {
   }
 
   /**
-   * Método actualizado para mapear todos los result sets incluyendo el nuevo RS
-   * #9
+   * Método actualizado para mapear todos los result sets del SP
+   * SP_REQUERIMIENTO_REPORTE_SEL
+   * Incluye RS #9 (resumen de vacantes) y RS #10 (correos de notificación extra)
    * Protegido contra NullPointerException
+   * 
+   * @param extraMailSet Result Set #10 - Correos desde PARAMETROS ID_MAESTRO=42
    */
   public static RequirementReport mapCompleteReportV2(
       Map<String, Object> detailsRow,
@@ -200,7 +216,8 @@ public class RequirementReportMapper {
       List<Map<String, Object>> postulantsSet,
       List<Map<String, Object>> managersSet,
       Map<String, Object> actionUserRow,
-      List<Map<String, Object>> vacanteSummarySet) {
+      List<Map<String, Object>> vacanteSummarySet,
+      List<Map<String, Object>> extraMailSet) {
 
     RequirementReport report = new RequirementReport();
 
@@ -223,34 +240,28 @@ public class RequirementReportMapper {
     // Construir vacantes completas con relaciones
     report.setVacantesComplete(buildCompleteVacantes(summary, skills, careers));
 
+    // Mapear correos de notificación extra (RS #10)
+    report.setExtraMailList(mapExtraMailList(extraMailSet));
+
     return report;
   }
 
   /**
-   * Método original mantenido por compatibilidad
-   * 
-   * @deprecated Usar mapCompleteReportV2 para el nuevo SP
+   * Sobrecarga para mantener compatibilidad con código existente
+   * Sin el result set #10 de correos extra
    */
-  @Deprecated
-  public static RequirementReport mapCompleteReport(
+  public static RequirementReport mapCompleteReportV2(
       Map<String, Object> detailsRow,
       List<Map<String, Object>> contactsSet,
       List<Map<String, Object>> skillsSet,
       List<Map<String, Object>> careersSet,
       List<Map<String, Object>> postulantsSet,
       List<Map<String, Object>> managersSet,
-      Map<String, Object> actionUserRow) {
+      Map<String, Object> actionUserRow,
+      List<Map<String, Object>> vacanteSummarySet) {
 
-    RequirementReport report = new RequirementReport();
-
-    report.setRequirementDetails(mapRequirementDetails(detailsRow));
-    report.setContacts(mapContacts(contactsSet));
-    report.setVacanteSkills(mapVacanteSkills(skillsSet));
-    report.setVacanteCareers(mapVacanteCareers(careersSet));
-    report.setPostulants(mapPostulants(postulantsSet));
-    report.setManagers(mapManagers(managersSet));
-    report.setActionUser(mapActionUser(actionUserRow));
-
-    return report;
+    return mapCompleteReportV2(detailsRow, contactsSet, skillsSet, careersSet,
+        postulantsSet, managersSet, actionUserRow,
+        vacanteSummarySet, null);
   }
 }

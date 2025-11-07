@@ -36,6 +36,8 @@ public class RequirementReport {
   // Result Set #9: Resumen de vacantes por perfil
   private List<RequirementVacanteSummaryReport> vacanteSummary;
 
+  private List<String> extraMailList;
+
   // Vacantes consolidadas con habilidades y carreras
   private List<RequirementVacanteCompleteReport> vacantesComplete;
 
@@ -48,5 +50,6 @@ public class RequirementReport {
     this.managers = new java.util.ArrayList<>();
     this.vacanteSummary = new java.util.ArrayList<>();
     this.vacantesComplete = new java.util.ArrayList<>();
+    this.extraMailList = new java.util.ArrayList<>();
   }
 }

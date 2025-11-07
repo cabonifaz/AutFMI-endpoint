@@ -50,6 +50,26 @@ public class MailService implements IMailService {
     logger.info("Preparing to send requirement notification email...");
     logger.info("Asunto: {}", subject);
 
+    // Limpiar duplicados en listas de emails
+    List<String> cleanToAddresses = deduplicateEmailList(toAddresses);
+    List<String> cleanCcAddresses = deduplicateEmailList(ccAddresses);
+
+    // Log información de limpieza
+    int originalToCount = toAddresses != null ? toAddresses.size() : 0;
+    int originalCcCount = ccAddresses != null ? ccAddresses.size() : 0;
+
+    logger.info("Emails TO procesados: {} originales -> {} limpios", originalToCount, cleanToAddresses.size());
+    if (originalCcCount > 0) {
+      logger.info("Emails CC procesados: {} originales -> {} limpios", originalCcCount, cleanCcAddresses.size());
+    }
+
+    if (originalToCount != cleanToAddresses.size()) {
+      logger.warn("Se removieron {} emails TO duplicados o inválidos", originalToCount - cleanToAddresses.size());
+    }
+    if (originalCcCount != cleanCcAddresses.size()) {
+      logger.warn("Se removieron {} emails CC duplicados o inválidos", originalCcCount - cleanCcAddresses.size());
+    }
+
     Map<String, Object> variables = new HashMap<>();
 
     // Auditoría de acción (usando datos del usuario que realizó la acción)
@@ -182,17 +202,67 @@ public class MailService implements IMailService {
     }
     variables.put("postulantes", postulantesList.isEmpty() ? null : postulantesList);
 
-    // Enviar correo a cada destinatario
-    for (String destinatario : toAddresses) {
+    // Enviar correo a cada destinatario (usando listas limpias)
+    for (String destinatario : cleanToAddresses) {
       logger.info("Enviando correo a: {}", destinatario);
       mailUtils.sendEmailWithHtmlTemplate(
           destinatario,
-          ccAddresses,
+          cleanCcAddresses,
           subject,
           "rq-details",
           variables);
     }
 
-    logger.info("Notificación V2 completada. Enviado a {} destinatarios.", toAddresses.size());
+    logger.info("Notificación V2 completada. Enviado a {} destinatarios.", cleanToAddresses.size());
+  }
+
+  /**
+   * Elimina duplicados de una lista de emails manteniendo el orden original.
+   * Normaliza emails a minúsculas para comparación pero mantiene formato
+   * original.
+   * Filtra emails nulos, vacíos y con formato inválido.
+   * 
+   * @param emailList Lista original de emails (puede ser null)
+   * @return Lista limpia sin duplicados
+   */
+  private List<String> deduplicateEmailList(List<String> emailList) {
+    List<String> cleanList = new ArrayList<>();
+
+    if (emailList == null || emailList.isEmpty()) {
+      return cleanList;
+    }
+
+    java.util.Set<String> seenEmails = new java.util.LinkedHashSet<>();
+
+    for (String email : emailList) {
+      if (email == null || email.trim().isEmpty()) {
+        continue;
+      }
+
+      String trimmedEmail = email.trim();
+      String normalizedEmail = trimmedEmail.toLowerCase();
+
+      // Validación básica de formato email
+      if (isValidEmailFormat(normalizedEmail) && seenEmails.add(normalizedEmail)) {
+        cleanList.add(trimmedEmail);
+      }
+    }
+
+    return cleanList;
+  }
+
+  /**
+   * Validación básica de formato de email
+   * 
+   * @param email Email a validar (debe estar en minúsculas y sin espacios)
+   * @return true si el formato es válido
+   */
+  private boolean isValidEmailFormat(String email) {
+    // Validación simple: contiene @ y al menos un punto después del @
+    return email != null &&
+        email.contains("@") &&
+        email.indexOf("@") > 0 &&
+        email.indexOf("@") < email.length() - 1 &&
+        email.lastIndexOf(".") > email.indexOf("@");
   }
 }

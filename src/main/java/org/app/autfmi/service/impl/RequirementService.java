@@ -83,6 +83,11 @@ public class RequirementService implements IRequirementService {
                 toAddresses.add(report.getActionUser().getCorreo());
             }
 
+            // Notificar también a los correos adicionales si existen
+            if (report.getExtraMailList() != null && !report.getExtraMailList().isEmpty()) {
+                toAddresses.addAll(report.getExtraMailList());
+            }
+
             String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();
 
             // Enviar notificación por correo electrónico utilizando el servicio de correo
@@ -135,6 +140,11 @@ public class RequirementService implements IRequirementService {
 
             for (var manager : report.getManagers()) {
                 toAddresses.add(manager.getEmail());
+            }
+
+            // Notificar también a los correos adicionales si existen
+            if (report.getExtraMailList() != null && !report.getExtraMailList().isEmpty()) {
+                toAddresses.addAll(report.getExtraMailList());
             }
 
             String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();

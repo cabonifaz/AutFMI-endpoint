@@ -365,6 +365,7 @@ public class RequirementRepository {
         List<Map<String, Object>> managersResultSet = (List<Map<String, Object>>) rs.get("#result-set-7");
         List<Map<String, Object>> actionUserResultSet = (List<Map<String, Object>>) rs.get("#result-set-8");
         List<Map<String, Object>> vacDetResultSet = (List<Map<String, Object>>) rs.get("#result-set-9");
+        List<Map<String, Object>> extraMailSet = (List<Map<String, Object>>) rs.get("#result-set-10");
 
         if (rs1 == null || rs1.isEmpty()) {
             RequirementReport requirementReport = new RequirementReport();
@@ -392,7 +393,7 @@ public class RequirementRepository {
                 postulantsResultSet,
                 managersResultSet,
                 actionUserResultSet != null && !actionUserResultSet.isEmpty() ? actionUserResultSet.get(0) : null,
-                vacDetResultSet);
+                vacDetResultSet, extraMailSet);
 
         logger.info("RequirementReport mapeado exitosamente:");
         logger.info("- Detalles RQ: {}",

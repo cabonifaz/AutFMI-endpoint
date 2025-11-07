@@ -87,7 +87,9 @@ public class RequirementReportMapper {
             (String) row.get("CORREO"),
             (String) row.get("CELULAR"),
             (String) row.get("PERFIL"),
-            (String) row.get("ESTADO")));
+            (String) row.get("ESTADO"),
+            (String) row.get("DNI"),
+            (String) row.get("SITUACION")));
       }
     }
     return postulants;

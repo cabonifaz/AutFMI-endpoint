@@ -21,7 +21,6 @@ import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
 import org.app.autfmi.model.response.VacanteCarreraResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
-import org.app.autfmi.service.impl.MailService;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;

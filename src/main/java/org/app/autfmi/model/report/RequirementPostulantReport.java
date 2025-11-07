@@ -13,4 +13,6 @@ public class RequirementPostulantReport {
   private String celular;
   private String perfil;
   private String estado;
+  private String dni;
+  private String situacion;
 }

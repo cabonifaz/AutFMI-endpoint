@@ -318,16 +318,14 @@ public class MailService implements IMailService {
 
         // Dividir nombre completo de forma segura
         String nombreCompleto = SafeValues.safeString(postulante.getNombreCompleto()).trim();
-        String[] partes = nombreCompleto.split("\\s+", 2); // Dividir en máximo 2 partes
 
-        postulanteMap.put("nombres", partes.length > 0 ? partes[0] : "");
-        postulanteMap.put("apellidos", partes.length > 1 ? partes[1] : "");
-        postulanteMap.put("dni", "N/A"); // No disponible en RequirementPostulantReport
+        postulanteMap.put("nombres", nombreCompleto);
+        postulanteMap.put("dni", postulante.getDni());
         postulanteMap.put("celular", SafeValues.safeString(postulante.getCelular()));
         postulanteMap.put("correo", SafeValues.safeString(postulante.getCorreo()));
         postulanteMap.put("perfil", SafeValues.safeString(postulante.getPerfil()));
         postulanteMap.put("estado", SafeValues.safeString(postulante.getEstado()));
-        postulanteMap.put("situacion", "N/A"); // No disponible en RequirementPostulantReport
+        postulanteMap.put("situacion", postulante.getSituacion());
 
         postulantesList.add(postulanteMap);
       }

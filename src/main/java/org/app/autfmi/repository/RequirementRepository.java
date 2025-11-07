@@ -459,103 +459,17 @@ public class RequirementRepository {
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (resultSet != null && !resultSet.isEmpty()) {
-            Map<String, Object> row = resultSet.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
-            if (idTipoMensaje == 2) {
-
-                Integer idNuevoRQ = (Integer) row.get("ID_NEW_RQ");
-                guardarArchivos(request.getLstArchivos(), idNuevoRQ, baseRequest.getIdEmpresa());
-
-                String rqCode = (String) row.get("CODIGO_RQ");
-
-                // Datos RQ
-                var rDto = new RequirementDTO();
-                rDto.setTitulo(request.getTitulo());
-                rDto.setCodigoRQ(rqCode);
-                rDto.setFechaSolicitud(request.getFechaSolicitud());
-                rDto.setFechaVencimiento(request.getFechaVencimiento());
-                rDto.setDescripcion(request.getDescripcion());
-                rDto.setIdEstado(request.getEstado());
-
-                // Cliente - nombre
-                rDto.setCliente(request.getCliente());
-
-                // Gestion
-                rDto.setDuracion(
-                        request.getDuracion() != null ? BigDecimal.valueOf(request.getDuracion()) : BigDecimal.ZERO);
-
-                rDto.setIdDuracion(request.getIdDuracion());
-                rDto.setIdModalidad(request.getIdModalidad());
-                rDto.setModalidadFact(request.getIdModalidadFact());
-
-                // Vacantes
-                List<Map<String, Object>> vacantesResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
-                List<Map<String, Object>> vacantesMapList = new ArrayList<>();
-
-                if (vacantesResultSet != null && !vacantesResultSet.isEmpty()) {
-                    for (Map<String, Object> vacante : vacantesResultSet) {
-                        Map<String, Object> vacanteMap = new HashMap<>();
-
-                        vacanteMap.put("idPerfil", vacante.get("ID_REQUERIMIENTO_VACANTE"));
-                        vacanteMap.put("perfil", vacante.get("PERFIL_PROFESIONAL"));
-                        vacanteMap.put("cantidad", vacante.get("CANTIDAD"));
-
-                        vacantesMapList.add(vacanteMap);
-                    }
-
-                }
-
-                // Contactos
-                List<Map<String, Object>> contactosResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
-                List<Map<String, Object>> contactosMapList = new ArrayList<>();
-
-                if (contactosResultSet != null && !contactosResultSet.isEmpty()) {
-                    for (Map<String, Object> contacto : contactosResultSet) {
-                        Map<String, Object> contactoMap = new HashMap<>();
-                        String nombreCompleto = String.format("%s %s %s",
-                                contacto.getOrDefault("NOMBRES", ""),
-                                contacto.getOrDefault("APELLIDO_PATERNO", ""),
-                                contacto.getOrDefault("APELLIDO_MATERNO", "")).trim();
-
-                        contactoMap.put("nombre", nombreCompleto);
-                        contactoMap.put("celular", contacto.get("TELEFONO"));
-                        contactoMap.put("correo", contacto.get("CORREO"));
-                        contactoMap.put("cargo", contacto.get("CARGO"));
-
-                        contactosMapList.add(contactoMap);
-                    }
-                }
-
-                // --- Habilidades técnicas por vacante (result set 4)
-                List<Map<String, Object>> habilidadesResultSet = (List<Map<String, Object>>) result
-                        .get("#result-set-4");
-
-                // --- Carreras por vacante (result set 5)
-                List<Map<String, Object>> carrerasResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
-
-                // --- Correo del ejecutor (result set 6)
-                List<Map<String, Object>> correoResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
-                String correoEjecutor = null;
-                if (correoResultSet != null && !correoResultSet.isEmpty()) {
-                    correoEjecutor = (String) correoResultSet.get(0).get("CORREO");
-                }
-
-                // send mail
-                mailService.sendCreateRequirementNotification(
-                        baseRequest.getUsername(),
-                        rDto, vacantesMapList,
-                        contactosMapList,
-                        habilidadesResultSet,
-                        carrerasResultSet,
-                        correoEjecutor);
-
-            }
-
-            return new BaseResponse(idTipoMensaje, mensaje);
+        if (resultSet == null || resultSet.isEmpty()) {
+            return new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
         }
-        return null;
+
+        Map<String, Object> row = resultSet.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+
+        BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
+
+        return baseResponse;
     }
 
     private SQLServerDataTable loadTvpLstCarreras(List<VacanteCarreraRequest> carreras) throws SQLServerException {

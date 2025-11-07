@@ -160,11 +160,51 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse updateRequirement(String token, RequirementRequest request) throws SQLServerException {
-        UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
-        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        return requirementRepository.updateRequirement(request, baseRequest);
+    public BaseResponse updateRequirement(String token, RequirementRequest request) {
+        try {
+            UserDTO user = jwt.decodeToken(token);
+            String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+            BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+            BaseResponse response = requirementRepository.updateRequirement(request, baseRequest);
+
+            if (response.getIdTipoMensaje() != 2) {
+                return response;
+            }
+
+            // Obtener el reporte del requerimiento actualizado
+            RequirementReport report = requirementRepository.getRequirementReport(
+                    request.getIdRequerimiento(), baseRequest.getIdUsuario());
+
+            List<String> toAddresses = new ArrayList<>();
+            for (var manager : report.getManagers()) {
+                toAddresses.add(manager.getEmail());
+            }
+            // Agregar el correo del usuario que realizó la acción
+            if (report.getActionUser() != null && report.getActionUser().getCorreo() != null) {
+                toAddresses.add(report.getActionUser().getCorreo());
+            }
+            String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();
+            // Enviar notificación por correo electrónico utilizando el servicio de correo
+            try {
+                this.mailService.sendRequirementNotificationV2(
+                        report,
+                        subject,
+                        toAddresses,
+                        new ArrayList<>(),
+                        "ACTUALIZAR_REQUERIMIENTO");
+            } catch (Exception e) {
+                this.logger.error("Error al enviar notificación de actualización de requerimiento: {}", e);
+            }
+
+            return response;
+
+        } catch (SQLServerException e) {
+            this.logger.error("SQLServerException al actualizar requerimiento: {}", e);
+            return new BaseResponse(3, "No se pudo actualizar el requerimiento", e.getMessage());
+        } catch (Exception e) {
+            this.logger.error("Exception al actualizar requerimiento: {}", e);
+            return new BaseResponse(3, "No se pudo actualizar el requerimiento", e.getMessage());
+        }
     }
 
     @Override

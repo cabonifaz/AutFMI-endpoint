@@ -4,9 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.List;
 
+import org.app.autfmi.model.response.BaseResponse;
+
 @Data
 @AllArgsConstructor
 public class RequirementReport {
+
+  private BaseResponse response;
 
   // Result Set #2: Detalles del RQ y cliente
   private RequirementDetailsReport requirementDetails;
@@ -29,6 +33,12 @@ public class RequirementReport {
   // Result Set #8: Usuario que realizó la acción
   private RequirementActionUserReport actionUser;
 
+  // Result Set #9: Resumen de vacantes por perfil
+  private List<RequirementVacanteSummaryReport> vacanteSummary;
+
+  // Vacantes consolidadas con habilidades y carreras
+  private List<RequirementVacanteCompleteReport> vacantesComplete;
+
   // Constructor de conveniencia para inicializar listas vacías
   public RequirementReport() {
     this.contacts = new java.util.ArrayList<>();
@@ -36,5 +46,7 @@ public class RequirementReport {
     this.vacanteCareers = new java.util.ArrayList<>();
     this.postulants = new java.util.ArrayList<>();
     this.managers = new java.util.ArrayList<>();
+    this.vacanteSummary = new java.util.ArrayList<>();
+    this.vacantesComplete = new java.util.ArrayList<>();
   }
 }

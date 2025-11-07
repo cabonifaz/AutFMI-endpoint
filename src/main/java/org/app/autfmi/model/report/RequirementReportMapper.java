@@ -121,9 +121,115 @@ public class RequirementReportMapper {
   }
 
   /**
-   * Método de conveniencia para mapear todos los result sets a un
-   * RequirementReport completo
+   * Mapea el result set #9 a List<RequirementVacanteSummaryReport>
    */
+  public static List<RequirementVacanteSummaryReport> mapVacanteSummary(List<Map<String, Object>> resultSet) {
+    List<RequirementVacanteSummaryReport> summary = new ArrayList<>();
+    if (resultSet != null) {
+      for (Map<String, Object> row : resultSet) {
+        summary.add(new RequirementVacanteSummaryReport(
+            (Integer) row.get("ID_VACANTE"),
+            (String) row.get("PERFIL"),
+            (Integer) row.get("TOTAL_VACANTES")));
+      }
+    }
+    return summary;
+  }
+
+  /**
+   * Construye las vacantes completas consolidando resumen, habilidades y carreras
+   * Protege contra NullPointerException
+   */
+  public static List<RequirementVacanteCompleteReport> buildCompleteVacantes(
+      List<RequirementVacanteSummaryReport> summary,
+      List<RequirementVacanteSkillReport> skills,
+      List<RequirementVacanteCareerReport> careers) {
+
+    List<RequirementVacanteCompleteReport> completeVacantes = new ArrayList<>();
+
+    if (summary == null || summary.isEmpty()) {
+      return completeVacantes;
+    }
+
+    for (RequirementVacanteSummaryReport summaryItem : summary) {
+      if (summaryItem == null || summaryItem.getIdVacante() == null) {
+        continue; // Protección contra nulos
+      }
+
+      RequirementVacanteCompleteReport completeVacante = new RequirementVacanteCompleteReport(
+          summaryItem.getIdVacante(),
+          summaryItem.getPerfil() != null ? summaryItem.getPerfil() : "Perfil no especificado",
+          summaryItem.getTotalVacantes() != null ? summaryItem.getTotalVacantes() : 0);
+
+      // Agregar habilidades relacionadas
+      if (skills != null) {
+        skills.stream()
+            .filter(skill -> skill != null &&
+                skill.getIdVacante() != null &&
+                skill.getIdVacante().equals(summaryItem.getIdVacante()))
+            .forEach(completeVacante::addHabilidad);
+      }
+
+      // Agregar carreras relacionadas
+      if (careers != null) {
+        careers.stream()
+            .filter(career -> career != null &&
+                career.getIdVacante() != null &&
+                career.getIdVacante().equals(summaryItem.getIdVacante()))
+            .forEach(completeVacante::addCarrera);
+      }
+
+      completeVacantes.add(completeVacante);
+    }
+
+    return completeVacantes;
+  }
+
+  /**
+   * Método actualizado para mapear todos los result sets incluyendo el nuevo RS
+   * #9
+   * Protegido contra NullPointerException
+   */
+  public static RequirementReport mapCompleteReportV2(
+      Map<String, Object> detailsRow,
+      List<Map<String, Object>> contactsSet,
+      List<Map<String, Object>> skillsSet,
+      List<Map<String, Object>> careersSet,
+      List<Map<String, Object>> postulantsSet,
+      List<Map<String, Object>> managersSet,
+      Map<String, Object> actionUserRow,
+      List<Map<String, Object>> vacanteSummarySet) {
+
+    RequirementReport report = new RequirementReport();
+
+    // Mapear datos básicos
+    report.setRequirementDetails(mapRequirementDetails(detailsRow));
+    report.setContacts(mapContacts(contactsSet));
+    report.setPostulants(mapPostulants(postulantsSet));
+    report.setManagers(mapManagers(managersSet));
+    report.setActionUser(mapActionUser(actionUserRow));
+
+    // Mapear datos de vacantes
+    List<RequirementVacanteSkillReport> skills = mapVacanteSkills(skillsSet);
+    List<RequirementVacanteCareerReport> careers = mapVacanteCareers(careersSet);
+    List<RequirementVacanteSummaryReport> summary = mapVacanteSummary(vacanteSummarySet);
+
+    report.setVacanteSkills(skills);
+    report.setVacanteCareers(careers);
+    report.setVacanteSummary(summary);
+
+    // Construir vacantes completas con relaciones
+    report.setVacantesComplete(buildCompleteVacantes(summary, skills, careers));
+
+    return report;
+  }
+
+  /**
+   * Método original mantenido por compatibilidad
+   * 
+   * @deprecated Usar mapCompleteReportV2 para el nuevo SP
+   */
+  @Deprecated
   public static RequirementReport mapCompleteReport(
       Map<String, Object> detailsRow,
       List<Map<String, Object>> contactsSet,

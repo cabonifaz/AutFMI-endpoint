@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RequirementVacanteCareerReport {
+public class RequirementVacanteSummaryReport {
   private Integer idVacante;
-  private String carrera;
-  private String grado; // Grado de estudios
+  private String perfil;
+  private Integer totalVacantes;
 }

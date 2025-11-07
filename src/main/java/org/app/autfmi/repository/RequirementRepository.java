@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 
-import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
 import org.app.autfmi.model.report.EntryReport;
@@ -309,12 +308,16 @@ public class RequirementRepository {
      * Crea o actualiza un requerimiento desde un agente externo
      * N8N en Octubre 2025
      */
-    public RequirementReport saveRequirementByAgent(AgentRQRequest request, BaseRequest baseRequest)
-            throws SQLServerException, JsonProcessingException {
+    public BaseResponse saveRequirementByAgent(AgentRQRequest request, BaseRequest baseRequest)
+            throws SQLServerException {
         String agentJson = null;
 
         ObjectMapper objectMapper = new ObjectMapper();
-        agentJson = objectMapper.writeValueAsString(request);
+        try {
+            agentJson = objectMapper.writeValueAsString(request);
+        } catch (JsonProcessingException e) {
+            return new BaseResponse(3, "Error al procesar datos del agente externo", e.getMessage());
+        }
 
         logger.info("SaveRequirementByAgent started for: {}", request.getTitulo());
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -340,24 +343,59 @@ public class RequirementRepository {
         Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
         String mensaje = (String) row.get("MENSAJE");
 
-        // Obtener todos los result sets
-        List<Map<String, Object>> detailsResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
-        List<Map<String, Object>> contactsResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
-        List<Map<String, Object>> skillsResultSet = (List<Map<String, Object>>) result.get("#result-set-4");
-        List<Map<String, Object>> careersResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
-        List<Map<String, Object>> postulantsResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
-        List<Map<String, Object>> managersResultSet = (List<Map<String, Object>>) result.get("#result-set-7");
-        List<Map<String, Object>> actionUserResultSet = (List<Map<String, Object>>) result.get("#result-set-8");
+        return new BaseResponse(idTipoMensaje, mensaje);
+
+    }
+
+    public RequirementReport getRequirementReport(Integer idRequirement, Integer idUser)
+            throws SQLServerException {
+
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_REPORTE_SEL");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_RQ", idRequirement)
+                .addValue("ID_USUARIO", idUser);
+
+        Map<String, Object> rs = simpleJdbcCall.execute(params);
+
+        List<Map<String, Object>> rs1 = (List<Map<String, Object>>) rs.get("#result-set-1");
+        List<Map<String, Object>> detailsResultSet = (List<Map<String, Object>>) rs.get("#result-set-2");
+        List<Map<String, Object>> contactsResultSet = (List<Map<String, Object>>) rs.get("#result-set-3");
+        List<Map<String, Object>> skillsResultSet = (List<Map<String, Object>>) rs.get("#result-set-4");
+        List<Map<String, Object>> careersResultSet = (List<Map<String, Object>>) rs.get("#result-set-5");
+        List<Map<String, Object>> postulantsResultSet = (List<Map<String, Object>>) rs.get("#result-set-6");
+        List<Map<String, Object>> managersResultSet = (List<Map<String, Object>>) rs.get("#result-set-7");
+        List<Map<String, Object>> actionUserResultSet = (List<Map<String, Object>>) rs.get("#result-set-8");
+        List<Map<String, Object>> vacDetResultSet = (List<Map<String, Object>>) rs.get("#result-set-9");
+
+        if (rs1 == null || rs1.isEmpty()) {
+            RequirementReport requirementReport = new RequirementReport();
+            requirementReport.setResponse(new BaseResponse(3, "No se encontraron datos para el requerimiento"));
+            return requirementReport;
+        }
+
+        Map<String, Object> row = rs1.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+        BaseResponse response = new BaseResponse(idTipoMensaje, mensaje);
+
+        if (idTipoMensaje != 2) {
+            RequirementReport requirementReport = new RequirementReport();
+            requirementReport.setResponse(response);
+            return requirementReport;
+        }
 
         // Mapear usando RequirementReportMapper
-        RequirementReport requirementReport = RequirementReportMapper.mapCompleteReport(
+        RequirementReport requirementReport = RequirementReportMapper.mapCompleteReportV2(
                 detailsResultSet != null && !detailsResultSet.isEmpty() ? detailsResultSet.get(0) : null,
                 contactsResultSet,
                 skillsResultSet,
                 careersResultSet,
                 postulantsResultSet,
                 managersResultSet,
-                actionUserResultSet != null && !actionUserResultSet.isEmpty() ? actionUserResultSet.get(0) : null);
+                actionUserResultSet != null && !actionUserResultSet.isEmpty() ? actionUserResultSet.get(0) : null,
+                vacDetResultSet);
 
         logger.info("RequirementReport mapeado exitosamente:");
         logger.info("- Detalles RQ: {}",
@@ -373,9 +411,9 @@ public class RequirementRepository {
                 requirementReport.getActionUser() != null ? requirementReport.getActionUser().getUsuario()
                         : "No disponible");
 
-        BaseResponse response = new BaseResponse(idTipoMensaje, mensaje);
-        logger.info("RP: SaveRequiremtByAgent finished: {}", response);
+        requirementReport.setResponse(response);
         return requirementReport;
+
     }
 
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {

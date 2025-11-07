@@ -258,82 +258,81 @@ public class MailService implements IMailService {
     cliente.put("contactos", contactosMapList);
     variables.put("cliente", cliente);
 
-    // --- Vacantes con habilidades y carreras ---
+    // --- Vacantes con habilidades y carreras usando el nuevo formato ---
     List<Map<String, Object>> vacantesMapList = new ArrayList<>();
 
-    // Agrupar habilidades por vacante
-    Map<Integer, List<Map<String, Object>>> habilidadesPorVacante = new HashMap<>();
-    if (report.getVacanteSkills() != null) {
-      for (var skill : report.getVacanteSkills()) {
-        habilidadesPorVacante.computeIfAbsent(skill.getIdVacante(), k -> new ArrayList<>())
-            .add(Map.of("habilidad", skill.getHabilidad(), "aniosExp", skill.getAExp()));
-      }
-    }
-
-    // Agrupar carreras por vacante
-    Map<Integer, List<Map<String, Object>>> carrerasPorVacante = new HashMap<>();
-    if (report.getVacanteCareers() != null) {
-      for (var career : report.getVacanteCareers()) {
-        carrerasPorVacante.computeIfAbsent(career.getIdVacante(), k -> new ArrayList<>())
-            .add(Map.of("carrera", SafeValues.safeString(career.getCarrera()), "grado",
-                SafeValues.safeString(career.getGrado())));
-      }
-    }
-
-    // Crear lista de vacantes únicas
-    if (report.getVacanteSkills() != null || report.getVacanteCareers() != null) {
-      // Obtener IDs únicos de vacantes
-      java.util.Set<Integer> idsVacantes = new java.util.HashSet<>();
-      if (report.getVacanteSkills() != null) {
-        report.getVacanteSkills().forEach(s -> idsVacantes.add(s.getIdVacante()));
-      }
-      if (report.getVacanteCareers() != null) {
-        report.getVacanteCareers().forEach(c -> idsVacantes.add(c.getIdVacante()));
-      }
-
-      for (Integer idVacante : idsVacantes) {
-        Map<String, Object> vacanteMap = new HashMap<>();
-        vacanteMap.put("idPerfil", idVacante);
-
-        // Obtener perfil desde habilidades (si existe)
-        String perfil = "Perfil Profesional";
-        if (report.getVacanteSkills() != null) {
-          var skillOpt = report.getVacanteSkills().stream()
-              .filter(s -> s.getIdVacante().equals(idVacante))
-              .findFirst();
-          if (skillOpt.isPresent()) {
-            perfil = skillOpt.get().getPerfil();
-          }
+    if (report.getVacantesComplete() != null && !report.getVacantesComplete().isEmpty()) {
+      for (var vacanteComplete : report.getVacantesComplete()) {
+        if (vacanteComplete == null || vacanteComplete.getIdVacante() == null) {
+          continue;
         }
 
-        vacanteMap.put("perfil", perfil);
-        vacanteMap.put("cantidad", 1); // Default
-        vacanteMap.put("habilidades", habilidadesPorVacante.getOrDefault(idVacante, new ArrayList<>()));
-        vacanteMap.put("carreras", carrerasPorVacante.getOrDefault(idVacante, new ArrayList<>()));
+        Map<String, Object> vacanteMap = new HashMap<>();
+        vacanteMap.put("idPerfil", vacanteComplete.getIdVacante());
+        vacanteMap.put("perfil", SafeValues.safeString(vacanteComplete.getPerfil()));
+        vacanteMap.put("cantidad", vacanteComplete.getTotalVacantes() != null ? vacanteComplete.getTotalVacantes() : 1);
+
+        // Mapear habilidades
+        List<Map<String, Object>> habilidadesList = new ArrayList<>();
+        if (vacanteComplete.getHabilidades() != null) {
+          for (var habilidad : vacanteComplete.getHabilidades()) {
+            if (habilidad != null) {
+              Map<String, Object> skillMap = new HashMap<>();
+              skillMap.put("habilidad", SafeValues.safeString(habilidad.getHabilidad()));
+              skillMap.put("aniosExp", habilidad.getAExp() != null ? habilidad.getAExp() : 0);
+              habilidadesList.add(skillMap);
+            }
+          }
+        }
+        vacanteMap.put("habilidades", habilidadesList);
+
+        // Mapear carreras
+        List<Map<String, Object>> carrerasList = new ArrayList<>();
+        if (vacanteComplete.getCarreras() != null) {
+          for (var carrera : vacanteComplete.getCarreras()) {
+            if (carrera != null) {
+              Map<String, Object> carreraMap = new HashMap<>();
+              carreraMap.put("carrera", SafeValues.safeString(carrera.getCarrera()));
+              carreraMap.put("grado", SafeValues.safeString(carrera.getGrado()));
+              carrerasList.add(carreraMap);
+            }
+          }
+        }
+        vacanteMap.put("carreras", carrerasList);
 
         vacantesMapList.add(vacanteMap);
       }
     }
+
     variables.put("vacantes", vacantesMapList);
 
     // --- Postulantes ---
     List<Map<String, Object>> postulantesList = new ArrayList<>();
-    if (report.getPostulants() != null) {
+    if (report.getPostulants() != null && !report.getPostulants().isEmpty()) {
       for (var postulante : report.getPostulants()) {
+        if (postulante == null || postulante.getNombreCompleto() == null) {
+          continue; // Protección contra nulos
+        }
+
         Map<String, Object> postulanteMap = new HashMap<>();
-        postulanteMap.put("nombres", postulante.getNombreCompleto().split(" ")[0]);
-        postulanteMap.put("apellidos", postulante.getNombreCompleto().substring(
-            postulante.getNombreCompleto().indexOf(" ") + 1));
-        postulanteMap.put("dni", "N/A");
-        postulanteMap.put("celular", postulante.getCelular());
-        postulanteMap.put("correo", postulante.getCorreo());
-        postulanteMap.put("perfil", postulante.getPerfil());
-        postulanteMap.put("estado", postulante.getEstado());
-        postulanteMap.put("situacion", "N/A");
+
+        // Dividir nombre completo de forma segura
+        String nombreCompleto = SafeValues.safeString(postulante.getNombreCompleto()).trim();
+        String[] partes = nombreCompleto.split("\\s+", 2); // Dividir en máximo 2 partes
+
+        postulanteMap.put("nombres", partes.length > 0 ? partes[0] : "");
+        postulanteMap.put("apellidos", partes.length > 1 ? partes[1] : "");
+        postulanteMap.put("dni", "N/A"); // No disponible en RequirementPostulantReport
+        postulanteMap.put("celular", SafeValues.safeString(postulante.getCelular()));
+        postulanteMap.put("correo", SafeValues.safeString(postulante.getCorreo()));
+        postulanteMap.put("perfil", SafeValues.safeString(postulante.getPerfil()));
+        postulanteMap.put("estado", SafeValues.safeString(postulante.getEstado()));
+        postulanteMap.put("situacion", "N/A"); // No disponible en RequirementPostulantReport
+
         postulantesList.add(postulanteMap);
       }
     }
-    variables.put("postulantes", postulantesList);
+    variables.put("postulantes", postulantesList.isEmpty() ? null : postulantesList);
 
     // Enviar correo a cada destinatario
     for (String destinatario : toAddresses) {

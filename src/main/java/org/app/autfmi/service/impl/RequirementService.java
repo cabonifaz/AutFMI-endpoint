@@ -1,9 +1,7 @@
 package org.app.autfmi.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 
-import io.swagger.v3.core.util.Json;
 import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.UserDTO;
@@ -67,7 +65,7 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) throws SQLServerException {
+    public BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) {
         try {
 
             this.logger.info("Iniciando saveRequirementByAgent para: {}", request.getTitulo());
@@ -78,7 +76,14 @@ public class RequirementService implements IRequirementService {
             UserDTO user = jwt.decodeToken(token);
             String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
             BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-            RequirementReport report = requirementRepository.saveRequirementByAgent(request, baseRequest);
+            BaseResponse rs = requirementRepository.saveRequirementByAgent(request, baseRequest);
+
+            if (rs.getIdTipoMensaje() != 2) {
+                return rs;
+            }
+
+            RequirementReport report = requirementRepository.getRequirementReport(
+                    Integer.parseInt(rs.getMensaje()), baseRequest.getIdUsuario());
 
             List<String> toAddresses = new ArrayList<>();
 
@@ -101,10 +106,6 @@ public class RequirementService implements IRequirementService {
             this.logger.error("SQLServerException al guardar requerimiento por agente: {}", e.getMessage());
             this.logger.error("Error: {}", e);
             return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
-        } catch (JsonProcessingException e) {
-            this.logger.error("JsonProcessingException al procesar JSON: {}", e.getMessage());
-            this.logger.error("Error: {}", e);
-            return new BaseResponse(3, "Error al procesar JSON", e.getMessage());
         } catch (Exception e) {
             this.logger.error("Exception al guardar requerimiento por agente: {}", e.getMessage());
             this.logger.error("Error: {}", e);

@@ -115,6 +115,14 @@ public class RequirementService implements IRequirementService {
         }
     }
 
+    /**
+     * Método para guardar un requerimiento creado por un agente externo
+     * 
+     * @param token   Token de autenticación del usuario
+     * @param request Datos del requerimiento a guardar
+     * @return Respuesta con el resultado de la operación, con el ID-RQ en el
+     *         mensaje si es exitoso
+     */
     @Override
     public BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) {
         try {
@@ -157,7 +165,7 @@ public class RequirementService implements IRequirementService {
                     new ArrayList<>(),
                     "CREAR_EDITAR_REQUERIMIENTO_AGENTE");
 
-            return new BaseResponse(2, "Requerimiento creado/editado correctamente");
+            return rs;
         } catch (SQLServerException e) {
             this.logger.error("SQLServerException al guardar requerimiento por agente: {}", e.getMessage());
             this.logger.error("Error: {}", e);

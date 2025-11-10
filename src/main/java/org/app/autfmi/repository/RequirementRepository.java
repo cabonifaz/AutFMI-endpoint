@@ -467,6 +467,11 @@ public class RequirementRepository {
 
         BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
 
+        // Cargar arcchivo de RQ si se creó correctamente
+        if (idTipoMensaje == 2) {
+            guardarArchivos(request.getLstArchivos(), Integer.parseInt(mensaje), baseRequest.getIdEmpresa());
+        }
+
         return baseResponse;
     }
 

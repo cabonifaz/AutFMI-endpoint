@@ -102,6 +102,7 @@ public class RequirementService implements IRequirementService {
             } catch (Exception e) {
                 this.logger.error("Error al enviar notificación de requerimiento: {}", e);
             }
+            response.setMensaje("RQ creado exitosamente");
             return response;
         } catch (SQLServerException e) {
             this.logger.error("SQLServerException al guardar requerimiento: {}", e);
@@ -213,7 +214,7 @@ public class RequirementService implements IRequirementService {
             } catch (Exception e) {
                 this.logger.error("Error al enviar notificación de actualización de requerimiento: {}", e);
             }
-
+            response.setMensaje("RQ actualizado exitosamente");
             return response;
 
         } catch (SQLServerException e) {

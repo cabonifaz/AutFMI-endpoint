@@ -5,9 +5,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
 import org.app.autfmi.model.report.EntryReport;
+import org.app.autfmi.model.report.RequirementReport;
+import org.app.autfmi.model.report.RequirementReportMapper;
 import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
@@ -18,7 +21,6 @@ import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
 import org.app.autfmi.model.response.VacanteCarreraResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
-import org.app.autfmi.service.impl.MailService;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.MailUtils;
@@ -37,7 +39,6 @@ import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,6 @@ public class RequirementRepository {
     private final JdbcTemplate jdbcTemplate;
     private final MailUtils mailUtils;
     private final PDFUtils pdfUtils;
-    private final MailService mailService;
     private static final Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
 
     public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
@@ -301,6 +301,119 @@ public class RequirementRepository {
         return table;
     }
 
+    /*
+     * Crea o actualiza un requerimiento desde un agente externo
+     * N8N en Octubre 2025
+     */
+    public BaseResponse saveRequirementByAgent(AgentRQRequest request, BaseRequest baseRequest)
+            throws SQLServerException {
+        String agentJson = null;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            agentJson = objectMapper.writeValueAsString(request);
+        } catch (JsonProcessingException e) {
+            return new BaseResponse(3, "Error al procesar datos del agente externo", e.getMessage());
+        }
+
+        logger.info("SaveRequirementByAgent started for: {}", request.getTitulo());
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_INS_SMART");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("AGENT_JSON", agentJson);
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+        List<Map<String, Object>> rs1 = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (rs1 == null || rs1.isEmpty()) {
+            return null;
+        }
+
+        Map<String, Object> row = rs1.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+
+        return new BaseResponse(idTipoMensaje, mensaje);
+
+    }
+
+    public RequirementReport getRequirementReport(Integer idRequirement, Integer idUser)
+            throws SQLServerException {
+
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_REQUERIMIENTO_REPORTE_SEL");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_RQ", idRequirement)
+                .addValue("ID_USUARIO", idUser);
+
+        Map<String, Object> rs = simpleJdbcCall.execute(params);
+
+        List<Map<String, Object>> rs1 = (List<Map<String, Object>>) rs.get("#result-set-1");
+        List<Map<String, Object>> detailsResultSet = (List<Map<String, Object>>) rs.get("#result-set-2");
+        List<Map<String, Object>> contactsResultSet = (List<Map<String, Object>>) rs.get("#result-set-3");
+        List<Map<String, Object>> skillsResultSet = (List<Map<String, Object>>) rs.get("#result-set-4");
+        List<Map<String, Object>> careersResultSet = (List<Map<String, Object>>) rs.get("#result-set-5");
+        List<Map<String, Object>> postulantsResultSet = (List<Map<String, Object>>) rs.get("#result-set-6");
+        List<Map<String, Object>> managersResultSet = (List<Map<String, Object>>) rs.get("#result-set-7");
+        List<Map<String, Object>> actionUserResultSet = (List<Map<String, Object>>) rs.get("#result-set-8");
+        List<Map<String, Object>> vacDetResultSet = (List<Map<String, Object>>) rs.get("#result-set-9");
+        List<Map<String, Object>> extraMailSet = (List<Map<String, Object>>) rs.get("#result-set-10");
+
+        if (rs1 == null || rs1.isEmpty()) {
+            RequirementReport requirementReport = new RequirementReport();
+            requirementReport.setResponse(new BaseResponse(3, "No se encontraron datos para el requerimiento"));
+            return requirementReport;
+        }
+
+        Map<String, Object> row = rs1.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+        BaseResponse response = new BaseResponse(idTipoMensaje, mensaje);
+
+        if (idTipoMensaje != 2) {
+            RequirementReport requirementReport = new RequirementReport();
+            requirementReport.setResponse(response);
+            return requirementReport;
+        }
+
+        // Mapear usando RequirementReportMapper
+        RequirementReport requirementReport = RequirementReportMapper.mapCompleteReportV2(
+                detailsResultSet != null && !detailsResultSet.isEmpty() ? detailsResultSet.get(0) : null,
+                contactsResultSet,
+                skillsResultSet,
+                careersResultSet,
+                postulantsResultSet,
+                managersResultSet,
+                actionUserResultSet != null && !actionUserResultSet.isEmpty() ? actionUserResultSet.get(0) : null,
+                vacDetResultSet, extraMailSet);
+
+        logger.info("RequirementReport mapeado exitosamente:");
+        logger.info("- Detalles RQ: {}",
+                requirementReport.getRequirementDetails() != null
+                        ? requirementReport.getRequirementDetails().getCodigoRQ()
+                        : "No disponible");
+        logger.info("- Contactos: {} registros", requirementReport.getContacts().size());
+        logger.info("- Habilidades: {} registros", requirementReport.getVacanteSkills().size());
+        logger.info("- Carreras: {} registros", requirementReport.getVacanteCareers().size());
+        logger.info("- Postulantes: {} registros", requirementReport.getPostulants().size());
+        logger.info("- Gestores: {} registros", requirementReport.getManagers().size());
+        logger.info("- Usuario acción: {}",
+                requirementReport.getActionUser() != null ? requirementReport.getActionUser().getUsuario()
+                        : "No disponible");
+
+        requirementReport.setResponse(response);
+        return requirementReport;
+
+    }
+
     public BaseResponse saveRequirement(RequirementRequest request, BaseRequest baseRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_REQUERIMIENTO_INS");
         SQLServerDataTable tvpRqFiles = loadTvpRequirementFiles(request.getLstArchivos(), baseRequest.getIdEmpresa());
@@ -344,103 +457,22 @@ public class RequirementRepository {
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (resultSet != null && !resultSet.isEmpty()) {
-            Map<String, Object> row = resultSet.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
-            if (idTipoMensaje == 2) {
-
-                Integer idNuevoRQ = (Integer) row.get("ID_NEW_RQ");
-                guardarArchivos(request.getLstArchivos(), idNuevoRQ, baseRequest.getIdEmpresa());
-
-                String rqCode = (String) row.get("CODIGO_RQ");
-
-                // Datos RQ
-                var rDto = new RequirementDTO();
-                rDto.setTitulo(request.getTitulo());
-                rDto.setCodigoRQ(rqCode);
-                rDto.setFechaSolicitud(request.getFechaSolicitud());
-                rDto.setFechaVencimiento(request.getFechaVencimiento());
-                rDto.setDescripcion(request.getDescripcion());
-                rDto.setIdEstado(request.getEstado());
-
-                // Cliente - nombre
-                rDto.setCliente(request.getCliente());
-
-                // Gestion
-                rDto.setDuracion(
-                        request.getDuracion() != null ? BigDecimal.valueOf(request.getDuracion()) : BigDecimal.ZERO);
-
-                rDto.setIdDuracion(request.getIdDuracion());
-                rDto.setIdModalidad(request.getIdModalidad());
-                rDto.setModalidadFact(request.getIdModalidadFact());
-
-                // Vacantes
-                List<Map<String, Object>> vacantesResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
-                List<Map<String, Object>> vacantesMapList = new ArrayList<>();
-
-                if (vacantesResultSet != null && !vacantesResultSet.isEmpty()) {
-                    for (Map<String, Object> vacante : vacantesResultSet) {
-                        Map<String, Object> vacanteMap = new HashMap<>();
-
-                        vacanteMap.put("idPerfil", vacante.get("ID_REQUERIMIENTO_VACANTE"));
-                        vacanteMap.put("perfil", vacante.get("PERFIL_PROFESIONAL"));
-                        vacanteMap.put("cantidad", vacante.get("CANTIDAD"));
-
-                        vacantesMapList.add(vacanteMap);
-                    }
-
-                }
-
-                // Contactos
-                List<Map<String, Object>> contactosResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
-                List<Map<String, Object>> contactosMapList = new ArrayList<>();
-
-                if (contactosResultSet != null && !contactosResultSet.isEmpty()) {
-                    for (Map<String, Object> contacto : contactosResultSet) {
-                        Map<String, Object> contactoMap = new HashMap<>();
-                        String nombreCompleto = String.format("%s %s %s",
-                                contacto.getOrDefault("NOMBRES", ""),
-                                contacto.getOrDefault("APELLIDO_PATERNO", ""),
-                                contacto.getOrDefault("APELLIDO_MATERNO", "")).trim();
-
-                        contactoMap.put("nombre", nombreCompleto);
-                        contactoMap.put("celular", contacto.get("TELEFONO"));
-                        contactoMap.put("correo", contacto.get("CORREO"));
-                        contactoMap.put("cargo", contacto.get("CARGO"));
-
-                        contactosMapList.add(contactoMap);
-                    }
-                }
-
-                // --- Habilidades técnicas por vacante (result set 4)
-                List<Map<String, Object>> habilidadesResultSet = (List<Map<String, Object>>) result
-                        .get("#result-set-4");
-
-                // --- Carreras por vacante (result set 5)
-                List<Map<String, Object>> carrerasResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
-
-                // --- Correo del ejecutor (result set 6)
-                List<Map<String, Object>> correoResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
-                String correoEjecutor = null;
-                if (correoResultSet != null && !correoResultSet.isEmpty()) {
-                    correoEjecutor = (String) correoResultSet.get(0).get("CORREO");
-                }
-
-                // send mail
-                mailService.sendCreateRequirementNotification(
-                        baseRequest.getUsername(),
-                        rDto, vacantesMapList,
-                        contactosMapList,
-                        habilidadesResultSet,
-                        carrerasResultSet,
-                        correoEjecutor);
-
-            }
-
-            return new BaseResponse(idTipoMensaje, mensaje);
+        if (resultSet == null || resultSet.isEmpty()) {
+            return new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
         }
-        return null;
+
+        Map<String, Object> row = resultSet.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+
+        BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
+
+        // Cargar arcchivo de RQ si se creó correctamente
+        if (idTipoMensaje == 2) {
+            guardarArchivos(request.getLstArchivos(), Integer.parseInt(mensaje), baseRequest.getIdEmpresa());
+        }
+
+        return baseResponse;
     }
 
     private SQLServerDataTable loadTvpLstCarreras(List<VacanteCarreraRequest> carreras) throws SQLServerException {
@@ -501,115 +533,14 @@ public class RequirementRepository {
         Map<String, Object> result = simpleJdbcCall.execute(params);
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (resultSet != null && !resultSet.isEmpty()) {
-            Map<String, Object> row = resultSet.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
-
-            if (idTipoMensaje == 2) {
-                // Mapear los resultados para enviar email
-
-                // Datos RQ básicos
-                var rDto = new RequirementDTO();
-                rDto.setTitulo(request.getTitulo());
-                rDto.setCodigoRQ(request.getCodigoRQ());
-                rDto.setFechaSolicitud(request.getFechaSolicitud());
-                rDto.setFechaVencimiento(request.getFechaVencimiento());
-                rDto.setDescripcion(request.getDescripcion());
-                rDto.setIdEstado(request.getEstado());
-                rDto.setCliente(request.getCliente());
-                rDto.setDuracion(
-                        request.getDuracion() != null ? BigDecimal.valueOf(request.getDuracion()) : BigDecimal.ZERO);
-                rDto.setIdDuracion(request.getIdDuracion());
-                rDto.setIdModalidad(request.getIdModalidad());
-                rDto.setModalidadFact(request.getIdModalidadFact());
-
-                // Vacantes (result set 2)
-                List<Map<String, Object>> vacantesResultSet = (List<Map<String, Object>>) result.get("#result-set-2");
-                List<Map<String, Object>> vacantesMapList = new ArrayList<>();
-
-                if (vacantesResultSet != null && !vacantesResultSet.isEmpty()) {
-                    for (Map<String, Object> vacante : vacantesResultSet) {
-                        Map<String, Object> vacanteMap = new HashMap<>();
-                        vacanteMap.put("idPerfil", vacante.get("ID_REQUERIMIENTO_VACANTE"));
-                        vacanteMap.put("perfil", vacante.get("PERFIL_PROFESIONAL"));
-                        vacanteMap.put("cantidad", vacante.get("CANTIDAD"));
-                        vacantesMapList.add(vacanteMap);
-                    }
-                }
-
-                // Contactos (result set 3)
-                List<Map<String, Object>> contactosResultSet = (List<Map<String, Object>>) result.get("#result-set-3");
-                List<Map<String, Object>> contactosMapList = new ArrayList<>();
-
-                if (contactosResultSet != null && !contactosResultSet.isEmpty()) {
-                    for (Map<String, Object> contacto : contactosResultSet) {
-                        Map<String, Object> contactoMap = new HashMap<>();
-                        String nombreCompleto = String.format("%s %s %s",
-                                contacto.getOrDefault("NOMBRES", ""),
-                                contacto.getOrDefault("APELLIDO_PATERNO", ""),
-                                contacto.getOrDefault("APELLIDO_MATERNO", "")).trim();
-
-                        contactoMap.put("nombre", nombreCompleto);
-                        contactoMap.put("celular", contacto.get("TELEFONO"));
-                        contactoMap.put("correo", contacto.get("CORREO"));
-                        contactoMap.put("cargo", contacto.get("CARGO"));
-                        contactosMapList.add(contactoMap);
-                    }
-                }
-
-                // Habilidades técnicas por vacante (result set 4)
-                List<Map<String, Object>> habilidadesResultSet = (List<Map<String, Object>>) result
-                        .get("#result-set-4");
-
-                // Carreras por vacante (result set 5)
-                List<Map<String, Object>> carrerasResultSet = (List<Map<String, Object>>) result.get("#result-set-5");
-
-                // Postulantes/talentos (result set 6)
-                List<Map<String, Object>> postulantsResultSet = (List<Map<String, Object>>) result.get("#result-set-6");
-                List<Map<String, Object>> postulantesList = new ArrayList<>();
-
-                if (postulantsResultSet != null && !postulantsResultSet.isEmpty()) {
-                    for (Map<String, Object> postulante : postulantsResultSet) {
-                        Map<String, Object> postulanteMap = new HashMap<>();
-                        postulanteMap.put("nombres", postulante.get("NOMBRES_TALENTO"));
-                        postulanteMap.put("apellidos", postulante.get("APELLIDOS_TALENTO"));
-                        postulanteMap.put("dni", postulante.get("DNI"));
-                        postulanteMap.put("celular", postulante.get("CELULAR"));
-                        postulanteMap.put("correo", postulante.get("EMAIL"));
-                        postulanteMap.put("situacion", postulante.get("SITUACION"));
-                        postulanteMap.put("estado", postulante.get("ESTADO"));
-                        postulanteMap.put("perfil", postulante.get("PERFIL"));
-                        postulantesList.add(postulanteMap);
-                    }
-                }
-
-                // result set 7 correo del usuario ejecutor
-                List<Map<String, Object>> correoResultSet = (List<Map<String, Object>>) result.get("#result-set-7");
-                String correoEjecutor = null;
-
-                if (correoResultSet != null && !correoResultSet.isEmpty()) {
-                    Map<String, Object> rw = correoResultSet.get(0);
-                    correoEjecutor = (String) rw.get("CORREO");
-                }
-
-                // Enviar email de notificación
-                mailService.sendUpdateRequirementNotification(
-                        baseRequest.getUsername(),
-                        rDto,
-                        vacantesMapList,
-                        contactosMapList,
-                        habilidadesResultSet,
-                        carrerasResultSet,
-                        postulantesList, correoEjecutor);
-            }
-
-            logger.info("Fin REPOSITORY updateRequirement - ID_REQUERIMIENTO: {} - Resultado: {} - {}",
-                    request.getIdRequerimiento(), idTipoMensaje, mensaje);
-            return new BaseResponse(idTipoMensaje, mensaje);
+        if (resultSet == null || resultSet.isEmpty()) {
+            return new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
         }
-        logger.info("Fin REPOSITORY updateRequirement - No se obtuvieron resultados");
-        return null;
+
+        Map<String, Object> row = resultSet.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+        return new BaseResponse(idTipoMensaje, mensaje);
     }
 
     public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) {

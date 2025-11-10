@@ -4,6 +4,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerException;
 
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
+import org.app.autfmi.model.request.AgentRQRequest;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
@@ -44,4 +45,5 @@ public interface IRequirementService {
 
         BaseResponse getCareersForVac(String token, Integer idVacante);
 
+        BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) throws SQLServerException;
 }

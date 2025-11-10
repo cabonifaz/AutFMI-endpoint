@@ -255,10 +255,12 @@ public class FileUtils {
             extension = extension.toLowerCase();
 
             // Validar tipo permitido (solo imágenes o PDF)
-            if (!esExtensionSoportada(extension)) {
-                logger.error("Extensión de archivo no soportada: " + extension);
-                return "";
-            }
+            /*
+             * if (!esExtensionSoportada(extension)) {
+             * logger.error("Extensión de archivo no soportada: " + extension);
+             * return "";
+             * }
+             */
 
             S3Client s3 = ClienteS3.getInstance();
 
@@ -302,13 +304,6 @@ public class FileUtils {
             logger.error("Error inesperado al cargar archivo desde S3: " + e.getMessage(), e);
             return "";
         }
-    }
-
-    // Verifica que esté en el mismo nivel (sin subcarpetas)
-    private static boolean esMismoNivel(String key, String prefijo) {
-        // Quita el prefijo y revisa que no haya otra barra
-        String restante = key.substring(prefijo.length());
-        return !restante.contains("/");
     }
 
     private static boolean esImagen(String ext) {

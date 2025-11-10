@@ -1,11 +1,13 @@
 package org.app.autfmi.service.impl;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
+
 import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
+import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
@@ -16,8 +18,12 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -27,6 +33,10 @@ public class RequirementService implements IRequirementService {
 
     private final RequirementRepository requirementRepository;
     private final JwtHelper jwt;
+    private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
+
+    @Autowired
+    private MailService mailService;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
@@ -47,19 +57,173 @@ public class RequirementService implements IRequirementService {
     }
 
     @Override
-    public BaseResponse saveRequirement(String token, RequirementRequest request) throws SQLServerException {
-        UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
-        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        return requirementRepository.saveRequirement(request, baseRequest);
+    public BaseResponse saveRequirement(String token, RequirementRequest request) {
+        try {
+            UserDTO user = jwt.decodeToken(token);
+            String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
+            BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+            BaseResponse response = requirementRepository.saveRequirement(request, baseRequest);
+
+            if (response.getIdTipoMensaje() != 2) {
+                return response;
+            }
+
+            // Obtener el reporte del requerimiento guardado
+            RequirementReport report = requirementRepository.getRequirementReport(
+                    Integer.parseInt(response.getMensaje()), baseRequest.getIdUsuario());
+
+            List<String> toAddresses = new ArrayList<>();
+
+            for (var manager : report.getManagers()) {
+                toAddresses.add(manager.getEmail());
+            }
+
+            // Agregar el correo del usuario que realizó la acción
+            if (report.getActionUser() != null && report.getActionUser().getCorreo() != null) {
+                toAddresses.add(report.getActionUser().getCorreo());
+            }
+
+            // Notificar también a los correos adicionales si existen
+            if (report.getExtraMailList() != null && !report.getExtraMailList().isEmpty()) {
+                toAddresses.addAll(report.getExtraMailList());
+            }
+
+            String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();
+
+            // Enviar notificación por correo electrónico utilizando el servicio de correo
+            try {
+                this.mailService.sendRequirementNotificationV2(
+                        report,
+                        subject,
+                        toAddresses,
+                        new ArrayList<>(),
+                        "CREAR_REQUERIMIENTO");
+
+            } catch (Exception e) {
+                this.logger.error("Error al enviar notificación de requerimiento: {}", e);
+            }
+            response.setMensaje("RQ creado exitosamente");
+            return response;
+        } catch (SQLServerException e) {
+            this.logger.error("SQLServerException al guardar requerimiento: {}", e);
+            return new BaseResponse(3, "Error al guardar requerimiento", e.getMessage());
+        } catch (NullPointerException ex) {
+            this.logger.error("NullPointerException al guardar requerimiento: {}", ex);
+            return new BaseResponse(3, "Error al guardar requerimiento", ex.getMessage());
+        } catch (Exception e) {
+            this.logger.error("Exception al guardar requerimiento: {}", e);
+            return new BaseResponse(3, "Error al guardar requerimiento", e.getMessage());
+        }
+    }
+
+    /**
+     * Método para guardar un requerimiento creado por un agente externo
+     * 
+     * @param token   Token de autenticación del usuario
+     * @param request Datos del requerimiento a guardar
+     * @return Respuesta con el resultado de la operación, con el ID-RQ en el
+     *         mensaje si es exitoso
+     */
+    @Override
+    public BaseResponse saveRequirementByAgent(String token, AgentRQRequest request) {
+        try {
+
+            this.logger.info("Iniciando saveRequirementByAgent para: {}", request.getTitulo());
+            this.logger.info("Contacts size: {}", request.getLstContactos().size());
+            this.logger.info("Vacantes size: {}", request.getLstVacantes().size());
+            this.logger.info("Vacantes details: {}", request.getLstVacantes().toString());
+
+            UserDTO user = jwt.decodeToken(token);
+            String funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
+            BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+            BaseResponse rs = requirementRepository.saveRequirementByAgent(request, baseRequest);
+
+            if (rs.getIdTipoMensaje() != 2) {
+                return rs;
+            }
+
+            RequirementReport report = requirementRepository.getRequirementReport(
+                    Integer.parseInt(rs.getMensaje()), baseRequest.getIdUsuario());
+
+            List<String> toAddresses = new ArrayList<>();
+
+            for (var manager : report.getManagers()) {
+                toAddresses.add(manager.getEmail());
+            }
+
+            // Notificar también a los correos adicionales si existen
+            if (report.getExtraMailList() != null && !report.getExtraMailList().isEmpty()) {
+                toAddresses.addAll(report.getExtraMailList());
+            }
+
+            String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();
+
+            // Enviar notificación por correo electrónico utilizando el servicio de correo
+            this.mailService.sendRequirementNotificationV2(
+                    report,
+                    subject,
+                    toAddresses,
+                    new ArrayList<>(),
+                    "CREAR_EDITAR_REQUERIMIENTO_AGENTE");
+
+            return rs;
+        } catch (SQLServerException e) {
+            this.logger.error("SQLServerException al guardar requerimiento por agente: {}", e.getMessage());
+            this.logger.error("Error: {}", e);
+            return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
+        } catch (Exception e) {
+            this.logger.error("Exception al guardar requerimiento por agente: {}", e.getMessage());
+            this.logger.error("Error: {}", e);
+            return new BaseResponse(3, "Error al guardar requerimiento por agente", e.getMessage());
+        }
     }
 
     @Override
-    public BaseResponse updateRequirement(String token, RequirementRequest request) throws SQLServerException {
-        UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
-        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        return requirementRepository.updateRequirement(request, baseRequest);
+    public BaseResponse updateRequirement(String token, RequirementRequest request) {
+        try {
+            UserDTO user = jwt.decodeToken(token);
+            String funcionalidades = Constante.ACTUALIZAR_REQUERIMIENTO;
+            BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+            BaseResponse response = requirementRepository.updateRequirement(request, baseRequest);
+
+            if (response.getIdTipoMensaje() != 2) {
+                return response;
+            }
+
+            // Obtener el reporte del requerimiento actualizado
+            RequirementReport report = requirementRepository.getRequirementReport(
+                    request.getIdRequerimiento(), baseRequest.getIdUsuario());
+
+            List<String> toAddresses = new ArrayList<>();
+            for (var manager : report.getManagers()) {
+                toAddresses.add(manager.getEmail());
+            }
+            // Agregar el correo del usuario que realizó la acción
+            if (report.getActionUser() != null && report.getActionUser().getCorreo() != null) {
+                toAddresses.add(report.getActionUser().getCorreo());
+            }
+            String subject = "Detalle Requerimiento " + report.getRequirementDetails().getCodigoRQ();
+            // Enviar notificación por correo electrónico utilizando el servicio de correo
+            try {
+                this.mailService.sendRequirementNotificationV2(
+                        report,
+                        subject,
+                        toAddresses,
+                        new ArrayList<>(),
+                        "ACTUALIZAR_REQUERIMIENTO");
+            } catch (Exception e) {
+                this.logger.error("Error al enviar notificación de actualización de requerimiento: {}", e);
+            }
+            response.setMensaje("RQ actualizado exitosamente");
+            return response;
+
+        } catch (SQLServerException e) {
+            this.logger.error("SQLServerException al actualizar requerimiento: {}", e);
+            return new BaseResponse(3, "No se pudo actualizar el requerimiento", e.getMessage());
+        } catch (Exception e) {
+            this.logger.error("Exception al actualizar requerimiento: {}", e);
+            return new BaseResponse(3, "No se pudo actualizar el requerimiento", e.getMessage());
+        }
     }
 
     @Override

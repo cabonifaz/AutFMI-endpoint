@@ -91,73 +91,6 @@
         </div>
       </div>
 
-      <!-- Datos Generales del RQ -->
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 32px;">
-        <tr>
-          <td>
-            <h2
-              style="font-size: 18px; font-weight: bold; color: #000000; border-bottom: 2px solid #000000; padding-bottom: 8px; margin: 0 0 16px 0;">
-              Datos Generales del RQ
-            </h2>
-          </td>
-        </tr>
-
-        <!-- Título -->
-        <tr>
-          <td style="padding: 12px; border: 1px solid #e5e7eb; margin-bottom: 16px;">
-            <strong style="color: #000000; display: block; margin-bottom: 4px;">Título:</strong>
-            <span style="color: #000000;" th:text="${rqData.titulo}">Título del requerimiento</span>
-          </td>
-        </tr>
-
-        <!-- Estado y Código -->
-        <tr>
-          <td style="padding-top: 16px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td width="48%" style="padding: 12px; border: 1px solid #e5e7eb;">
-                  <strong style="color: #000000; display: block; margin-bottom: 4px;">Estado RQ:</strong>
-                  <span style="color: #000000;" th:text="${rqData.estado}">Atendido</span>
-                </td>
-                <td width="4%"></td>
-                <td width="48%" style="padding: 12px; border: 1px solid #e5e7eb;">
-                  <strong style="color: #000000; display: block; margin-bottom: 4px;">Código RQ:</strong>
-                  <span style="color: #000000;" th:text="${rqData.codigo}">RQ-004078</span>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Fechas -->
-        <tr>
-          <td style="padding-top: 16px;">
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td width="48%" style="padding: 12px; border: 1px solid #e5e7eb;">
-                  <strong style="color: #000000; display: block; margin-bottom: 4px;">Fecha de
-                    Solicitud:</strong>
-                  <span style="color: #000000;" th:text="${rqData.fechaSolicitud}">10/16/2025</span>
-                </td>
-                <td width="4%"></td>
-                <td width="48%" style="padding: 12px; border: 1px solid #e5e7eb;">
-                  <strong style="color: #000000; display: block; margin-bottom: 4px;">Fecha de
-                    Vencimiento:</strong>
-                  <span style="color: #000000;" th:text="${rqData.fechaVencimiento}">10/31/2025</span>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <!-- Descripción -->
-        <tr>
-          <td style="padding: 12px; border: 1px solid #e5e7eb; margin-top: 16px;">
-            <strong style="color: #000000; display: block; margin-bottom: 4px;">Descripción:</strong>
-            <span style="color: #000000;" th:text="${rqData.descripcion}">Descripción del requerimiento</span>
-          </td>
-        </tr>
-      </table>
 
       <!-- Gestión -->
       <div style="margin-bottom: 32px;">
@@ -334,7 +267,6 @@
               <tr th:each="postulante : ${postulantes}" style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 12px; color: #000000;">
                   <span th:text="${postulante.nombres}">Juan</span>
-                  <span th:text="${postulante.apellidos}">Pérez García</span>
                 </td>
                 <td style="padding: 12px; color: #000000;" th:text="${postulante.dni}">12345678</td>
                 <td style="padding: 12px; color: #000000;" th:text="${postulante.celular}">999123456</td>

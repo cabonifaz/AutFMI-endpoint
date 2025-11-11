@@ -304,7 +304,6 @@ public class HistoryRepository {
                 params.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
                 params.addValue("ID_USUARIO", baseRequest.getIdUsuario());
                 params.addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
-                params.addValue("MOSTRAR_MENSAJES", 1);
             });
 
             List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");

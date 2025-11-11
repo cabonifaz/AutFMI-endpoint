@@ -296,10 +296,17 @@ public class HistoryRepository {
         }
     }
 
-    public SolicitudEquipoReport getLastSolicitudEquipo(BaseRequest baseRequest, Integer idSolicitudEquipo) {
+    /**
+     * Get last solicitud equipo report for a talent
+     * 
+     * @param baseRequest
+     * @param talentId
+     * @return
+     */
+    public SolicitudEquipoReport getLastSolicitudEquipo(BaseRequest baseRequest, Integer talentId) {
         try {
-            Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_SEL", params -> {
-                params.addValue("ID_EQUIPO_SOLICITUD", idSolicitudEquipo);
+            Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_SEL_LAST", params -> {
+                params.addValue("ID_TALENTO", talentId);
                 params.addValue("ID_ROL", baseRequest.getIdRol());
                 params.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
                 params.addValue("ID_USUARIO", baseRequest.getIdUsuario());
@@ -370,7 +377,7 @@ public class HistoryRepository {
                     } else {
                         this.logger.error(
                                 "Datos incompletos para idSolicitudEquipo: {} - validSolicitud: {}, validGestor: {}",
-                                idSolicitudEquipo, validSolicitud, validGestor);
+                                talentId, validSolicitud, validGestor);
                         baseResponse = new BaseResponse(3, "Datos incompletos en la solicitud");
                     }
                 }

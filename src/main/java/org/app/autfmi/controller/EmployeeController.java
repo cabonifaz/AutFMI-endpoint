@@ -134,10 +134,10 @@ public class EmployeeController {
     @GetMapping("/lastSolicitudEquipo")
     public ResponseEntity<FilePDFResponse> getLastSolicitudEquipo(
             HttpServletRequest httpServletRequest,
-            @RequestParam Integer idSolicitudEquipo) {
+            @RequestParam Integer idTalento) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            FilePDFResponse response = employeeService.getLastSolicitudEquipo(token, idSolicitudEquipo);
+            FilePDFResponse response = employeeService.getLastSolicitudEquipo(token, idTalento);
             this.logger.info("Response generated for getLastSolicitudEquipo");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {

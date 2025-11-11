@@ -354,11 +354,11 @@ public class EmployeeService implements IEmployeeService {
         }
 
         @Override
-        public FilePDFResponse getLastSolicitudEquipo(String token, Integer idSolicitudEquipo)
+        public FilePDFResponse getLastSolicitudEquipo(String token, Integer talentId)
                         throws MessagingException {
                 UserDTO user = jwt.decodeToken(token);
                 BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-                SolicitudEquipoReport report = historyRepository.getLastSolicitudEquipo(baseRequest, idSolicitudEquipo);
+                SolicitudEquipoReport report = historyRepository.getLastSolicitudEquipo(baseRequest, talentId);
                 // this.logger.info("Generated report for solicitud equipo: {}", report);
 
                 FilePDFResponse response = new FilePDFResponse();

@@ -325,11 +325,9 @@ public class HistoryRepository {
                     List<Map<String, Object>> resultSetGestor = (List<Map<String, Object>>) result.get("#result-set-4");
 
                     boolean validSolicitud = resultSetSolicitud != null && !resultSetSolicitud.isEmpty();
-                    boolean validSoftwareList = resultSetSolicitudSoftwareList != null
-                            && !resultSetSolicitudSoftwareList.isEmpty();
                     boolean validGestor = resultSetGestor != null && !resultSetGestor.isEmpty();
 
-                    if (validSolicitud && validSoftwareList && validGestor) {
+                    if (validSolicitud && validGestor) {
                         Map<String, Object> reportRow = resultSetSolicitud.get(0);
 
                         // solicitud
@@ -352,12 +350,15 @@ public class HistoryRepository {
 
                         // lista software
                         List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
-                        for (Map<String, Object> softwareRow : resultSetSolicitudSoftwareList) {
-                            SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
-                            software.setProducto((String) softwareRow.get("PRODUCTO"));
-                            software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
 
-                            lstSoftware.add(software);
+                        if (resultSetSolicitudSoftwareList != null && !resultSetSolicitudSoftwareList.isEmpty()) {
+                            for (Map<String, Object> softwareRow : resultSetSolicitudSoftwareList) {
+                                SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
+                                software.setProducto((String) softwareRow.get("PRODUCTO"));
+                                software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
+
+                                lstSoftware.add(software);
+                            }
                         }
 
                         report.setLstSoftware(lstSoftware);
@@ -367,6 +368,11 @@ public class HistoryRepository {
 
                         report.setCorreoGestor((String) gestorRow.get("EMAIL"));
                         report.setNombreApellidoGestor((String) gestorRow.get("NOMBRE_APELLIDO_GESTOR"));
+                    } else {
+                        this.logger.error(
+                                "Datos incompletos para idSolicitudEquipo: {} - validSolicitud: {}, validGestor: {}",
+                                idSolicitudEquipo, validSolicitud, validGestor);
+                        baseResponse = new BaseResponse(3, "Datos incompletos en la solicitud");
                     }
                 }
 

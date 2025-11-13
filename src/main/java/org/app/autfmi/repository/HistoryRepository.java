@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.util.Common;
+import org.app.autfmi.util.Constante;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,7 +14,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +120,16 @@ public class HistoryRepository {
                 (String) report.get("EMAIL_EMPLEADO"));
     }
 
-    public CeseReport registerContractTermination(BaseRequest baseRequest, EmployeeContractEndRequest request) {
+    /**
+     * Register contract termination
+     * 
+     * @param baseRequest
+     * @param request
+     * @return OperationResult<Integer> contiene el ID de la operación para futuras
+     *         operaciones
+     */
+    public OperationResult<Integer> registerContractTermination(BaseRequest baseRequest,
+            EmployeeContractEndRequest request) {
         Map<String, Object> result = executeProcedure(baseRequest, "SP_TALENTO_EMPLEADO_CESE", params -> {
             params.addValue("ID_TALENTO", request.getIdTalento())
                     .addValue("NOMBRES", request.getNombres())
@@ -129,21 +142,85 @@ public class HistoryRepository {
                     .addValue("FCH_HISTORIAL", request.getFchCese());
         });
 
-        List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
+        List<Map<String, Object>> dbResponse = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (message != null && !message.isEmpty()) {
-            Map<String, Object> row = message.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
-
-            if (idTipoMensaje == 2) {
-                List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-2");
-                Map<String, Object> reportRow = report.get(0);
-
-                return mapToCeseReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
-            }
+        if (dbResponse == null || dbResponse.isEmpty()) {
+            this.logger.error("No message returned from stored procedure SP_TALENTO_EMPLEADO_CESE");
+            this.logger.error("Error: {}", result);
+            BaseResponse baseResponse = new BaseResponse(3, "Error al realizar la consulta",
+                    "No se obtuvo respuesta de la base de datos");
+            return new OperationResult<>(baseResponse, null);
         }
-        return null;
+
+        Integer messageId = (Integer) dbResponse.get(0).get("ID_TIPO_MENSAJE");
+        String messageText = (String) dbResponse.get(0).get("MENSAJE");
+        Integer operationId = (Integer) dbResponse.get(0).get("ID_OPERACION");
+
+        BaseResponse baseResponse = new BaseResponse(messageId, messageText);
+        return new OperationResult<>(baseResponse, operationId);
+    }
+
+    public IReport getHistoryReport(
+            BaseRequest baseRequest,
+            @NonNull Integer talentId,
+            @NonNull Integer reportTypeRequest,
+            @Nullable Integer operationId,
+            @NonNull Boolean isLast) {
+
+        this.logger.info("Fetching employee history register for TipoHistorial: {} and Talento: {} OperationId: {}",
+                reportTypeRequest, talentId, operationId);
+        Map<String, Object> rs = executeProcedure(baseRequest, "SP_FMI_REPORTE_GENERAL", params -> {
+            params
+                    .addValue("ID_TALENTO", talentId)
+                    .addValue("ID_TIPO_REPORTE", reportTypeRequest)
+                    .addValue("ID_OPERACION", operationId)
+                    .addValue("ULTIMO", isLast);
+        });
+
+        if (rs == null || rs.isEmpty()) {
+            this.logger.error("No message returned from stored procedure SP_FMI_REPORTE_GENERAL");
+            this.logger.error("Error: {}", rs);
+            return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
+        }
+
+        List<Map<String, Object>> messageList = (List<Map<String, Object>>) rs.get("#result-set-1");
+
+        if (messageList == null || messageList.isEmpty()) {
+            this.logger.error("No message returned from stored procedure SP_FMI_REPORTE_GENERAL");
+            return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
+        }
+
+        Map<String, Object> baseResponseDb = messageList.get(0);
+        Integer messageId = (Integer) baseResponseDb.get("ID_TIPO_MENSAJE");
+        String messageText = (String) baseResponseDb.get("MENSAJE");
+        String reportType = (String) baseResponseDb.get("TIPO_REPORTE");
+        BaseResponse baseResponse = new BaseResponse(messageId, messageText);
+
+        if (baseResponse.getIdTipoMensaje() != 2)
+            return new BaseReport(baseResponse);
+
+        // Obtener datos del reporte
+        List<Map<String, Object>> reportData = (List<Map<String, Object>>) rs.get("#result-set-2");
+
+        if (reportData == null || reportData.isEmpty()) {
+            String message = "El talento no tiene reporte de " + reportType + " previo";
+            return new BaseReport(new BaseResponse(1, message));
+        }
+
+        switch (reportTypeRequest) {
+            case Constante.TIPO_REPORTE_INGRESO:
+                return mapToEntryReport(baseResponse, reportData.get(0));
+
+            case Constante.TIPO_REPORTE_MOVIMIENTO:
+                return mapToMovementReport(baseResponse, reportData.get(0));
+
+            case Constante.TIPO_REPORTE_CESE:
+                return mapToCeseReport(baseResponse, reportData.get(0));
+
+            default:
+                this.logger.error("Tipo de reporte no manejado: {}", reportTypeRequest);
+                return new BaseReport(new BaseResponse(3, "Tipo de reporte no soportado"));
+        }
     }
 
     private CeseReport mapToCeseReport(BaseResponse baseResponse, Map<String, Object> report) {

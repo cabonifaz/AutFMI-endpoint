@@ -11,6 +11,7 @@ import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.SolicitudEquipoResponse;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
@@ -134,51 +135,72 @@ public class EmployeeService implements IEmployeeService {
             throws MessagingException {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
-        CeseReport report = historyRepository.registerContractTermination(baseRequest, request);
 
-        if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
+        OperationResult<Integer> operationResult = historyRepository.registerContractTermination(baseRequest, request);
+        BaseResponse response = operationResult.getBaseResponse();
+        Integer operationId = operationResult.getData();
 
-            GestorDTO gs = new GestorDTO(report.getFirmante(), report.getFirmante());
+        if (response.getIdTipoMensaje() != 2)
+            return response;
 
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GT-12 Formulario de Cese",
-                    pdfUtils.replaceOutRequestValues(
-                            pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                            report, gs),
-                    null);
-
-            SolicitudData data = new SolicitudData();
-            data.setNombres(report.getNombres());
-            data.setApellidos(report.getApellidos());
-            data.setArea(report.getUnidad());
-            data.setFechaSolicitud(report.getFechaHistorial());
-            data.setNombresCese(report.getNombres());
-            data.setApellidosCese(report.getApellidos());
-            data.setUsuarioCese(report.getUsernameEmpleado());
-            data.setCorreoCese(report.getEmailEmpleado());
-            data.setMotivoCese(report.getMotivo());
-            data.setFirmante(report.getFirmante());
-
-            FileDTO fileSolicitud = new FileDTO(
-                    "FT-GS-01 Solicitud de Desactivación de Usuario",
-                    pdfUtils.replaceSolicitudPDFValues(
-                            pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-                            data, null),
-                    null);
-
-            List<FileDTO> lstfiles = new ArrayList<>();
-            lstfiles.add(fileFormulario);
-            lstfiles.add(fileSolicitud);
-
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    report.getCorreoGestor(),
-                    Collections.emptyList(),
-                    "Cese de empleado",
-                    "Formulario de cese del empleado.");
+        if (response.getIdTipoMensaje() == 2 && operationId == null) {
+            String msg = "Cese confirmado, pero no se pudo generar el reporte por falta de ID de cese";
+            String detail = "No se obtuvo ID de operación";
+            this.logger.error("No se pudo generar  el reporte de cese: {} - {}", msg, detail);
+            return new BaseResponse(2, msg, detail);
         }
 
-        return report.getResponse();
+        // Obtener reporte de cese usando el ID de la operación
+        this.logger.info("Obteniendo reporte de cese para ID de operación: {}", operationId);
+        Integer reportType = Constante.TIPO_REPORTE_CESE;
+        Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
+        CeseReport report = (CeseReport) historyRepository.getHistoryReport(baseRequest, talentId, reportType,
+                operationId, false);
+
+        /*
+         * 
+         * GestorDTO gs = new GestorDTO(report.getFirmante(), report.getFirmante());
+         * 
+         * FileDTO fileFormulario = new FileDTO(
+         * "FT-GT-12 Formulario de Cese",
+         * pdfUtils.replaceOutRequestValues(
+         * pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
+         * report, gs),
+         * null);
+         * 
+         * SolicitudData data = new SolicitudData();
+         * data.setNombres(report.getNombres());
+         * data.setApellidos(report.getApellidos());
+         * data.setArea(report.getUnidad());
+         * data.setFechaSolicitud(report.getFechaHistorial());
+         * data.setNombresCese(report.getNombres());
+         * data.setApellidosCese(report.getApellidos());
+         * data.setUsuarioCese(report.getUsernameEmpleado());
+         * data.setCorreoCese(report.getEmailEmpleado());
+         * data.setMotivoCese(report.getMotivo());
+         * data.setFirmante(report.getFirmante());
+         * 
+         * FileDTO fileSolicitud = new FileDTO(
+         * "FT-GS-01 Solicitud de Desactivación de Usuario",
+         * pdfUtils.replaceSolicitudPDFValues(
+         * pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
+         * data, null),
+         * null);
+         * 
+         * List<FileDTO> lstfiles = new ArrayList<>();
+         * lstfiles.add(fileFormulario);
+         * lstfiles.add(fileSolicitud);
+         * 
+         * pdfUtils.enviarCorreoConPDF(
+         * lstfiles,
+         * report.getCorreoGestor(),
+         * Collections.emptyList(),
+         * "Cese de empleado",
+         * "Formulario de cese del empleado.");
+         * }
+         */
+
+        return response;
     }
 
     @Override

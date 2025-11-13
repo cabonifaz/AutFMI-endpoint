@@ -98,45 +98,58 @@ public class EmployeeService implements IEmployeeService {
         return report.getResponse();
     }
 
+    /**
+     * Saves employee movement and sends notification email with the movement
+     * report.
+     * 
+     * @param token   JWT token for authentication
+     * @param request EmployeeMovementRequest containing movement details
+     * @return BaseResponse indicating the result of the operation
+     */
     @Override
-    public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request)
-            throws MessagingException {
+    public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
-        MovementReport report = historyRepository.registerMovement(baseRequest, request);
 
-        if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            List<FileDTO> lstfiles = new ArrayList<>();
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GT-12 Formulario de Movimiento",
-                    pdfUtils.replaceMovementRequestValues(
-                            pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-                            report),
-                    null);
-            lstfiles.add(fileFormulario);
+        OperationResult<Integer> operationResult = historyRepository.registerMovement(baseRequest, request);
+        BaseResponse baseResponse = operationResult.getBaseResponse();
+        Integer operationId = operationResult.getData();
 
-            FileDTO fileSolicitud = new FileDTO(
-                    "FT-GS-01 Solicitud de Modificación de Usuario",
-                    pdfUtils.replaceMovementRequestValues(
-                            pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-                            report),
-                    null);
-            lstfiles.add(fileSolicitud);
+        if (baseResponse.getIdTipoMensaje() != 2)
+            return baseResponse;
 
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    report.getCorreoGestor(),
-                    Collections.emptyList(),
-                    "Movimiento de empleado",
-                    "Formulario de movimiento de empleado.");
-        }
+        if (baseResponse.getIdTipoMensaje() == 2 && operationId == null)
+            return new BaseResponse(2,
+                    "Movimiento confirmado, pero no se pudo generar el reporte por falta de ID de movimiento",
+                    "No se obtuvo ID de operación");
 
-        return report.getResponse();
+        // Obtener reporte de movimiento usando el ID de la operación
+        this.logger.info("Obteniendo reporte de movimiento para ID de operación: {}", operationId);
+        Integer reportType = Constante.TIPO_REPORTE_MOVIMIENTO;
+        Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
+
+        MovementReport report = (MovementReport) historyRepository.getHistoryReport(
+                baseRequest,
+                talentId,
+                reportType,
+                operationId,
+                false);
+
+        this.mailService.sendMovementReportNotification(report);
+
+        return baseResponse;
     }
 
+    /**
+     * Saves employee contract termination and sends notification email with the
+     * termination report.
+     * 
+     * @param token   JWT token for authentication
+     * @param request EmployeeContractEndRequest containing termination details
+     * @return BaseResponse indicating the result of the operation
+     */
     @Override
-    public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request)
-            throws MessagingException {
+    public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
 

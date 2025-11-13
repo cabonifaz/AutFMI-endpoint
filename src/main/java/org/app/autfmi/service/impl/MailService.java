@@ -9,6 +9,7 @@ import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
+import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.MailUtils;
@@ -301,6 +302,38 @@ public class MailService implements IMailService {
       logger.info("Cese report email sent successfully to {}", dest);
     } catch (Exception e) {
       logger.error("Error sending cese report email: ", e);
+    }
+  }
+
+  @Override
+  public void sendMovementReportNotification(MovementReport report) {
+
+    String fullname = report.getNombres() + " " + report.getApellidos();
+    String subject = "Movimiento de Empleado - " + fullname;
+    String dest = report.getCorreoGestor();
+    GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
+
+    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+        .forMovimiento(report, gs)
+        .withFormulario()
+        .build();
+
+    if (dest == null || dest.isEmpty()) {
+      logger.error("Movement report email not sent: Gestor email is null or empty.");
+      return;
+    }
+
+    try {
+      String message = "Formulario de movimiento para el empleado: " + fullname;
+      pdfUtils.enviarCorreoConPDF(
+          attachments,
+          dest,
+          new ArrayList<>(),
+          subject,
+          message);
+      logger.info("Movement report email sent successfully to {}", dest);
+    } catch (Exception e) {
+      logger.error("Error sending movement report email: ", e);
     }
   }
 }

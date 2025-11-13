@@ -22,6 +22,7 @@ import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,6 +31,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class EmployeeService implements IEmployeeService {
+
+    @Autowired
+    private final MailService mailService;
     private final EmployeeRepository employeeRepository;
     private final HistoryRepository historyRepository;
     private final PDFUtils pdfUtils;
@@ -157,49 +161,8 @@ public class EmployeeService implements IEmployeeService {
         CeseReport report = (CeseReport) historyRepository.getHistoryReport(baseRequest, talentId, reportType,
                 operationId, false);
 
-        /*
-         * 
-         * GestorDTO gs = new GestorDTO(report.getFirmante(), report.getFirmante());
-         * 
-         * FileDTO fileFormulario = new FileDTO(
-         * "FT-GT-12 Formulario de Cese",
-         * pdfUtils.replaceOutRequestValues(
-         * pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-         * report, gs),
-         * null);
-         * 
-         * SolicitudData data = new SolicitudData();
-         * data.setNombres(report.getNombres());
-         * data.setApellidos(report.getApellidos());
-         * data.setArea(report.getUnidad());
-         * data.setFechaSolicitud(report.getFechaHistorial());
-         * data.setNombresCese(report.getNombres());
-         * data.setApellidosCese(report.getApellidos());
-         * data.setUsuarioCese(report.getUsernameEmpleado());
-         * data.setCorreoCese(report.getEmailEmpleado());
-         * data.setMotivoCese(report.getMotivo());
-         * data.setFirmante(report.getFirmante());
-         * 
-         * FileDTO fileSolicitud = new FileDTO(
-         * "FT-GS-01 Solicitud de Desactivación de Usuario",
-         * pdfUtils.replaceSolicitudPDFValues(
-         * pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-         * data, null),
-         * null);
-         * 
-         * List<FileDTO> lstfiles = new ArrayList<>();
-         * lstfiles.add(fileFormulario);
-         * lstfiles.add(fileSolicitud);
-         * 
-         * pdfUtils.enviarCorreoConPDF(
-         * lstfiles,
-         * report.getCorreoGestor(),
-         * Collections.emptyList(),
-         * "Cese de empleado",
-         * "Formulario de cese del empleado.");
-         * }
-         */
-
+        this.logger.info("Generando y enviando correo con reporte de cese");
+        this.mailService.sendCeseReportNotification(report);
         return response;
     }
 

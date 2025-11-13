@@ -5,9 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.app.autfmi.model.builders.ReportPDFBuilder;
+import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.model.dto.GestorDTO;
+import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.MailUtils;
+import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.SafeValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +28,9 @@ public class MailService implements IMailService {
 
   @Autowired
   private MailUtils mailUtils;
+
+  @Autowired
+  private final PDFUtils pdfUtils;
 
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
@@ -264,5 +272,35 @@ public class MailService implements IMailService {
         email.indexOf("@") > 0 &&
         email.indexOf("@") < email.length() - 1 &&
         email.lastIndexOf(".") > email.indexOf("@");
+  }
+
+  @Async
+  @Override
+  public void sendCeseReportNotification(CeseReport report) {
+    logger.info("Preparing to send cese report notification email...");
+
+    String subject = "Cese de Empleado - " + report.getNombres() + " " + report.getApellidos();
+    GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
+
+    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+        .forCese(report, gs)
+        .withFormulario()
+        .withDeactivateRequest()
+        .build();
+
+    String dest = report.getCorreoGestor();
+
+    if (dest == null || dest.isEmpty()) {
+      logger.error("Cese report email not sent: Gestor email is null or empty.");
+      return;
+    }
+
+    try {
+      pdfUtils.enviarCorreoConPDF(attachments, dest, new ArrayList<>(), subject,
+          "Formulario de cese del empleado.");
+      logger.info("Cese report email sent successfully to {}", dest);
+    } catch (Exception e) {
+      logger.error("Error sending cese report email: ", e);
+    }
   }
 }

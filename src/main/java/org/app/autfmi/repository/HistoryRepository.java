@@ -52,7 +52,7 @@ public class HistoryRepository {
      * @param request
      * @return MovementReport
      */
-    public MovementReport registerMovement(BaseRequest baseRequest, EmployeeMovementRequest request) {
+    public OperationResult<Integer> registerMovement(BaseRequest baseRequest, EmployeeMovementRequest request) {
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
 
@@ -85,19 +85,25 @@ public class HistoryRepository {
 
         List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (message != null && !message.isEmpty()) {
-            Map<String, Object> row = message.get(0);
-            Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-            String mensaje = (String) row.get("MENSAJE");
-
-            if (idTipoMensaje == 2) {
-                List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-2");
-                Map<String, Object> reportRow = report.get(0);
-
-                return mapToMovementReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
-            }
+        if (message == null || message.isEmpty()) {
+            this.logger.error("No message returned from stored procedure SP_TALENTO_EMPLEADO_MOVIMIENTO");
+            this.logger.error("Error: {}", result);
+            BaseResponse baseResponse = new BaseResponse(3, "Error al realizar la consulta",
+                    "No se obtuvo respuesta de la base de datos");
+            return new OperationResult<>(baseResponse, null);
         }
-        return null;
+
+        Map<String, Object> row = message.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+        Integer operationId = (Integer) row.get("ID_OPERACION");
+        BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
+
+        if (idTipoMensaje != 2)
+            return new OperationResult<>(baseResponse, null);
+
+        return new OperationResult<>(baseResponse, operationId);
+
     }
 
     private MovementReport mapToMovementReport(BaseResponse baseResponse, Map<String, Object> report) {

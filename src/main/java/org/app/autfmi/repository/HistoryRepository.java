@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -21,10 +22,11 @@ import java.util.function.Consumer;
 @Repository
 @RequiredArgsConstructor
 public class HistoryRepository {
+    @NonNull
     private final JdbcTemplate jdbcTemplate;
     private final Logger logger = LoggerFactory.getLogger(HistoryRepository.class);
 
-    private Map<String, Object> executeProcedure(BaseRequest baseRequest, String SP,
+    private Map<String, Object> executeProcedure(BaseRequest baseRequest, @NonNull String SP,
             Consumer<MapSqlParameterSource> parameterBuilder) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName(SP);
 
@@ -39,6 +41,13 @@ public class HistoryRepository {
         return simpleJdbcCall.execute(params);
     }
 
+    /**
+     * Register employee movement
+     * 
+     * @param baseRequest
+     * @param request
+     * @return MovementReport
+     */
     public MovementReport registerMovement(BaseRequest baseRequest, EmployeeMovementRequest request) {
         LocalDate fchInicioContrato = Common.formatDate(request.getFchInicioContrato());
         LocalDate fchTerminoContrato = Common.formatDate(request.getFchTerminoContrato());
@@ -97,9 +106,9 @@ public class HistoryRepository {
                 (String) report.get("MOV_AREA"),
                 (String) report.get("HORARIO"),
                 (String) report.get("FCH_HISTORIAL"),
-                (Double) report.get("MONTO_BASE"),
-                (Double) report.get("MONTO_MOVILIDAD"),
-                (Double) report.get("MONTO_TRIMESTRAL"),
+                (String) report.get("MONTO_BASE"),
+                (String) report.get("MONTO_MOVILIDAD"),
+                (String) report.get("MONTO_TRIMESTRAL"),
                 (String) report.get("CORREO_GESTOR"),
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),

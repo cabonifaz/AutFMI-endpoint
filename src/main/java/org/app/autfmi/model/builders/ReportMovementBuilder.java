@@ -19,7 +19,9 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     String fileTemplate = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO);
     String filled = pdfUtils.replaceMovementRequestValues(fileTemplate, report);
 
-    files.add(new FileDTO(fileName, filled, null));
+    byte[] fileBytes = pdfUtils.crearPDF(filled, fileName);
+
+    files.add(new FileDTO(fileName, filled, fileBytes));
     return this;
   }
 

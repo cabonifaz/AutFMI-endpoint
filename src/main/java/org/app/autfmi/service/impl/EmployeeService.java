@@ -25,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -213,13 +215,28 @@ public class EmployeeService implements IEmployeeService {
         this.logger.info("Processing getLastHistory");
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-        IReport report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial,
-                idTalento);
 
+        if (idTipoHistorial == null)
+            throw new IllegalArgumentException("El tipo de historial no puede ser nulo");
+
+        if (idTalento == null)
+            throw new IllegalArgumentException("El ID del talento no puede ser nulo");
+
+        IReport report = historyRepository.getHistoryReport(baseRequest, idTalento,
+                idTipoHistorial, null, true);
+        BaseResponse bs = report.getResponse();
         FilePDFResponse response = new FilePDFResponse();
+        response.setBaseResponse(bs);
+
+        if (bs.getIdTipoMensaje() != 2)
+            return response;
+
         List<FilePDFDTO> lstfiles = new ArrayList<>();
+        PDFUtils pdfUtils = new PDFUtils();
+        ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
 
         if (report instanceof EntryReport entry) {
+            // @Pendiente
             GestorDTO gs = new GestorDTO(null, entry.getFirmante());
             String formularioFileB64 = pdfUtils.filePDFToBase64(
                     pdfUtils.crearPDF(
@@ -255,18 +272,22 @@ public class EmployeeService implements IEmployeeService {
             lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Ingreso", formularioFileB64));
             lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Creación de Usuario", solicitudFileB64));
             response.setBaseResponse(entry.getResponse());
+            return response;
 
         } else if (report instanceof MovementReport movement) {
-            String formularioFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceMovementRequestValues(
-                                    pdfUtils.getHtmlTemplate(
-                                            PDFUtils.TemplateType.FORMULARIO),
-                                    movement),
-                            "FT-GT-12 Formulario de Movimiento"));
+            String fullname = movement.getFirmante();
+            GestorDTO gs = new GestorDTO(fullname, fullname);
+            List<FileDTO> files = builder.forMovimiento(movement, gs)
+                    .withFormulario()
+                    .build();
 
-            lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Movimiento", formularioFileB64));
-            response.setBaseResponse(movement.getResponse());
+            List<FilePDFDTO> files64 = files.stream().map(p -> {
+                String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+                return new FilePDFDTO(p.nombreArchivo, base64);
+            }).toList();
+
+            response.setLstArchivos(files64);
+            return response;
 
         } else if (report instanceof CeseReport cese) {
             GestorDTO gs = new GestorDTO(null, cese.getFirmante());

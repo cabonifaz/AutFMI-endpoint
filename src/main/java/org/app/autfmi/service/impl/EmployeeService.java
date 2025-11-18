@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,7 +92,7 @@ public class EmployeeService implements IEmployeeService {
             pdfUtils.enviarCorreoConPDF(
                     lstfiles,
                     report.getCorreoGestor(),
-                    Collections.emptyList(),
+                    new ArrayList<>(),
                     "Ingreso de empleado",
                     "Formulario de nuevo ingreso de empleado.");
         }
@@ -231,47 +230,25 @@ public class EmployeeService implements IEmployeeService {
         if (bs.getIdTipoMensaje() != 2)
             return response;
 
-        List<FilePDFDTO> lstfiles = new ArrayList<>();
         PDFUtils pdfUtils = new PDFUtils();
         ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
 
         if (report instanceof EntryReport entry) {
             // @Pendiente
             GestorDTO gs = new GestorDTO(null, entry.getFirmante());
-            String formularioFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceEntryRequestValues(
-                                    pdfUtils.getHtmlTemplate(
-                                            PDFUtils.TemplateType.FORMULARIO),
-                                    entry, gs),
-                            "FT-GT-12 Formulario de Ingreso"));
 
-            SolicitudData data = new SolicitudData();
-            data.setNombres(entry.getNombres());
-            data.setApellidos(entry.getApellidos());
-            data.setArea(entry.getUnidad());
-            data.setFechaSolicitud(entry.getFechaHistorial());
-            data.setNombresCreacion(entry.getNombres());
-            data.setApellidosCreacion(entry.getApellidos());
-            data.setNombreUsuarioCreacion(entry.getUsernameEmpleado());
-            data.setCorreoCreacion(entry.getEmailEmpleado());
-            data.setAreaCreacion(entry.getUnidad());
-            data.setFirmante(entry.getFirmante());
+            List<FileDTO> files = builder
+                    .forIngreso(entry, gs)
+                    .withFormulario()
+                    .withUsuarioInfo()
+                    .build();
 
-            // GestorDTO gs = new GestorDTO(null, data.getFirmante());
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD);
-            String formattedTemplate = pdfUtils.replaceSolicitudPDFValues(
-                    template,
-                    data, gs);
+            List<FilePDFDTO> files64 = files.stream().map(f -> {
+                String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+                return new FilePDFDTO(f.nombreArchivo, base64);
+            }).toList();
 
-            byte[] fileBytes = pdfUtils.crearPDF(formattedTemplate,
-                    "FT-GS-01 Solicitud de Creación de Usuario");
-
-            String solicitudFileB64 = pdfUtils.filePDFToBase64(fileBytes);
-
-            lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Ingreso", formularioFileB64));
-            lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Creación de Usuario", solicitudFileB64));
-            response.setBaseResponse(entry.getResponse());
+            response.setLstArchivos(files64);
             return response;
 
         } else if (report instanceof MovementReport movement) {
@@ -291,44 +268,24 @@ public class EmployeeService implements IEmployeeService {
 
         } else if (report instanceof CeseReport cese) {
             GestorDTO gs = new GestorDTO(null, cese.getFirmante());
-            String formularioFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceOutRequestValues(
-                                    pdfUtils.getHtmlTemplate(
-                                            PDFUtils.TemplateType.FORMULARIO),
-                                    cese, gs),
-                            "FT-GT-12 Formulario de Cese"));
 
-            SolicitudData data = new SolicitudData();
-            data.setNombres(cese.getNombres());
-            data.setApellidos(cese.getApellidos());
-            data.setArea(cese.getUnidad());
-            data.setFechaSolicitud(cese.getFechaHistorial());
-            data.setNombresCese(cese.getNombres());
-            data.setApellidosCese(cese.getApellidos());
-            data.setUsuarioCese(cese.getUsernameEmpleado());
-            data.setCorreoCese(cese.getEmailEmpleado());
-            data.setMotivoCese(cese.getMotivo());
-            data.setFirmante(cese.getFirmante());
+            List<FileDTO> files = builder.forCese(cese, gs)
+                    .withFormulario()
+                    .withDeactivateRequest()
+                    .build();
 
-            String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceSolicitudPDFValues(
-                                    pdfUtils.getHtmlTemplate(
-                                            PDFUtils.TemplateType.SOLICITUD),
-                                    data, gs),
-                            "FT-GS-01 Solicitud de Desactivación de Usuario"));
+            List<FilePDFDTO> files64 = files.stream().map(f -> {
+                String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+                return new FilePDFDTO(f.nombreArchivo, base64);
+            }).toList();
 
-            lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Cese", formularioFileB64));
-            lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Desactivación de Usuario",
-                    solicitudFileB64));
-            response.setBaseResponse(cese.getResponse());
+            response.setLstArchivos(files64);
+            return response;
 
         } else if (report instanceof BaseReport baseReport) {
             response.setBaseResponse(baseReport.getResponse());
         }
-
-        response.setLstArchivos(lstfiles);
+        response.setLstArchivos(new ArrayList<>());
         return response;
     }
 

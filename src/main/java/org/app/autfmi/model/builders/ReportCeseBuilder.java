@@ -20,7 +20,9 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     String fileTemplate = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO);
     String filled = pdfUtils.replaceOutRequestValues(fileTemplate, report, gs);
 
-    files.add(new FileDTO(fileName, filled, null));
+    byte[] fileBytes = pdfUtils.crearPDF(filled, fileName);
+
+    files.add(new FileDTO(fileName, filled, fileBytes));
     return this;
   }
 
@@ -43,7 +45,9 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     String fileTemplate = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD);
     String templateWithValues = pdfUtils.replaceSolicitudPDFValues(fileTemplate, data, gs);
 
-    files.add(new FileDTO(fileName, templateWithValues, null));
+    byte[] fileBytes = pdfUtils.crearPDF(templateWithValues, fileName);
+
+    files.add(new FileDTO(fileName, templateWithValues, fileBytes));
     return this;
   }
 

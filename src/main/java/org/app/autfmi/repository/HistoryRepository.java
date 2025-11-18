@@ -1,7 +1,6 @@
 package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value.Str;
 
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
@@ -20,7 +19,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -426,11 +424,10 @@ public class HistoryRepository {
         String messageText = (String) baseResponseDb.get("MENSAJE");
         BaseResponse baseResponse = new BaseResponse(messageId, messageText);
         SolicitudEquipoReport report = new SolicitudEquipoReport();
+        report.setBaseResponse(baseResponse);
 
-        if (baseResponse.getIdTipoMensaje() != 2) {
-            report.setBaseResponse(baseResponse);
+        if (baseResponse.getIdTipoMensaje() != 2)
             return report;
-        }
 
         List<Map<String, Object>> solicitanteList = (List<Map<String, Object>>) rs.get("#result-set-2");
         Map<String, Object> solicitanteDb = solicitanteList.get(0);
@@ -454,7 +451,6 @@ public class HistoryRepository {
         report.setNombreEmpleado((String) solicitudDb.get("NOMBRE_EMPLEADO"));
         report.setApellidosEmpleado((String) solicitudDb.get("APELLIDOS_EMPLEADO"));
         report.setCliente((String) solicitudDb.get("EMPRESA_CLIENTE"));
-        this.logger.info("Client: {}", (String) solicitanteDb.get("EMPRESA_CLIENTE"));
         report.setArea((String) solicitudDb.get("AREA"));
         report.setPuesto((String) solicitudDb.get("PUESTO"));
         report.setFechaSolicitud((String) solicitudDb.get("FECHA_SOLICITUD"));
@@ -488,108 +484,5 @@ public class HistoryRepository {
 
         report.setLstSoftware(software);
         return report;
-    }
-
-    /**
-     * Get last solicitud equipo report for a talent
-     * 
-     * @param baseRequest
-     * @param talentId
-     * @return
-     */
-    public SolicitudEquipoReport getLastSolicitudEquipo(BaseRequest baseRequest, Integer talentId) {
-        try {
-            Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_SEL_LAST", params -> {
-                params.addValue("ID_TALENTO", talentId);
-                params.addValue("ID_ROL", baseRequest.getIdRol());
-                params.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
-                params.addValue("ID_USUARIO", baseRequest.getIdUsuario());
-                params.addValue("ID_EMPRESA", baseRequest.getIdEmpresa());
-            });
-
-            List<Map<String, Object>> message = (List<Map<String, Object>>) result.get("#result-set-1");
-            SolicitudEquipoReport report = new SolicitudEquipoReport();
-
-            if (message != null && !message.isEmpty()) {
-                Map<String, Object> row = message.get(0);
-                Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-                String mensaje = (String) row.get("MENSAJE");
-
-                BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
-
-                if (idTipoMensaje == 2) {
-                    List<Map<String, Object>> resultSetSolicitud = (List<Map<String, Object>>) result
-                            .get("#result-set-2");
-                    List<Map<String, Object>> resultSetSolicitudSoftwareList = (List<Map<String, Object>>) result
-                            .get("#result-set-3");
-                    List<Map<String, Object>> resultSetGestor = (List<Map<String, Object>>) result.get("#result-set-4");
-
-                    boolean validSolicitud = resultSetSolicitud != null && !resultSetSolicitud.isEmpty();
-                    boolean validGestor = resultSetGestor != null && !resultSetGestor.isEmpty();
-
-                    if (validSolicitud && validGestor) {
-                        Map<String, Object> reportRow = resultSetSolicitud.get(0);
-
-                        // solicitud
-                        report.setNombreEmpleado((String) reportRow.get("NOMBRE_EMPLEADO"));
-                        report.setApellidosEmpleado((String) reportRow.get("APELLIDOS_EMPLEADO"));
-                        report.setCliente((String) reportRow.get("EMPRESA_CLIENTE"));
-                        report.setArea((String) reportRow.get("AREA"));
-                        report.setPuesto((String) reportRow.get("PUESTO"));
-                        report.setFechaSolicitud((String) reportRow.get("FECHA_SOLICITUD"));
-                        report.setFechaEntrega((String) reportRow.get("FECHA_ENTREGA"));
-                        report.setIdTipoEquipo((Integer) reportRow.get("ID_TIPO_EQUIPO"));
-                        report.setProcesador((String) reportRow.get("PROCESADOR"));
-                        report.setRam((String) reportRow.get("RAM"));
-                        report.setHd((String) reportRow.get("HD"));
-                        report.setMarca((String) reportRow.get("MARCA"));
-                        report.setIdAnexo((Integer) reportRow.get("ID_ANEXO"));
-                        report.setCelular((Boolean) reportRow.get("CELULAR"));
-                        report.setInternetMovil((Boolean) reportRow.get("INTERNET_MOVIL"));
-                        report.setAccesorios((String) reportRow.get("ACCESORIOS"));
-
-                        // lista software
-                        List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
-
-                        if (resultSetSolicitudSoftwareList != null && !resultSetSolicitudSoftwareList.isEmpty()) {
-                            for (Map<String, Object> softwareRow : resultSetSolicitudSoftwareList) {
-                                SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
-                                software.setProducto((String) softwareRow.get("PRODUCTO"));
-                                software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
-
-                                lstSoftware.add(software);
-                            }
-                        }
-
-                        report.setLstSoftware(lstSoftware);
-
-                        // datos gestor
-                        Map<String, Object> gestorRow = resultSetGestor.get(0);
-
-                        report.setCorreoGestor((String) gestorRow.get("EMAIL"));
-                        report.setNombreApellidoGestor((String) gestorRow.get("NOMBRE_APELLIDO_GESTOR"));
-                    } else {
-                        this.logger.error(
-                                "Datos incompletos para idSolicitudEquipo: {} - validSolicitud: {}, validGestor: {}",
-                                talentId, validSolicitud, validGestor);
-                        baseResponse = new BaseResponse(3, "Datos incompletos en la solicitud");
-                    }
-                }
-
-                // base response
-                report.setBaseResponse(baseResponse);
-
-                return report;
-            }
-
-            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta"));
-            return report;
-        } catch (Exception ex) {
-            this.logger.error("Error on last history: {}", ex.getMessage());
-            this.logger.error("Stack trace: ", ex);
-            SolicitudEquipoReport report = new SolicitudEquipoReport();
-            report.setBaseResponse(new BaseResponse(3, "Error al realizar la consulta", ex.getMessage()));
-            return report;
-        }
     }
 }

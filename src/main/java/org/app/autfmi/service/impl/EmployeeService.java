@@ -3,6 +3,8 @@ package org.app.autfmi.service.impl;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+
+import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
 import org.app.autfmi.model.dto.GestorDTO;
@@ -314,36 +316,44 @@ public class EmployeeService implements IEmployeeService {
             throws MessagingException {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-        SolicitudEquipoReport report = historyRepository.getLastSolicitudEquipo(baseRequest, talentId);
-        // this.logger.info("Generated report for solicitud equipo: {}", report);
 
         FilePDFResponse response = new FilePDFResponse();
-        List<FilePDFDTO> lstfiles = new ArrayList<>();
 
-        if (report != null && report.getBaseResponse().getIdTipoMensaje() == 2) {
-            response.setBaseResponse(report.getBaseResponse());
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
-            String fileName = "FT-GS-03 Formulario de Requerimiento de Software y Hardware";
+        if (talentId == null)
+            throw new IllegalArgumentException("EL ID del talento no puede ser nulo");
 
-            GestorDTO gs = new GestorDTO(null,
-                    report.getNombreApellidoGestor());
-            String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
-                            fileName));
+        this.logger.info("Fetching last EquipoSolicitud para talento: {}", talentId);
+        SolicitudEquipoReport report = historyRepository
+                .getSolicitudEquipoReport(
+                        baseRequest,
+                        talentId,
+                        null, true);
 
-            lstfiles.add(new FilePDFDTO(fileName, solicitudFileB64));
+        this.logger.info("Report: {}", report);
 
-            response.setLstArchivos(lstfiles);
-        } else if (report != null && report.getBaseResponse().getIdTipoMensaje() != 3) {
-            BaseResponse baseResponse = new BaseResponse(3, report.getBaseResponse().getMensaje());
-            response.setBaseResponse(baseResponse);
-            response.setLstArchivos(Collections.emptyList());
-        } else {
-            BaseResponse baseResponse = new BaseResponse(3, "Error al obtener solicitud");
-            response.setBaseResponse(baseResponse);
-            response.setLstArchivos(Collections.emptyList());
-        }
+        BaseResponse rs = report.getBaseResponse();
+        response.setBaseResponse(rs);
+
+        if (rs.getIdTipoMensaje() != 2)
+            return response;
+
+        // Mapear la respuesta
+        PDFUtils pdfUtils = new PDFUtils();
+        String gestor = report.getNombreApellidoGestor();
+        GestorDTO gs = new GestorDTO(gestor, gestor);
+        List<FileDTO> files = new ReportPDFBuilder(pdfUtils)
+                .fEquipoReport(report, gs)
+                .withFormulario()
+                .build();
+
+        List<FilePDFDTO> file64 = files.stream().map(p -> {
+            String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+            return new FilePDFDTO(p.nombreArchivo, base64);
+        }).toList();
+
+        this.logger.info("Files in base64: {}", file64.size());
+
+        response.setLstArchivos(file64);
 
         return response;
     }

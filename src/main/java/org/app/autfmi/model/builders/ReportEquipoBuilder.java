@@ -19,7 +19,10 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     String template = this.pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
     String filled = pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs);
     String filename = "FT-GS-03-FMI-" + employeeName;
-    this.files.add(new FileDTO(filename, filled, null));
+
+    byte[] fileBytes = pdfUtils.crearPDF(filled, filename);
+
+    this.files.add(new FileDTO(filename, filled, fileBytes));
     return this;
   }
 

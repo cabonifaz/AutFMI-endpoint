@@ -153,7 +153,8 @@ public class EmployeeService implements IEmployeeService {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
 
-        OperationResult<Integer> operationResult = historyRepository.registerContractTermination(baseRequest, request);
+        OperationResult<Integer> operationResult = historyRepository.registerContractTermination(baseRequest,
+                request);
         BaseResponse response = operationResult.getBaseResponse();
         Integer operationId = operationResult.getData();
 
@@ -180,72 +181,60 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request)
-            throws MessagingException, SQLServerException {
+    public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws SQLServerException {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
-        SolicitudEquipoResponse solicitudEquipoResponse = employeeRepository.solicitudEquipo(baseRequest,
+        OperationResult<Integer> response = employeeRepository.insertSolicitudEquipo(baseRequest,
                 request);
 
-        if (solicitudEquipoResponse != null
-                && solicitudEquipoResponse.getBaseResponse().getIdTipoMensaje() == 2) {
-            List<FileDTO> lstfiles = new ArrayList<>();
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+        if (response.getBaseResponse().getIdTipoMensaje() != 2)
+            return response.getBaseResponse();
 
-            // map request to report
-            SolicitudEquipoReport report = mapToSolicitudEquipoReport(request, solicitudEquipoResponse);
+        if (response.getData() == null)
+            return new BaseResponse(2,
+                    "Se completó el registro de la solicitud, pero no se pudo obtener el ID de la solicitud");
 
-            String fullname = solicitudEquipoResponse.getNombres() + " "
-                    + solicitudEquipoResponse.getApellidos();
-            GestorDTO gs = new GestorDTO(null, fullname);
+        // Obtener detalles de la solicitud para generar el reporte
+        Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
+        Integer operationId = response.getData();
 
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
-                    pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
-                    null);
+        SolicitudEquipoReport rp = historyRepository.getSolicitudEquipoReport(baseRequest,
+                talentId, operationId, false);
+        // Enviar correo con el reporte generado
 
-            lstfiles.add(fileFormulario);
+        /*
+         * && solicitudEquipoResponse.getBaseResponse().getIdTipoMensaje() == 2) {
+         * List<FileDTO> lstfiles = new ArrayList<>();
+         * String template =
+         * pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+         * 
+         * // map request to report
+         * SolicitudEquipoReport report = mapToSolicitudEquipoReport(request,
+         * solicitudEquipoResponse);
+         * 
+         * String fullname = solicitudEquipoResponse.getNombres() + " "
+         * + solicitudEquipoResponse.getApellidos();
+         * GestorDTO gs = new GestorDTO(null, fullname);
+         * 
+         * FileDTO fileFormulario = new FileDTO(
+         * "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
+         * pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
+         * null);
+         * 
+         * lstfiles.add(fileFormulario);
+         * 
+         * pdfUtils.enviarCorreoConPDF(
+         * lstfiles,
+         * solicitudEquipoResponse.getCorreoGestor(),
+         * Collections.emptyList(),
+         * "Requerimiento de Software y Hardware",
+         * "Formulario Requerimiento de Software y Hardware.");
+         * }
+         */
 
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    solicitudEquipoResponse.getCorreoGestor(),
-                    Collections.emptyList(),
-                    "Requerimiento de Software y Hardware",
-                    "Formulario Requerimiento de Software y Hardware.");
-        }
+        this.logger.info("Report: {}", rp);
 
-        return solicitudEquipoResponse.getBaseResponse();
-    }
-
-    private static SolicitudEquipoReport mapToSolicitudEquipoReport(SolicitudEquipoRequest request,
-            SolicitudEquipoResponse solicitudEquipoResponse) {
-        SolicitudEquipoReport report = new SolicitudEquipoReport();
-        // general
-        report.setBaseResponse(solicitudEquipoResponse.getBaseResponse());
-        // datos gestor
-        report.setCorreoGestor(solicitudEquipoResponse.getCorreoGestor());
-        report.setNombreApellidoGestor(
-                solicitudEquipoResponse.getNombres() + ' ' + solicitudEquipoResponse.getApellidos());
-        // datos reporte
-        report.setNombreEmpleado(request.getNombreEmpleado());
-        report.setApellidosEmpleado(
-                request.getApellidoPaternoEmpleado() + ' ' + request.getApellidoMaternoEmpleado());
-        report.setCliente(request.getCliente());
-        report.setArea(request.getArea());
-        report.setPuesto(request.getPuesto());
-        report.setFechaSolicitud(request.getFechaSolicitud());
-        report.setFechaEntrega(request.getFechaEntrega());
-        report.setIdTipoEquipo(request.getIdTipoEquipo());
-        report.setProcesador(request.getProcesador());
-        report.setRam(request.getRam());
-        report.setHd(request.getHd());
-        report.setMarca(request.getMarca());
-        report.setIdAnexo(request.getIdAnexo());
-        report.setCelular(request.getCelular());
-        report.setInternetMovil(request.getInternetMovil());
-        report.setAccesorios(request.getAccesorios());
-        report.setLstSoftware(request.getLstSoftware());
-        return report;
+        return response.getBaseResponse();
     }
 
     @Override

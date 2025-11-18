@@ -1,6 +1,7 @@
 package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
+
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
@@ -21,7 +22,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -386,6 +389,102 @@ public class HistoryRepository {
             this.logger.error("Error in getLastHistory: ", ex);
             return new BaseReport(new BaseResponse(3, "Error al realizar la consulta"));
         }
+    }
+
+    public SolicitudEquipoReport getSolicitudEquipoReport(
+            BaseRequest baseRequest,
+            @NonNull Integer talentId,
+            @Nullable Integer operationId,
+            @NonNull Boolean isLast) {
+
+        this.logger.info("Fetching solicitud equipo report for Talento: {} OperationId: {}", talentId, operationId);
+
+        Map<String, Object> rs = executeProcedure(baseRequest, "SP_FMI_REPORTE_EQUIPO", params -> {
+            params
+                    .addValue("ID_TALENTO", talentId)
+                    .addValue("ID_OPERACION", operationId)
+                    .addValue("ULTIMO", isLast);
+        });
+
+        if (rs == null || rs.isEmpty()) {
+            this.logger.error("No message returned from stored procedure SP_FMI_REPORTE_GENERAL");
+            this.logger.error("Error: {}", rs);
+            throw new RuntimeException("Error al realizar la consulta");
+        }
+
+        List<Map<String, Object>> messageList = (List<Map<String, Object>>) rs.get("#result-set-1");
+
+        if (messageList == null || messageList.isEmpty()) {
+            this.logger.error("No message returned from stored procedure SP_FMI_REPORTE_GENERAL");
+            throw new RuntimeException("Error al realizar la consulta");
+        }
+
+        Map<String, Object> baseResponseDb = messageList.get(0);
+
+        Integer messageId = (Integer) baseResponseDb.get("ID_TIPO_MENSAJE");
+        String messageText = (String) baseResponseDb.get("MENSAJE");
+        BaseResponse baseResponse = new BaseResponse(messageId, messageText);
+        SolicitudEquipoReport report = new SolicitudEquipoReport();
+
+        if (baseResponse.getIdTipoMensaje() != 2) {
+            report.setBaseResponse(baseResponse);
+            return report;
+        }
+
+        List<Map<String, Object>> solicitanteList = (List<Map<String, Object>>) rs.get("#result-set-2");
+        Map<String, Object> solicitanteDb = solicitanteList.get(0);
+
+        String fullname = (String) solicitanteDb.get("NOMBRES_COMPLETOS");
+        String mail = (String) solicitanteDb.get("CORREO");
+
+        report.setNombreApellidoGestor(fullname);
+        report.setCorreoGestor(mail);
+
+        List<Map<String, Object>> solicitudList = (List<Map<String, Object>>) rs.get("#result-set-3");
+
+        if (solicitanteList == null || solicitanteList.isEmpty()) {
+            BaseResponse br = new BaseResponse(1, "Talento no tiene solicitud de equipo");
+            report.setBaseResponse(br);
+            return report;
+        }
+
+        Map<String, Object> solicitudDb = solicitudList.get(0);
+
+        report.setNombreEmpleado((String) solicitudDb.get("NOMBRE_EMPLEADO"));
+        report.setApellidosEmpleado((String) solicitudDb.get("APELLIDOS_EMPLEADO"));
+        report.setArea((String) solicitudDb.get("AREA"));
+        report.setPuesto((String) solicitudDb.get("PUESTO"));
+        report.setFechaSolicitud((String) solicitudDb.get("FECHA_SOLICITUD"));
+        report.setFechaEntrega((String) solicitudDb.get("FECHA_ENTREGA"));
+
+        report.setIdTipoEquipo((Integer) solicitudDb.get("ID_TIPO_EQUIPO"));
+        report.setProcesador((String) solicitudDb.get("PROCESADOR"));
+        report.setIdAnexo((Integer) solicitudDb.get("ID_ANEXO"));
+        report.setRam((String) solicitudDb.get("RAM"));
+        report.setHd((String) solicitudDb.get("HD"));
+        report.setMarca((String) solicitudDb.get("MARCA"));
+
+        report.setCelular((Boolean) solicitudDb.get("CELULAR"));
+        report.setInternetMovil((Boolean) solicitudDb.get("INTERNET_MOVIL"));
+
+        report.setAccesorios((String) solicitudDb.get("ACCESORIOS"));
+
+        // Mapear software
+        List<Map<String, Object>> softwareList = (List<Map<String, Object>>) rs.get("#result-set-4");
+        AtomicInteger index = new AtomicInteger(1);
+
+        List<SolicitudSoftwareRequest> software = softwareList.stream()
+                .map(row -> {
+                    SolicitudSoftwareRequest item = new SolicitudSoftwareRequest();
+                    item.setIdItem(index.getAndIncrement());
+                    item.setProducto((String) row.get("PRODUCTO"));
+                    item.setProdVersion((String) row.get("PROD_VERSION"));
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        report.setLstSoftware(software);
+        return report;
     }
 
     /**

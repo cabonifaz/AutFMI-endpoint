@@ -4,15 +4,16 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.EmployeeDTO;
-import org.app.autfmi.model.response.SolicitudEquipoResponse;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.EmployeeResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
@@ -22,6 +23,8 @@ import java.util.Map;
 @Repository
 @RequiredArgsConstructor
 public class EmployeeRepository {
+
+    @NonNull
     private final JdbcTemplate jdbcTemplate;
 
     public BaseResponse getEmployee(Integer idTalento) {
@@ -45,7 +48,7 @@ public class EmployeeRepository {
 
                 if (resultSet2 != null && !resultSet2.isEmpty()) {
                     Map<String, Object> employeeRaw = resultSet2.get(0);
-                    return new EmployeeResponse( idTipoMensaje, mensaje, mapToEmployeeDTO(employeeRaw) );
+                    return new EmployeeResponse(idTipoMensaje, mensaje, mapToEmployeeDTO(employeeRaw));
                 }
             }
             return new BaseResponse(idTipoMensaje, mensaje);
@@ -61,18 +64,16 @@ public class EmployeeRepository {
                 (Integer) employeeRaw.get("ID_AREA"),
                 (Double) employeeRaw.get("REMUNERACION"),
                 (Integer) employeeRaw.get("ID_CLIENTE"),
-                (String) employeeRaw.get("CARGO")
-        );
+                (String) employeeRaw.get("CARGO"));
     }
 
-    public SolicitudEquipoResponse solicitudEquipo(BaseRequest baseRequestequest, SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
+    public OperationResult<Integer> insertSolicitudEquipo(BaseRequest baseRequestequest,
+            SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_EQUIPO_SOLICITUD_INS");
 
-        SolicitudEquipoResponse solicitudEquipoResponse = new SolicitudEquipoResponse();
-        BaseResponse baseResponse = new BaseResponse();
-
         SQLServerDataTable tvpProductos = getSqlServerDataTable(solicitudEquipoRequest);
+        BaseResponse baseResponse = new BaseResponse();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_TALENTO", solicitudEquipoRequest.getIdTalento())
@@ -108,24 +109,22 @@ public class EmployeeRepository {
 
         List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
-        if (resultSet != null && !resultSet.isEmpty()) {
-            Map<String, Object> row = resultSet.get(0);
-            baseResponse.setIdTipoMensaje((Integer) row.get("ID_TIPO_MENSAJE"));
-            baseResponse.setMensaje((String) row.get("MENSAJE"));
-
-            if (baseResponse.getIdTipoMensaje() == 2) {
-                solicitudEquipoResponse.setNombres((String) row.get("NOMBRES_FIRMANTE"));
-                solicitudEquipoResponse.setApellidos((String) row.get("APELLIDOS_FIRMANTE"));
-                solicitudEquipoResponse.setCorreoGestor((String) row.get("EMAIL_FIRMANTE"));
-            }
+        if (resultSet == null || resultSet.isEmpty()) {
+            baseResponse = new BaseResponse(3, "La base de datos no retornó información.");
+            return new OperationResult<>(baseResponse, null);
         }
 
-        solicitudEquipoResponse.setBaseResponse(baseResponse);
+        Map<String, Object> row = resultSet.get(0);
+        Integer messageId = (Integer) row.get("ID_TIPO_MENSAJE");
+        String message = (String) row.get("MENSAJE");
+        Integer operationId = (Integer) row.get("ID_OPERACION");
+        baseResponse = new BaseResponse(messageId, message);
 
-        return solicitudEquipoResponse;
+        return new OperationResult<>(baseResponse, operationId);
     }
 
-    private static SQLServerDataTable getSqlServerDataTable(SolicitudEquipoRequest solicitudEquipoRequest) throws SQLServerException {
+    private static SQLServerDataTable getSqlServerDataTable(SolicitudEquipoRequest solicitudEquipoRequest)
+            throws SQLServerException {
         SQLServerDataTable tvpProductos = new SQLServerDataTable();
         tvpProductos.addColumnMetadata("ID_TALENTO", Types.INTEGER);
         tvpProductos.addColumnMetadata("ID_ITEM", Types.INTEGER);
@@ -137,8 +136,7 @@ public class EmployeeRepository {
                     softwareRequest.getIdItem(),
                     softwareRequest.getIdItem(),
                     softwareRequest.getProducto(),
-                    softwareRequest.getProdVersion()
-            );
+                    softwareRequest.getProdVersion());
         }
         return tvpProductos;
     }

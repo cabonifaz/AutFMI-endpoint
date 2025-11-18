@@ -3,6 +3,7 @@ package org.app.autfmi.repository;
 import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
+
 import org.app.autfmi.model.dto.EmployeeDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.SolicitudEquipoRequest;
@@ -10,15 +11,22 @@ import org.app.autfmi.model.request.SolicitudSoftwareRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.EmployeeResponse;
 import org.app.autfmi.model.response.OperationResult;
+import org.app.autfmi.model.response.TalentEmployeeList;
+import org.app.autfmi.model.response.TalentEmployeeList.EmployeeItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -26,6 +34,8 @@ public class EmployeeRepository {
 
     @NonNull
     private final JdbcTemplate jdbcTemplate;
+
+    private Logger logger = LoggerFactory.getLogger(EmployeeRepository.class);
 
     public BaseResponse getEmployee(Integer idTalento) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -139,5 +149,57 @@ public class EmployeeRepository {
                     softwareRequest.getProdVersion());
         }
         return tvpProductos;
+    }
+
+    public TalentEmployeeList findAllEmployees(BaseRequest baseRequest, Integer page, String searchTerm) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_TALENTO_EMPLEADO_LST");
+
+        this.logger.info("Request: {}", baseRequest);
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("N_PAG", page)
+                .addValue("BUSQUEDA", searchTerm);
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+        List<Map<String, Object>> baseRs = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (baseRs == null || baseRs.isEmpty())
+            return new TalentEmployeeList(3, "No hay respuesta de la base de datos");
+
+        Map<String, Object> row = baseRs.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+        Integer totalElementos = (Integer) row.get("TOTAL_ELEMENTOS");
+        Integer totalPaginas = (Integer) row.get("TOTAL_PAGINAS");
+
+        if (idTipoMensaje != 2)
+            return new TalentEmployeeList(idTipoMensaje, mensaje);
+
+        List<Map<String, Object>> employeeSet = (List<Map<String, Object>>) result.getOrDefault("#result-set-2",
+                Collections.emptyList());
+
+        List<EmployeeItem> employees = employeeSet
+                .stream()
+                .map(this::mapToEmployeeItem)
+                .collect(Collectors.toList());
+
+        return new TalentEmployeeList(idTipoMensaje, mensaje)
+                .withMetadata(totalPaginas, totalElementos)
+                .withTalents(employees);
+    }
+
+    private EmployeeItem mapToEmployeeItem(Map<String, Object> row) {
+
+        Integer talentId = (Integer) row.get("ID_TALENTO");
+        String names = (String) row.get("NOMBRES");
+        String lastname = (String) row.get("APELIDO_PATERNO");
+        String surname = (String) row.get("APELLIDO_MATERNO");
+        String fullname = lastname + " " + surname;
+
+        return new EmployeeItem(talentId, names, fullname);
     }
 }

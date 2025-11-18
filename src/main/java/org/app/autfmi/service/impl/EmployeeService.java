@@ -334,4 +334,11 @@ public class EmployeeService implements IEmployeeService {
 
         return response;
     }
+
+    @Override
+    public BaseResponse findAllEmployees(String token, Integer page, String searchTerm) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
+        return this.employeeRepository.findAllEmployees(baseRequest, page, searchTerm);
+    }
 }

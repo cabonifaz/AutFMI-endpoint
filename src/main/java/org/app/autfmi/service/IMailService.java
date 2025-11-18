@@ -5,6 +5,7 @@ import java.util.List;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
+import org.app.autfmi.model.report.SolicitudEquipoReport;
 
 public interface IMailService {
 
@@ -14,5 +15,7 @@ public interface IMailService {
 	void sendCeseReportNotification(CeseReport report);
 
 	void sendMovementReportNotification(MovementReport report);
+
+	void sendEquipmentRequestNotification(SolicitudEquipoReport report);
 
 }

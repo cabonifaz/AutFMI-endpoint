@@ -1,6 +1,7 @@
 package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value.Str;
 
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
@@ -452,6 +453,8 @@ public class HistoryRepository {
 
         report.setNombreEmpleado((String) solicitudDb.get("NOMBRE_EMPLEADO"));
         report.setApellidosEmpleado((String) solicitudDb.get("APELLIDOS_EMPLEADO"));
+        report.setCliente((String) solicitudDb.get("EMPRESA_CLIENTE"));
+        this.logger.info("Client: {}", (String) solicitanteDb.get("EMPRESA_CLIENTE"));
         report.setArea((String) solicitudDb.get("AREA"));
         report.setPuesto((String) solicitudDb.get("PUESTO"));
         report.setFechaSolicitud((String) solicitudDb.get("FECHA_SOLICITUD"));

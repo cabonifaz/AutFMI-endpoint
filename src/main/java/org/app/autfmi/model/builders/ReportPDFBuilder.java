@@ -3,6 +3,7 @@ package org.app.autfmi.model.builders;
 import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
+import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.util.PDFUtils;
 import org.springframework.stereotype.Component;
 
@@ -26,5 +27,9 @@ public class ReportPDFBuilder {
    * return new ReportIngresoBuilder(pdfUtils, report);
    * }
    */
+
+  public ReportEquipoBuilder fEquipoReport(SolicitudEquipoReport report, GestorDTO gs) {
+    return new ReportEquipoBuilder(pdfUtils, report, gs);
+  }
 
 }

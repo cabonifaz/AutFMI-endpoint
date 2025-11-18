@@ -11,6 +11,7 @@ import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
+import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
@@ -335,5 +336,36 @@ public class MailService implements IMailService {
     } catch (Exception e) {
       logger.error("Error sending movement report email: ", e);
     }
+  }
+
+  @Async
+  @Override
+  public void sendEquipmentRequestNotification(SolicitudEquipoReport report) {
+
+    String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
+    String subject = "Requerimiento de Software y Hardware - " + employee;
+    String message = "Solicitud de equipo para: " + employee;
+    String gsFullname = report.getNombreApellidoGestor();
+
+    GestorDTO gs = new GestorDTO(gsFullname, gsFullname);
+
+    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+        .fEquipoReport(report, gs)
+        .withFormulario()
+        .build();
+
+    String dest = report.getCorreoGestor();
+
+    if (dest == null || dest.isEmpty())
+      throw new IllegalArgumentException("Correo de gestor no pude ser nulo o vacío");
+
+    try {
+      pdfUtils.enviarCorreoConPDF(attachments, dest, new ArrayList<>(), subject,
+          message);
+      logger.info("Mail sent to: {}", dest);
+    } catch (Exception e) {
+      logger.error("Error sending report mail: {}", e);
+    }
+
   }
 }

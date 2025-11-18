@@ -12,7 +12,6 @@ import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
 import org.app.autfmi.model.response.OperationResult;
-import org.app.autfmi.model.response.SolicitudEquipoResponse;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
@@ -200,39 +199,9 @@ public class EmployeeService implements IEmployeeService {
 
         SolicitudEquipoReport rp = historyRepository.getSolicitudEquipoReport(baseRequest,
                 talentId, operationId, false);
+
         // Enviar correo con el reporte generado
-
-        /*
-         * && solicitudEquipoResponse.getBaseResponse().getIdTipoMensaje() == 2) {
-         * List<FileDTO> lstfiles = new ArrayList<>();
-         * String template =
-         * pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
-         * 
-         * // map request to report
-         * SolicitudEquipoReport report = mapToSolicitudEquipoReport(request,
-         * solicitudEquipoResponse);
-         * 
-         * String fullname = solicitudEquipoResponse.getNombres() + " "
-         * + solicitudEquipoResponse.getApellidos();
-         * GestorDTO gs = new GestorDTO(null, fullname);
-         * 
-         * FileDTO fileFormulario = new FileDTO(
-         * "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
-         * pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
-         * null);
-         * 
-         * lstfiles.add(fileFormulario);
-         * 
-         * pdfUtils.enviarCorreoConPDF(
-         * lstfiles,
-         * solicitudEquipoResponse.getCorreoGestor(),
-         * Collections.emptyList(),
-         * "Requerimiento de Software y Hardware",
-         * "Formulario Requerimiento de Software y Hardware.");
-         * }
-         */
-
-        this.logger.info("Report: {}", rp);
+        this.mailService.sendEquipmentRequestNotification(rp);
 
         return response.getBaseResponse();
     }

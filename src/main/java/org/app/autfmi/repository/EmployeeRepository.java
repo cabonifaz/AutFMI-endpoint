@@ -154,8 +154,6 @@ public class EmployeeRepository {
     public TalentEmployeeList findAllEmployees(BaseRequest baseRequest, Integer page, String searchTerm) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_TALENTO_EMPLEADO_LST");
 
-        this.logger.info("Request: {}", baseRequest);
-
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
@@ -196,10 +194,11 @@ public class EmployeeRepository {
 
         Integer talentId = (Integer) row.get("ID_TALENTO");
         String names = (String) row.get("NOMBRES");
-        String lastname = (String) row.get("APELIDO_PATERNO");
+        String lastname = (String) row.get("APELLIDO_PATERNO");
         String surname = (String) row.get("APELLIDO_MATERNO");
         String fullname = lastname + " " + surname;
+        Integer idActivo = (Integer) row.get("ID_ACTIVO");
 
-        return new EmployeeItem(talentId, names, fullname);
+        return new EmployeeItem(talentId, names, fullname, idActivo);
     }
 }

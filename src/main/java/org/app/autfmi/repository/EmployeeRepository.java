@@ -152,7 +152,9 @@ public class EmployeeRepository {
     }
 
     public TalentEmployeeList findAllEmployees(BaseRequest baseRequest, Integer page, String searchTerm) {
-        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_TALENTO_EMPLEADO_LST");
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_TALENTO_CTR_LST");
+
+        this.logger.info("Fetching Talents with contract");
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("ID_ROL", baseRequest.getIdRol())
@@ -197,8 +199,7 @@ public class EmployeeRepository {
         String lastname = (String) row.get("APELLIDO_PATERNO");
         String surname = (String) row.get("APELLIDO_MATERNO");
         String fullname = lastname + " " + surname;
-        Integer idActivo = (Integer) row.get("ID_ACTIVO");
 
-        return new EmployeeItem(talentId, names, fullname, idActivo);
+        return new EmployeeItem(talentId, names, fullname);
     }
 }

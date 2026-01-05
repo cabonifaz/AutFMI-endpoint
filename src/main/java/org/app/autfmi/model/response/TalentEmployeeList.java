@@ -31,8 +31,7 @@ public class TalentEmployeeList extends BaseResponse {
   public record EmployeeItem(
       Integer idTalento,
       String nombres,
-      String apellidos,
-      Integer idActivo) {
+      String apellidos) {
   }
 
 }

@@ -1,13 +1,15 @@
 package org.app.autfmi.service;
 
-import com.microsoft.sqlserver.jdbc.SQLServerException;
-import jakarta.mail.MessagingException;
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
 import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
+
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import jakarta.mail.MessagingException;
 
 public interface IEmployeeService {
     BaseResponse getEmployee(Integer idTalento);
@@ -26,4 +28,6 @@ public interface IEmployeeService {
     FilePDFResponse getLastSolicitudEquipo(String token, Integer idSolicitudEquipo) throws MessagingException;
 
     BaseResponse findAllEmployees(String token, Integer page, String searchTerm);
+
+    BaseResponse getEmployeeFullHistory(String authToken, Integer talentId);
 }

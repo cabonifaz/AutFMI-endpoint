@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
@@ -165,4 +166,22 @@ public class EmployeeController {
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/detail")
+    public ResponseEntity<BaseResponse> getEmployeeFullHistory(
+            @RequestParam Integer talentId,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String authToken = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = employeeService.getEmployeeFullHistory(authToken, talentId);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            this.logger.error("Error getting employee full history: {}", e);
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

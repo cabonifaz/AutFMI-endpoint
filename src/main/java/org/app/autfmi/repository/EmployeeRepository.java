@@ -5,6 +5,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.EmployeeDTO;
+import org.app.autfmi.model.dto.EmployeeFullHistoryDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.SolicitudEquipoRequest;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
@@ -22,6 +23,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.List;
@@ -202,4 +204,132 @@ public class EmployeeRepository {
 
         return new EmployeeItem(talentId, names, fullname);
     }
+
+    @SuppressWarnings("unchecked")
+    public EmployeeFullHistoryDTO getEmployeeFullHistory(BaseRequest baseRequest, Integer talentId) {
+
+        SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_EMPLEADOS_DETALLES_SEL");
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_TALENTO", talentId);
+
+        Map<String, Object> result = jdbcCall.execute(params);
+
+        // 1. MENSAJE
+        List<Map<String, Object>> rsMensaje = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (rsMensaje == null || rsMensaje.isEmpty()) {
+            return new EmployeeFullHistoryDTO(
+                    3,
+                    "Sin respuesta del SP",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null);
+        }
+
+        Map<String, Object> msg = rsMensaje.get(0);
+        Integer idTipoMensaje = (Integer) msg.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) msg.get("MENSAJE");
+
+        EmployeeFullHistoryDTO response = new EmployeeFullHistoryDTO();
+        response.setIdTipoMensaje(idTipoMensaje);
+        response.setMensaje(mensaje);
+        if (idTipoMensaje != 2) {
+            return response;
+        }
+
+        // 2. DATOS PERSONALES
+        List<Map<String, Object>> rsDatos = (List<Map<String, Object>>) result.get("#result-set-2");
+
+        if (rsDatos != null && !rsDatos.isEmpty()) {
+
+            Map<String, Object> row = rsDatos.get(0);
+
+            String names = (String) row.get("NOMBRES");
+            String fullName = names + " "
+                    + row.get("APELLIDO_PATERNO") + " "
+                    + row.get("APELLIDO_MATERNO");
+
+            response.setNames(names);
+            response.setFullName(fullName.trim());
+            response.setEmail((String) row.get("CORREO_ELECTRONICO"));
+            response.setDocumentNumber((String) row.get("NRO_DOCUMENTO"));
+            response.setDescription((String) row.get("DESCRIPCION"));
+        }
+
+        // 3. CONTRATOS
+
+        List<Map<String, Object>> rsContratos = (List<Map<String, Object>>) result.get("#result-set-3");
+
+        response.setContracts(
+                rsContratos == null
+                        ? List.of()
+                        : rsContratos.stream()
+                                .map(r -> new EmployeeFullHistoryDTO.ContractDTO(
+                                        (Integer) r.get("ID_CONTRATO"),
+                                        (String) r.get("OBJETO_CONTRATO"),
+                                        (String) r.get("FECHA_INICIO"),
+                                        (String) r.get("FECHA_FIN"),
+                                        (String) r.get("TIPO_MONEDA"),
+                                        (BigDecimal) r.get("MONTO_BASE"),
+                                        (String) r.get("ESTADO")))
+                                .toList());
+
+        // 4. MOVIMIENTOS
+
+        List<Map<String, Object>> rsMovimientos = (List<Map<String, Object>>) result.get("#result-set-4");
+
+        response.setMovements(
+                rsMovimientos == null
+                        ? List.of()
+                        : rsMovimientos.stream()
+                                .map(r -> new EmployeeFullHistoryDTO.MovementDTO(
+                                        (String) r.get("FECHA_MOV"),
+                                        (String) r.get("MOTIVO"),
+                                        (String) r.get("AREA_ANTERIOR"),
+                                        (String) r.get("CARGO"),
+                                        (String) r.get("TIPO_MOV")))
+                                .toList());
+
+        // 5. SOLICITUDES DE EQUIPO
+
+        List<Map<String, Object>> rsEquipos = (List<Map<String, Object>>) result.get("#result-set-5");
+
+        response.setEquipmentRequests(
+                rsEquipos == null
+                        ? List.of()
+                        : rsEquipos.stream()
+                                .map(r -> new EmployeeFullHistoryDTO.EquipmentRequestDTO(
+                                        (Integer) r.get("ID_SOLICITUD"),
+                                        (String) r.get("EQUIPO_SOLICITADO"),
+                                        (String) r.get("MARCA"),
+                                        (String) r.get("FECHA_SOLICITUD"),
+                                        (String) r.get("FECHA_ENTREGA"),
+                                        (String) r.get("CELULAR_ASIGNADO")))
+                                .toList());
+
+        // 6. CESES
+
+        List<Map<String, Object>> rsCeses = (List<Map<String, Object>>) result.get("#result-set-6");
+
+        response.setTerminations(
+                rsCeses == null
+                        ? List.of()
+                        : rsCeses.stream()
+                                .map(r -> new EmployeeFullHistoryDTO.TerminationDTO(
+                                        (Integer) r.get("ID_CESE"),
+                                        (String) r.get("FECHA_CESE"),
+                                        (String) r.get("MOTIVO_CESE"),
+                                        (String) r.get("CLIENTE")))
+                                .toList());
+
+        return response;
+    }
+
 }

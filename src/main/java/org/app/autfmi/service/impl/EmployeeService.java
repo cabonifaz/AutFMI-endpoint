@@ -341,4 +341,12 @@ public class EmployeeService implements IEmployeeService {
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
         return this.employeeRepository.findAllEmployees(baseRequest, page, searchTerm);
     }
+
+    @Override
+    public BaseResponse getEmployeeFullHistory(String authToken, Integer talentId) {
+        UserDTO user = jwt.decodeToken(authToken);
+        BaseRequest baseRequest = Common.createBaseRequest(user, "");
+        return employeeRepository.getEmployeeFullHistory(baseRequest, talentId);
+    }
+
 }

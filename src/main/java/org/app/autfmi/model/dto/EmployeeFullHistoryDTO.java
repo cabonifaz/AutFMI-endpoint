@@ -20,7 +20,8 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     // DATOS PERSONALES
 
     private String names;
-    private String fullName;
+    private String lastname;
+    private String surname;
     private String email;
     private String documentNumber;
     private String description;
@@ -31,6 +32,10 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     private List<MovementDTO> movements;
     private List<EquipmentRequestDTO> equipmentRequests;
     private List<TerminationDTO> terminations;
+
+    public EmployeeFullHistoryDTO(Integer messageId, String message) {
+        super(messageId, message);
+    }
 
     // CLASES INTERNAS
 

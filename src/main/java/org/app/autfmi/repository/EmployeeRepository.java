@@ -225,17 +225,9 @@ public class EmployeeRepository {
                 List<Map<String, Object>> rsMensaje = (List<Map<String, Object>>) result.get("#result-set-1");
 
                 if (rsMensaje == null || rsMensaje.isEmpty()) {
-                        return new EmployeeFullHistoryDTO(
-                                        3,
-                                        "Sin respuesta del SP",
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null,
-                                        null);
+                        Integer messageId = 3;
+                        var message = "Sin respuesta de la base de datos";
+                        return new EmployeeFullHistoryDTO(messageId, message);
                 }
 
                 Map<String, Object> msg = rsMensaje.get(0);
@@ -257,12 +249,13 @@ public class EmployeeRepository {
                         Map<String, Object> row = rsDatos.get(0);
 
                         String names = (String) row.get("NOMBRES");
-                        String fullName = names + " "
-                                        + row.get("APELLIDO_PATERNO") + " "
-                                        + row.get("APELLIDO_MATERNO");
+                        var lastname = (String) row.get("APELLIDO_PATERNO");
+                        var surname = (String) row.get("APELLIDO_MATERNO");
 
                         response.setNames(names);
-                        response.setFullName(fullName.trim());
+                        response.setLastname(lastname);
+                        response.setSurname(surname);
+
                         response.setEmail((String) row.get("CORREO_ELECTRONICO"));
                         response.setDocumentNumber((String) row.get("NRO_DOCUMENTO"));
                         response.setDescription((String) row.get("DESCRIPCION"));

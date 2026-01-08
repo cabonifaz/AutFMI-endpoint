@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import org.app.autfmi.model.response.BaseResponse;
@@ -26,28 +25,27 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     private String documentNumber;
     private String description;
 
-    /*
-     * =========================
-     * HISTORIAL
-     * =========================
-     */
+    // HISTORIAL
+
     private List<ContractDTO> contracts;
     private List<MovementDTO> movements;
     private List<EquipmentRequestDTO> equipmentRequests;
     private List<TerminationDTO> terminations;
 
-    /*
-     * ======================================================
-     * CLASES INTERNAS
-     * ======================================================
-     */
+    // CLASES INTERNAS
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ContractDTO {
         private Integer contractId;
+        private String talentName;
         private String contractObject;
+        private Integer areaId;
+        private String area;
+        private String client;
+        private String rqCode;
+        private String rqTitle;
         private String startDate;
         private String endDate;
         private String baseAmount;

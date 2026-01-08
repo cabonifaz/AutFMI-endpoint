@@ -276,8 +276,7 @@ public class EmployeeRepository {
                                         (String) r.get("OBJETO_CONTRATO"),
                                         (String) r.get("FECHA_INICIO"),
                                         (String) r.get("FECHA_FIN"),
-                                        (String) r.get("TIPO_MONEDA"),
-                                        (BigDecimal) r.get("MONTO_BASE"),
+                                        (String) r.get("MONTO_BASE"),
                                         (String) r.get("ESTADO")))
                                 .toList());
 

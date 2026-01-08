@@ -50,8 +50,7 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
         private String contractObject;
         private String startDate;
         private String endDate;
-        private String currency;
-        private BigDecimal baseAmount;
+        private String baseAmount;
         private String status;
     }
 

@@ -23,7 +23,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.Collections;
 import java.util.List;
@@ -266,7 +265,7 @@ public class EmployeeRepository {
 
                 if (rsContratos != null) {
                         List<EmployeeFullHistoryDTO.ContractDTO> contractList = rsContratos.stream().map(r -> {
-                                EmployeeFullHistoryDTO.ContractDTO dto = new EmployeeFullHistoryDTO.ContractDTO();
+                                var dto = new EmployeeFullHistoryDTO.ContractDTO();
                                 dto.setContractId((Integer) r.get("ID_CONTRATO"));
                                 dto.setContractObject((String) r.get("OBJETO_CONTRATO"));
                                 dto.setStartDate((String) r.get("FECHA_INICIO"));
@@ -275,9 +274,13 @@ public class EmployeeRepository {
                                 dto.setStatus((String) r.get("ESTADO"));
                                 dto.setTalentName((String) r.get("NOMBRES_TALENTO"));
                                 dto.setArea((String) r.get("AREA"));
+                                dto.setAreaId((Integer) r.get("ID_AREA"));
                                 dto.setClient((String) r.get("CLIENTE"));
                                 dto.setRqCode((String) r.get("CODIGO_RQ"));
                                 dto.setRqTitle((String) r.get("TITULO_RQ"));
+
+                                dto.setContractType((String) r.get("MODALIDAD_CTR"));
+                                dto.setContractTypeId((Integer) r.get("ID_MODALIDAD_CRT"));
 
                                 return dto;
                         }).collect(Collectors.toList());

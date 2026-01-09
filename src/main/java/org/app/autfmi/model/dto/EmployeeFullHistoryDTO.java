@@ -45,6 +45,8 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     public static class ContractDTO {
         private Integer contractId;
         private String talentName;
+        private Integer contractTypeId;
+        private String contractType;
         private String contractObject;
         private Integer areaId;
         private String area;

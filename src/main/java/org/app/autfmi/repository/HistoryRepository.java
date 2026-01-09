@@ -147,7 +147,8 @@ public class HistoryRepository {
                     .addValue("ID_CLIENTE", request.getIdCliente())
                     .addValue("CLIENTE", request.getCliente())
                     .addValue("ID_AREA", request.getIdArea())
-                    .addValue("FCH_HISTORIAL", request.getFchCese());
+                    .addValue("FCH_HISTORIAL", request.getFchCese())
+                    .addValue("ID_CONTRATO", request.getContractId());
         });
 
         List<Map<String, Object>> dbResponse = (List<Map<String, Object>>) result.get("#result-set-1");

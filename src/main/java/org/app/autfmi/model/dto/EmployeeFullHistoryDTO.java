@@ -90,5 +90,9 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
         private String terminationDate;
         private String terminationReason;
         private String client;
+        private Integer requirementId;
+        private String requirementTitle;
+        private String requirementCode;
+        private Integer idContract;
     }
 }

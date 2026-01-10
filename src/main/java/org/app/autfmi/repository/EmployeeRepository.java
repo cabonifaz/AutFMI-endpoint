@@ -209,6 +209,11 @@ public class EmployeeRepository {
     return new EmployeeItem(talentId, names, fullname);
   }
 
+  /**
+   * @param baseRequest
+   * @param talentId
+   * @return
+   */
   @SuppressWarnings("unchecked")
   public EmployeeFullHistoryDTO getEmployeeFullHistory(BaseRequest baseRequest, Integer talentId) {
 
@@ -333,7 +338,11 @@ public class EmployeeRepository {
                     (Integer) r.get("ID_CESE"),
                     (String) r.get("FECHA_CESE"),
                     (String) r.get("MOTIVO_CESE"),
-                    (String) r.get("CLIENTE")))
+                    (String) r.get("CLIENTE"),
+                    (Integer) r.get("ID_REQUERIMIENTO"),
+                    (String) r.get("TITULO_RQ"),
+                    (String) r.get("CODIGO_RQ"),
+                    (Integer) r.get("ID_CONTRATO")))
                 .toList());
 
     return response;

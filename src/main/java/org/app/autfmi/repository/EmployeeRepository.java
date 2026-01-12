@@ -339,10 +339,8 @@ public class EmployeeRepository {
                     (String) r.get("FECHA_CESE"),
                     (String) r.get("MOTIVO_CESE"),
                     (String) r.get("CLIENTE"),
-                    (Integer) r.get("ID_REQUERIMIENTO"),
                     (String) r.get("TITULO_RQ"),
-                    (String) r.get("CODIGO_RQ"),
-                    (Integer) r.get("ID_CONTRATO")))
+                    (String) r.get("CODIGO_RQ")))
                 .toList());
 
     return response;

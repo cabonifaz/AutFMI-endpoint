@@ -17,9 +17,9 @@ public class MovementReport implements IReport {
     private String area;
     private String horario;
     private String fechaHistorial;
-    private Double montoBase;
-    private Double montoMovilidad;
-    private Double montoTrimestral;
+    private String montoBase;
+    private String montoMovilidad;
+    private String montoTrimestral;
     private String correoGestor;
     private String firmante;
     private String firma;

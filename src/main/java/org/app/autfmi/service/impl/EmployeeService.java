@@ -349,4 +349,84 @@ public class EmployeeService implements IEmployeeService {
         return employeeRepository.getEmployeeFullHistory(baseRequest, talentId);
     }
 
+    @Override
+    public FilePDFResponse getHistory(String token, Integer movementTypeId, Integer movementId, Integer talentId) {
+        this.logger.info("Processing getLastHistory");
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+
+        if (movementTypeId == null)
+            throw new IllegalArgumentException("El tipo de historial no puede ser nulo");
+
+        if (talentId == null)
+            throw new IllegalArgumentException("El ID del talento no puede ser nulo");
+
+        IReport report = historyRepository.getHistoryReport(baseRequest, talentId,
+                movementTypeId, movementId, false);
+        BaseResponse bs = report.getResponse();
+        FilePDFResponse response = new FilePDFResponse();
+        response.setBaseResponse(bs);
+
+        if (bs.getIdTipoMensaje() != 2)
+            return response;
+
+        PDFUtils pdfUtils = new PDFUtils();
+        ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
+
+        if (report instanceof EntryReport entry) {
+            // @Pendiente
+            GestorDTO gs = new GestorDTO(null, entry.getFirmante());
+
+            List<FileDTO> files = builder
+                    .forIngreso(entry, gs)
+                    .withFormulario()
+                    .withUsuarioInfo()
+                    .build();
+
+            List<FilePDFDTO> files64 = files.stream().map(f -> {
+                String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+                return new FilePDFDTO(f.nombreArchivo, base64);
+            }).toList();
+
+            response.setLstArchivos(files64);
+            return response;
+
+        } else if (report instanceof MovementReport movement) {
+            String fullname = movement.getFirmante();
+            GestorDTO gs = new GestorDTO(fullname, fullname);
+            List<FileDTO> files = builder.forMovimiento(movement, gs)
+                    .withFormulario()
+                    .build();
+
+            List<FilePDFDTO> files64 = files.stream().map(p -> {
+                String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+                return new FilePDFDTO(p.nombreArchivo, base64);
+            }).toList();
+
+            response.setLstArchivos(files64);
+            return response;
+
+        } else if (report instanceof CeseReport cese) {
+            GestorDTO gs = new GestorDTO(null, cese.getFirmante());
+
+            List<FileDTO> files = builder.forCese(cese, gs)
+                    .withFormulario()
+                    .withDeactivateRequest()
+                    .build();
+
+            List<FilePDFDTO> files64 = files.stream().map(f -> {
+                String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+                return new FilePDFDTO(f.nombreArchivo, base64);
+            }).toList();
+
+            response.setLstArchivos(files64);
+            return response;
+
+        } else if (report instanceof BaseReport baseReport) {
+            response.setBaseResponse(baseReport.getResponse());
+        }
+        response.setLstArchivos(new ArrayList<>());
+        return response;
+    }
+
 }

@@ -133,6 +133,30 @@ public class EmployeeController {
         }
     }
 
+    @GetMapping("/getHistory")
+    public ResponseEntity<FilePDFResponse> getHistory(
+            @RequestParam Integer historyType,
+            @RequestParam Integer movementId,
+            @RequestParam Integer talentId,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            /*
+             * FilePDFResponse response = employeeService.getLastHistory(token,
+             * idTipoHistorial, idTalento);
+             */
+            this.logger.info("Mov ID: {} His type: {}", movementId, historyType);
+
+            var bs = employeeService.getHistory(token, historyType, movementId, talentId);
+            return new ResponseEntity<>(bs, HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error in getLastHistory: ", e);
+            var bs = new BaseResponse(3, "Received");
+            var response = new FilePDFResponse(bs, Collections.EMPTY_LIST);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PostMapping("solicitud/equipo")
     public ResponseEntity<BaseResponse> solicitudEquipo(
             @RequestBody SolicitudEquipoRequest solicitudEquipoRequest,

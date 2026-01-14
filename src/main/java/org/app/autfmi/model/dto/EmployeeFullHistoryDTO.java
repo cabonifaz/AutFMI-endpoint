@@ -63,11 +63,13 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MovementDTO {
+        private Integer movementId;
         private String movementDate;
         private String reason;
         private String previousArea;
         private String position;
         private String movementType;
+        private Integer movementTypeId;
     }
 
     @Data

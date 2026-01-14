@@ -30,4 +30,9 @@ public interface IEmployeeService {
     BaseResponse findAllEmployees(String token, Integer page, String searchTerm);
 
     BaseResponse getEmployeeFullHistory(String authToken, Integer talentId);
+
+    FilePDFResponse getHistory(String token, Integer movementTypeId, Integer movementId, Integer talentId);
+
+    FilePDFResponse getRequestEquipement(String token, Integer idSolicitud, Integer talentId) throws MessagingException;
+
 }

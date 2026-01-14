@@ -302,11 +302,13 @@ public class EmployeeRepository {
             ? List.of()
             : rsMovimientos.stream()
                 .map(r -> new EmployeeFullHistoryDTO.MovementDTO(
+                    (Integer) r.get("ID_MOVIMIENTO"),
                     (String) r.get("FECHA_MOV"),
                     (String) r.get("MOTIVO"),
                     (String) r.get("AREA_ANTERIOR"),
                     (String) r.get("CARGO"),
-                    (String) r.get("TIPO_MOV")))
+                    (String) r.get("TIPO_MOV"),
+                    (Integer) r.get("ID_TIPO_MOV")))
                 .toList());
 
     // 5. SOLICITUDES DE EQUIPO

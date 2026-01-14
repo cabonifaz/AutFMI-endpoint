@@ -1260,7 +1260,7 @@ public class RequirementRepository {
                 (String) postulanteRow.get("TIEMPO_CONTRATO"),
                 (String) postulanteRow.get("FCH_INICIO_LABORES"),
                 (String) postulanteRow.get("CARGO"),
-                (BigDecimal) postulanteRow.get("REMUNERACION"),
+                (String) postulanteRow.get("REMUNERACION"),
                 (String) postulanteRow.get("MODALIDAD"),
                 (String) postulanteRow.get("TIENE_EQUIPO"));
     }

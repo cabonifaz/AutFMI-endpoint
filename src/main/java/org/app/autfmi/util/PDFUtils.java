@@ -287,42 +287,42 @@ public class PDFUtils {
      * Reemplaza los valores del reporte de solicitud en la plantilla HTML
      * 
      * @param htmlTemplate La plantilla HTML con marcadores de posición
-     * @param report       El objeto SolicitudData que contiene los datos a insertar
+     * @param data         El objeto SolicitudData que contiene los datos a insertar
      * @param gs           El objeto GestorDTO que contiene información del gestor
      * @return La plantilla HTML con los valores reemplazados
      */
-    public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData report, GestorDTO gs) {
+    public String replaceSolicitudPDFValues(String htmlTemplate, SolicitudData data, GestorDTO gs) {
         htmlTemplate = htmlTemplate
                 // DATOS DEL SOLICITANTE
-                .replace("{{solicitante}}", report.getNombres() == null ? "" : report.getFirmante())
-                .replace("{{area}}", report.getArea() == null ? "" : report.getArea())
-                .replace("{{fechaSolicitud}}", report.getFechaSolicitud() == null ? "" : report.getFechaSolicitud())
+                .replace("{{solicitante}}", data.getNombres() == null ? "" : data.getFirmante())
+                .replace("{{area}}", data.getArea() == null ? "" : data.getArea())
+                .replace("{{fechaSolicitud}}", data.getFechaSolicitud() == null ? "" : data.getFechaSolicitud())
 
                 // CREACIÓN DE USUARIOS
-                .replace("{{nombresCreacion}}", report.getNombresCreacion() == null ? "" : report.getNombresCreacion())
+                .replace("{{nombresCreacion}}", data.getNombresCreacion() == null ? "" : data.getNombresCreacion())
                 .replace("{{apellidosCreacion}}",
-                        report.getApellidosCreacion() == null ? "" : report.getApellidosCreacion())
+                        data.getApellidosCreacion() == null ? "" : data.getApellidosCreacion())
                 .replace("{{nombreUsuarioCreacion}}",
-                        report.getNombreUsuarioCreacion() == null ? "" : report.getNombreUsuarioCreacion())
-                .replace("{{correoCreacion}}", report.getCorreoCreacion() == null ? "" : report.getCorreoCreacion())
-                .replace("{{areaCreacion}}", report.getAreaCreacion() == null ? "" : report.getAreaCreacion())
+                        data.getNombreUsuarioCreacion() == null ? "" : data.getNombreUsuarioCreacion())
+                .replace("{{correoCreacion}}", data.getCorreoCreacion() == null ? "" : data.getCorreoCreacion())
+                .replace("{{areaCreacion}}", data.getAreaCreacion() == null ? "" : data.getAreaCreacion())
 
                 // MODIFICACIÓN DE USUARIOS
                 .replace("{{usuarioActualModificacion}}",
-                        report.getUsuarioActualModificacion() == null ? "" : report.getUsuarioActualModificacion())
+                        data.getUsuarioActualModificacion() == null ? "" : data.getUsuarioActualModificacion())
                 .replace("{{usuarioNuevoModificacion}}",
-                        report.getUsuarioNuevoModificacion() == null ? "" : report.getUsuarioNuevoModificacion())
+                        data.getUsuarioNuevoModificacion() == null ? "" : data.getUsuarioNuevoModificacion())
                 .replace("{{correoActualModificacion}}",
-                        report.getCorreoActualModificacion() == null ? "" : report.getCorreoActualModificacion())
+                        data.getCorreoActualModificacion() == null ? "" : data.getCorreoActualModificacion())
                 .replace("{{correoNuevoModificacion}}",
-                        report.getCorreoNuevoModificacion() == null ? "" : report.getNombres())
+                        data.getCorreoNuevoModificacion() == null ? "" : data.getNombres())
 
                 // DESACTIVACIÓN DE USUARIOS
-                .replace("{{nombresCese}}", report.getNombresCese() == null ? "" : report.getNombresCese())
-                .replace("{{apellidosCese}}", report.getApellidosCese() == null ? "" : report.getApellidosCese())
-                .replace("{{usuarioCese}}", report.getUsuarioCese() == null ? "" : report.getUsuarioCese())
-                .replace("{{correoCese}}", report.getCorreoCese() == null ? "" : report.getCorreoCese())
-                .replace("{{motivoCese}}", report.getMotivoCese() == null ? "" : report.getMotivoCese())
+                .replace("{{nombresCese}}", data.getNombresCese() == null ? "" : data.getNombresCese())
+                .replace("{{apellidosCese}}", data.getApellidosCese() == null ? "" : data.getApellidosCese())
+                .replace("{{usuarioCese}}", data.getUsuarioCese() == null ? "" : data.getUsuarioCese())
+                .replace("{{correoCese}}", data.getCorreoCese() == null ? "" : data.getCorreoCese())
+                .replace("{{motivoCese}}", data.getMotivoCese() == null ? "" : data.getMotivoCese())
 
                 // FOOTER
                 .replace("{{nombreFirma}}", SafeValues.safeString(gs.getFullname()))

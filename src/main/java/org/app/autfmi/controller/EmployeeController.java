@@ -1,8 +1,11 @@
 package org.app.autfmi.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+
+import org.apache.commons.lang3.ObjectUtils.Null;
 import org.app.autfmi.model.request.EmployeeContractEndRequest;
 import org.app.autfmi.model.request.EmployeeEntryRequest;
 import org.app.autfmi.model.request.EmployeeMovementRequest;
@@ -39,6 +42,23 @@ public class EmployeeController {
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<BaseResponse> getEmployeeList(
+            @RequestParam @Nullable Integer nPag,
+            @RequestParam @Nullable String busqueda,
+            HttpServletRequest httpServletRequest) {
+
+        try {
+            String authToken = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse rs = this.employeeService.findAllEmployees(authToken, nPag, busqueda);
+            return new ResponseEntity<>(rs, HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error getting employees: {}", e);
+            return new ResponseEntity<>(new BaseResponse(3, e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     @PostMapping("/entry")
@@ -114,6 +134,30 @@ public class EmployeeController {
         }
     }
 
+    @GetMapping("/getHistory")
+    public ResponseEntity<FilePDFResponse> getHistory(
+            @RequestParam Integer historyType,
+            @RequestParam Integer movementId,
+            @RequestParam Integer talentId,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            /*
+             * FilePDFResponse response = employeeService.getLastHistory(token,
+             * idTipoHistorial, idTalento);
+             */
+            this.logger.info("Mov ID: {} His type: {}", movementId, historyType);
+
+            var bs = employeeService.getHistory(token, historyType, movementId, talentId);
+            return new ResponseEntity<>(bs, HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error in getLastHistory: ", e);
+            var bs = new BaseResponse(3, "Received");
+            var response = new FilePDFResponse(bs, Collections.EMPTY_LIST);
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @PostMapping("solicitud/equipo")
     public ResponseEntity<BaseResponse> solicitudEquipo(
             @RequestBody SolicitudEquipoRequest solicitudEquipoRequest,
@@ -134,10 +178,10 @@ public class EmployeeController {
     @GetMapping("/lastSolicitudEquipo")
     public ResponseEntity<FilePDFResponse> getLastSolicitudEquipo(
             HttpServletRequest httpServletRequest,
-            @RequestParam Integer idSolicitudEquipo) {
+            @RequestParam Integer idTalento) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
-            FilePDFResponse response = employeeService.getLastSolicitudEquipo(token, idSolicitudEquipo);
+            FilePDFResponse response = employeeService.getLastSolicitudEquipo(token, idTalento);
             this.logger.info("Response generated for getLastSolicitudEquipo");
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
@@ -147,4 +191,45 @@ public class EmployeeController {
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/getRequestedEquipment")
+    public ResponseEntity<FilePDFResponse> getRequestEquipement(
+            HttpServletRequest httpServletRequest,
+            @RequestParam Integer idSolicitud,
+            @RequestParam Integer idTalento) {
+
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+
+            FilePDFResponse response = employeeService.getRequestEquipement(token,
+                    idSolicitud, idTalento);
+            this.logger.info("Response generated for getRequestedEquipment");
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            this.logger.error("Error in getRequestedEquipment: ", e);
+            return new ResponseEntity<>(
+                    new FilePDFResponse(new BaseResponse(3, e.getMessage()), Collections.emptyList()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/detail")
+    public ResponseEntity<BaseResponse> getEmployeeFullHistory(
+            @RequestParam Integer talentId,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String authToken = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = employeeService.getEmployeeFullHistory(authToken, talentId);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            this.logger.error("Error getting employee full history: {}", e);
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }

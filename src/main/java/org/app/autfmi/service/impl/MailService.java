@@ -5,9 +5,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.app.autfmi.model.builders.ReportPDFBuilder;
+import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.model.dto.GestorDTO;
+import org.app.autfmi.model.report.CeseReport;
+import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
+import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.MailUtils;
+import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.SafeValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +30,9 @@ public class MailService implements IMailService {
 
   @Autowired
   private MailUtils mailUtils;
+
+  @Autowired
+  private final PDFUtils pdfUtils;
 
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
@@ -264,5 +274,98 @@ public class MailService implements IMailService {
         email.indexOf("@") > 0 &&
         email.indexOf("@") < email.length() - 1 &&
         email.lastIndexOf(".") > email.indexOf("@");
+  }
+
+  @Async
+  @Override
+  public void sendCeseReportNotification(CeseReport report) {
+    logger.info("Preparing to send cese report notification email...");
+
+    String subject = "Cese de Empleado - " + report.getNombres() + " " + report.getApellidos();
+    GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
+
+    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+        .forCese(report, gs)
+        .withFormulario()
+        .withDeactivateRequest()
+        .build();
+
+    String dest = report.getCorreoGestor();
+
+    if (dest == null || dest.isEmpty()) {
+      logger.error("Cese report email not sent: Gestor email is null or empty.");
+      return;
+    }
+
+    try {
+      pdfUtils.enviarCorreoConPDF(attachments, dest, new ArrayList<>(), subject,
+          "Formulario de cese del empleado.");
+      logger.info("Cese report email sent successfully to {}", dest);
+    } catch (Exception e) {
+      logger.error("Error sending cese report email: ", e);
+    }
+  }
+
+  @Override
+  public void sendMovementReportNotification(MovementReport report) {
+
+    String fullname = report.getNombres() + " " + report.getApellidos();
+    String subject = "Movimiento de Empleado - " + fullname;
+    String dest = report.getCorreoGestor();
+    GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
+
+    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+        .forMovimiento(report, gs)
+        .withFormulario()
+        .build();
+
+    if (dest == null || dest.isEmpty()) {
+      logger.error("Movement report email not sent: Gestor email is null or empty.");
+      return;
+    }
+
+    try {
+      String message = "Formulario de movimiento para el empleado: " + fullname;
+      pdfUtils.enviarCorreoConPDF(
+          attachments,
+          dest,
+          new ArrayList<>(),
+          subject,
+          message);
+      logger.info("Movement report email sent successfully to {}", dest);
+    } catch (Exception e) {
+      logger.error("Error sending movement report email: ", e);
+    }
+  }
+
+  @Async
+  @Override
+  public void sendEquipmentRequestNotification(SolicitudEquipoReport report) {
+
+    String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
+    String subject = "Requerimiento de Software y Hardware - " + employee;
+    String message = "Solicitud de equipo para: " + employee;
+    String gsFullname = report.getNombreApellidoGestor();
+
+    GestorDTO gs = new GestorDTO(gsFullname, gsFullname);
+
+    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+        .fEquipoReport(report, gs)
+        .withFormulario()
+        .build();
+
+    String dest = report.getCorreoGestor();
+
+    if (dest == null || dest.isEmpty())
+      throw new IllegalArgumentException("Correo de gestor no pude ser nulo o vacío");
+
+    try {
+      pdfUtils.enviarCorreoConPDF(attachments, dest, new ArrayList<>(), subject,
+          message);
+      logger.info("Mail sent to: {}", dest);
+    } catch (Exception e) {
+      logger.error("Error sending report mail: {}", e);
+    }
+
   }
 }

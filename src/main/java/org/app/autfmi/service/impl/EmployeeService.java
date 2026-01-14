@@ -336,6 +336,57 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
+    public FilePDFResponse getRequestEquipement(String token, Integer idSolicitud, Integer talentId)
+            throws MessagingException {
+        UserDTO user = jwt.decodeToken(token);
+
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+
+        if (idSolicitud == null)
+            throw new IllegalArgumentException("El ID de la solicitud no puede ser nulo");
+
+        if (talentId == null)
+            throw new IllegalArgumentException("El ID del talento no puede ser nulo");
+
+        FilePDFResponse response = new FilePDFResponse();
+
+        this.logger.info("Solicitudes de equipo para talento: {}", idSolicitud, talentId);
+        SolicitudEquipoReport report = historyRepository
+                .getSolicitudEquipoReport(
+                        baseRequest,
+                        talentId,
+                        idSolicitud,
+                        false);
+        this.logger.info("Report: {}", report);
+
+        BaseResponse rs = report.getBaseResponse();
+        response.setBaseResponse(rs);
+
+        if (rs.getIdTipoMensaje() != 2)
+            return response;
+
+        // Mapear la respuesta
+        PDFUtils pdfUtils = new PDFUtils();
+        String gestor = report.getNombreApellidoGestor();
+        GestorDTO gs = new GestorDTO(gestor, gestor);
+        List<FileDTO> files = new ReportPDFBuilder(pdfUtils)
+                .fEquipoReport(report, gs)
+                .withFormulario()
+                .build();
+
+        List<FilePDFDTO> file64 = files.stream().map(p -> {
+            String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+            return new FilePDFDTO(p.nombreArchivo, base64);
+        }).toList();
+
+        this.logger.info("Files in base64: {}", file64.size());
+
+        response.setLstArchivos(file64);
+
+        return response;
+    }
+
+    @Override
     public BaseResponse findAllEmployees(String token, Integer page, String searchTerm) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);

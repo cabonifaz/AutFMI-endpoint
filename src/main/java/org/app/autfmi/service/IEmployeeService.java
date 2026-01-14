@@ -33,4 +33,6 @@ public interface IEmployeeService {
 
     FilePDFResponse getHistory(String token, Integer movementTypeId, Integer movementId, Integer talentId);
 
+    FilePDFResponse getRequestEquipement(String token, Integer idSolicitud, Integer talentId) throws MessagingException;
+
 }

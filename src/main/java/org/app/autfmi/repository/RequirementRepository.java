@@ -28,7 +28,6 @@ import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.SqlTypeValue;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
@@ -225,33 +224,43 @@ public class RequirementRepository {
 						}
 					}
 
-					// ========================================
 					// Bloque: Facturación
-					// ========================================
+
 					List<RQFacturacionDTO> lstFacturacion = new ArrayList<>();
 
-					List<Map<String, Object>> resultSet7 = (List<Map<String, Object>>) result.get("#result-set-7");
+					var resultSet7 = (List<Map<String, Object>>) result.get("#result-set-7");
 					if (resultSet7 != null && !resultSet7.isEmpty()) {
 
-						for (Map<String, Object> factRow : resultSet7) {
+						for (var item : resultSet7) {
 
-							var itemFact = new RQFacturacionDTO();
-							/*
-							 * (Integer) factRow.get("ID_REQUERIMIENTO_FACTURACION"),
-							 * (Integer) factRow.get("ID_REQUERIMIENTO"),
-							 * (Integer) factRow.get("ID_MODALIDAD"),
-							 * (Integer) factRow.get("ID_GRUPO_MODALIDAD"),
-							 * (BigDecimal) factRow.get("MONTO_BASE"),
-							 * (BigDecimal) factRow.get("MONTO_MOVILIDAD"),
-							 * (BigDecimal) factRow.get("MONTO_MENSUAL"),
-							 * (BigDecimal) factRow.get("MONTO_TRIMESTRAL"),
-							 * (BigDecimal) factRow.get("MONTO_SEMESTRAL"),
-							 * (Integer) factRow.get("ID_ESTADO_REGISTRO"),
-							 * (String) factRow.get("MODALIDAD"),
-							 * (String) factRow.get("GRUPO_MODALIDAD"));
-							 */
-							lstFacturacion.add(itemFact);
+							var builder = RQFacturacionDTO.builder();
 
+							builder.idRequerimiento((Integer) item.get("ID_REQUERIMIENTO"));
+							builder.idRequerimientoFacturacion((Integer) item.get("ID_REQUERIMIENTO_FACTURACION"));
+							builder.idEstadoRegistro((Integer) item.get("ID_ESTADO_REGISTRO"));
+							builder.idModalidad((Integer) item.get("ID_MODALIDAD"));
+							builder.idGrupoModalidad((Integer) item.get("ID_GRUPO_MODALIDAD"));
+							builder.nombreModalidad((String) item.get("MODALIDAD"));
+
+							builder.nombreGrupoModalidad((String) item.get("GRUPO_MODALIDAD"));
+							builder.currencyType((Integer) item.get("ID_MONEDA"));
+
+							builder.minBaseAmount((BigDecimal) item.get("MIN_MONTO_BASE"));
+							builder.maxBaseAmount((BigDecimal) item.get("MAX_MONTO_BASE"));
+
+							builder.minTravelAllowance((BigDecimal) item.get("MIN_MONTO_MOVILIDAD"));
+							builder.maxTravelAllowance((BigDecimal) item.get("MAX_MONTO_MOVILIDAD"));
+
+							builder.minMonthlyAmount((BigDecimal) item.get("MIN_MONTO_MENSUAL"));
+							builder.maxMonthlyAmount((BigDecimal) item.get("MAX_MONTO_MENSUAL"));
+
+							builder.minQuarterlyAmount((BigDecimal) item.get("MIN_MONTO_TRIMESTRAL"));
+							builder.maxQuarterlyAmount((BigDecimal) item.get("MAX_MONTO_TRIMESTRAL"));
+
+							builder.minSemiAnnualAmount((BigDecimal) item.get("MIN_MONTO_SEMESTRAL"));
+							builder.maxSemiAnnualAmount((BigDecimal) item.get("MAX_MONTO_SEMESTRAL"));
+
+							lstFacturacion.add(builder.build());
 						}
 					}
 

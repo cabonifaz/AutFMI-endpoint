@@ -523,14 +523,14 @@ public class RequirementRepository {
 
 		logger.info("Inicio REPOSITORY updateRequirement - ID_REQUERIMIENTO: {}", request.getIdRequerimiento());
 
-		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+		var simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
 				.withProcedureName("SP_REQUERIMIENTO_UPD");
 
-		SQLServerDataTable tvpRqVacantes = loadTvpRequirementVacantesUpdate(request.getLstVacantes());
+		var tvpRqVacantes = loadTvpRequirementVacantesUpdate(request.getLstVacantes());
 
-		SQLServerDataTable lstFactuacion = loadLstFacturacionTable(request.getLstFacturacion());
+		var lstFactuacion = loadLstFacturacionTable(request.getLstFacturacion());
 
-		MapSqlParameterSource params = new MapSqlParameterSource()
+		var params = new MapSqlParameterSource()
 				.addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
 				.addValue("ID_CLIENTE", request.getIdCliente())
 				.addValue("CLIENTE", request.getCliente())
@@ -554,16 +554,16 @@ public class RequirementRepository {
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
 				.addValue("LST_FACTURACION", lstFactuacion);
 
-		Map<String, Object> result = simpleJdbcCall.execute(params);
-		List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+		var result = simpleJdbcCall.execute(params);
+		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
 
 		if (resultSet == null || resultSet.isEmpty()) {
 			return new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
 		}
 
-		Map<String, Object> row = resultSet.get(0);
-		Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
-		String mensaje = (String) row.get("MENSAJE");
+		var row = resultSet.get(0);
+		var idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+		var mensaje = (String) row.get("MENSAJE");
 		return new BaseResponse(idTipoMensaje, mensaje);
 	}
 

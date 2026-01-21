@@ -25,6 +25,7 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     private String email;
     private String documentNumber;
     private String description;
+    private String photoUrl;
 
     // HISTORIAL
 

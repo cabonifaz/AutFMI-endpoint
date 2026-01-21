@@ -265,6 +265,7 @@ public class EmployeeRepository {
       response.setDocumentNumber((String) row.get("NRO_DOCUMENTO"));
       response.setDescription((String) row.get("DESCRIPCION"));
       response.setPhotoUrl((String) row.get("URL_FOTO"));
+      response.setPhotoB64((String) row.get("FOTO_B64"));
     }
 
     // 3. CONTRATOS

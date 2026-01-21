@@ -19,6 +19,7 @@ import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
@@ -397,7 +398,17 @@ public class EmployeeService implements IEmployeeService {
     public BaseResponse getEmployeeFullHistory(String authToken, Integer talentId) {
         UserDTO user = jwt.decodeToken(authToken);
         BaseRequest baseRequest = Common.createBaseRequest(user, "");
-        return employeeRepository.getEmployeeFullHistory(baseRequest, talentId);
+        var details = employeeRepository.getEmployeeFullHistory(baseRequest, talentId);
+        this.logger.info("========== DEBUG PHOTO ==========");
+        this.logger.info("PhotoUrl desde BD: {}", details.getPhotoUrl());
+        var fileBase64 = FileUtils.cargarArchivoAws(details.getPhotoUrl());
+        this.logger.info("Intentando cargar foto desde AWS...");
+        details.setPhotoB64(fileBase64);
+        this.logger.info("Foto cargada correctamente, tamaño B64: {}", fileBase64.length());
+        details.setPhotoUrl(null);
+        this.logger.info("========== FIN DEBUG PHOTO ==========");
+        return details;
+
     }
 
     @Override

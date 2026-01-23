@@ -27,6 +27,9 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     private String description;
     private String photoUrl;
     private String photoB64;// Foto en base 64 para el Frontend
+    private String cvNormal;
+    private String cvEs;
+    private String cvEn;
 
     // HISTORIAL
 

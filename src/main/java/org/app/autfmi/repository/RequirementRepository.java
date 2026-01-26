@@ -277,7 +277,8 @@ public class RequirementRepository {
 		return null;
 	}
 
-	private SQLServerDataTable loadLstFacturacionTable(List<RQFacturacionDTO> lstFacturacion) throws SQLServerException {
+	private SQLServerDataTable loadLstFacturacionTable(List<RQFacturacionDTO> lstFacturacion)
+			throws SQLServerException {
 		var table = new SQLServerDataTable();
 
 		table.addColumnMetadata("ID_REQUERIMIENTO_FACTURACION", Types.INTEGER);
@@ -350,6 +351,7 @@ public class RequirementRepository {
 				.addValue("ID_ROL", baseRequest.getIdRol())
 				.addValue("USUARIO", baseRequest.getUsername())
 				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+				.addValue("CODIGO_RQ", request.getCodigoRQ())
 				.addValue("AGENT_JSON", agentJson);
 
 		Map<String, Object> result = simpleJdbcCall.execute(params);
@@ -602,7 +604,7 @@ public class RequirementRepository {
 				if (baseResponse.getIdTipoMensaje() == 2) {
 					List<Map<String, Object>> gestorRqSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
 					List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS
-																																																							// CONFIRMADOS
+																														// CONFIRMADOS
 					List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
 					List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // Gestor
 

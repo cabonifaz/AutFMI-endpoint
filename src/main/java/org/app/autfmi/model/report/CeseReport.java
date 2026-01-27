@@ -20,4 +20,5 @@ public class CeseReport implements IReport {
     private String firma;
     private String usernameEmpleado;
     private String emailEmpleado;
+    private String fchDevolucionEquipo;
 }

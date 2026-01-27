@@ -750,6 +750,10 @@ public class Constante {
                             <th class="label">Fecha de Cese</th>
                             <td>{{fechaCese}}</td>
                         </tr>
+                        <tr>
+                            <th class="label">Fecha de Devolución de Equipo</th>
+                            <td>{{fechaDevolucionEquipo}}</td>
+                        </tr>
                     </table>
 
                     <table style="margin-bottom: 10px;">

@@ -264,6 +264,11 @@ public class EmployeeRepository {
       response.setEmail((String) row.get("CORREO_ELECTRONICO"));
       response.setDocumentNumber((String) row.get("NRO_DOCUMENTO"));
       response.setDescription((String) row.get("DESCRIPCION"));
+      response.setPhotoUrl((String) row.get("URL_FOTO"));
+      response.setPhotoB64((String) row.get("FOTO_B64"));
+      response.setCvNormal((String) row.get("CV_NORMAL"));
+      response.setCvEs((String) row.get("CV_ES"));
+      response.setCvEn((String) row.get("CV_EN"));
     }
 
     // 3. CONTRATOS

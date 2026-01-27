@@ -10,6 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 public class AgentRQRequest {
 
+  private String codigoRQ;
   private AgentDuracion duracionContrato;
   private Integer modalidad;
   private Boolean tieneDuracion;

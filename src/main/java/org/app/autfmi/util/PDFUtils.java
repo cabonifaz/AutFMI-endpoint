@@ -175,6 +175,7 @@ public class PDFUtils {
                 // CESE
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
+                .replace("{{fechaDevolucionEquipo}}", "Escribir la fecha de devolución de equipo")
                 // FOOTER
                 .replace("{{nombreFirma}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{firmante}}", SafeValues.safeString(gs.getFullname()))
@@ -224,6 +225,7 @@ public class PDFUtils {
                 // CESE
                 .replace("{{motivoCese}}", "Escribir el motivo de cese")
                 .replace("{{fechaCese}}", "Escribir el fecha de cese")
+                .replace("{{fechaDevolucionEquipo}}", "")
                 // FOOTER
                 .replace("{{nombreFirma}}", SafeValues.safeString(report.getFirmante()))
                 .replace("{{firmante}}", SafeValues.safeString(report.getFirmante()))

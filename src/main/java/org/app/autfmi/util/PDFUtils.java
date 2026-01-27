@@ -276,6 +276,7 @@ public class PDFUtils {
                 // CESE
                 .replace("{{motivoCese}}", SafeValues.safeString(report.getMotivo()))
                 .replace("{{fechaCese}}", SafeValues.safeString(report.getFechaHistorial()))
+                .replace("{{fechaDevolucionEquipo}}", SafeValues.safeString(report.getFchDevolucionEquipo()))
                 // FOOTER
                 .replace("{{nombreFirma}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{firmante}}", SafeValues.safeString(gs.getFullname()))

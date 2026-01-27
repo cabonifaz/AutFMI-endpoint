@@ -148,7 +148,8 @@ public class HistoryRepository {
                     .addValue("CLIENTE", request.getCliente())
                     .addValue("ID_AREA", request.getIdArea())
                     .addValue("FCH_HISTORIAL", request.getFchCese())
-                    .addValue("ID_CONTRATO", request.getContractId());
+                    .addValue("ID_CONTRATO", request.getContractId())
+                    .addValue("FCH_DEVOLUCION_EQUIPO", request.getFchDevolucionEquipo());
         });
 
         List<Map<String, Object>> dbResponse = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -244,7 +245,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO"));
+                (String) report.get("EMAIL_EMPLEADO"),
+                (String) report.get("FCH_DEVOLUCION_EQUIPO"));
     }
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {

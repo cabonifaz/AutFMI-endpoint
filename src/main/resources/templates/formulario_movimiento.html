@@ -1,0 +1,323 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @page {
+      size: A4;
+      margin-top: 0.28in;
+      margin-bottom: 0.3in;
+      margin-left: 1.18in;
+      margin-right: 1.18in;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 9pt;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    td {
+      border: 1px solid #a6c9e2;
+      padding: 5px;
+      vertical-align: middle;
+      min-height: 9pt;
+    }
+
+    .header-logo {
+      width: 30%;
+      text-align: center;
+    }
+
+    .header-title {
+      width: 40%;
+      text-align: center;
+      font-weight: bold;
+      font-size: 9pt;
+      background-color: #fff;
+    }
+
+    .header-info {
+      width: 30%;
+      font-size: 8pt;
+    }
+
+    .header-info-table {
+      width: 100%;
+      height: 100%;
+      border-collapse: collapse;
+    }
+
+    .header-info-table td {
+      border: none;
+      border-bottom: 1px solid #a6c9e2;
+      padding: 0 5px;
+    }
+
+    .header-info-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .section-title {
+      background-color: #ffffff;
+      font-weight: bold;
+      border: none;
+      padding-top: 5px;
+      padding-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .label {
+      background-color: #f2f2f2;
+      width: 30%;
+      font-weight: normal;
+    }
+
+    .value {
+      width: 70%;
+      color: #000;
+    }
+
+    .checkbox-cell {
+      text-align: center;
+      font-size: 9pt;
+      vertical-align: middle;
+    }
+
+    .checkbox-label {
+      font-size: 8pt;
+    }
+
+    .sub-table td {
+      border: 1px solid #a6c9e2;
+    }
+
+    .footer-sign {
+      margin-top: 50px;
+      text-align: center;
+      border-top: 1px dotted #999;
+      width: 50%;
+      margin-left: auto;
+      margin-right: auto;
+      font-size: 9pt;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ENCABEZADO -->
+  <table>
+    <tr>
+      <td rowspan="3" class="header-logo" style="width: 25%;">
+        <img th:src="${fractalLogo}" alt="Logo Fractal" style="max-height: 45px; width: auto;" />
+      </td>
+
+      <td rowspan="3" class="header-title" style="width: 45%; color: #8a8a8a;">
+        FORMULARIO DE MOVIMIENTO
+      </td>
+
+      <td style="width: 10%; font-size: 8pt; border-bottom: 1px solid #a6c9e2;">Código:</td>
+      <td style="width: 20%; font-size: 8pt; border-bottom: 1px solid #a6c9e2; border-left: 1px solid #a6c9e2;">
+        FT-GTH-12
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2;">Versión:</td>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2; border-left: 1px solid #a6c9e2;">04</td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2;">Fecha:</td>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2; border-left: 1px solid #a6c9e2;">05/11/2025</td>
+    </tr>
+  </table>
+
+  <!-- DATOS DEL COLABORADOR -->
+  <div class="section-title">DATOS DEL COLABORADOR</div>
+  <table>
+    <tr>
+      <td class="label">Nombres y Apellidos</td>
+      <td class="value" th:text="${nombreColaborador}">
+        Escribir el nombre del colaborador.
+      </td>
+    </tr>
+    <tr>
+      <td class="label">Unidad</td>
+      <td class="value" th:text="${unidad}">
+        Marketing, Comercial y Comunicaciones
+      </td>
+    </tr>
+  </table>
+
+  <!-- INGRESO -->
+  <div class="section-title">INGRESO</div>
+  <table>
+    <tr>
+      <td class="label">Modalidad</td>
+      <td colspan="4" class="value" th:text="${modalidadIngreso}">Planilla - Reg. General</td>
+    </tr>
+    <tr>
+      <td class="label">Motivo de Ingreso</td>
+      <td colspan="4" class="value" th:text="${motivoIngreso}">Cubrir una vacante</td>
+    </tr>
+    <tr>
+      <td class="label">Cargo</td>
+      <td colspan="4" class="value" th:text="${cargoIngreso}">Escribir el cargo.</td>
+    </tr>
+    <tr>
+      <td class="label">Horario de Trabajo</td>
+      <td colspan="4" class="value" th:text="${horarioIngreso}">Lun a Vie 8:00 a.m.- 6:30 p.m.</td>
+    </tr>
+    <tr>
+      <td rowspan="3" class="label">Estructura Salarial</td>
+      <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${montoBaseIngreso}" /> Base
+      </td>
+      <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${movilidadIngreso}" /> Movilidad
+      </td>
+      <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
+        Bono
+      </td>
+      <td class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${mensualIngreso}" /> Mensual
+      </td>
+    </tr>
+    <tr>
+      <td class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${trimestralIngreso}" /> Trimestral
+      </td>
+    </tr>
+    <tr>
+      <td class="checkbox-cell" th:text="${montoBaseIngreso}">1600</td>
+      <td class="checkbox-cell" th:text="${montoMovilidad}">Monto</td>
+      <td colspan="2" class="checkbox-cell" style="border-right: 1px solid #a6c9e2;" th:text="${montoBono}">Monto</td>
+    </tr>
+    <tr>
+      <td class="label">F. Inicio contrato</td>
+      <td colspan="4" class="value" th:text="${fechaInicioContrato}">Escoja una fecha.</td>
+    </tr>
+    <tr>
+      <td class="label">F. Término contrato</td>
+      <td colspan="4" class="value" th:text="${fechaFinContrato}">Escoja una fecha.</td>
+    </tr>
+    <tr>
+      <td class="label">Proyecto / servicio</td>
+      <td colspan="4" class="value" th:text="${proyectoContrato}">Escribir el nombre del proyecto o servicio.</td>
+    </tr>
+    <tr>
+      <td class="label">Objeto del contrato</td>
+      <td colspan="4" class="value" th:text="${objetoContrato}">Escribir el objeto del contrato.</td>
+    </tr>
+  </table>
+
+  <!--Declara SUNAT-->
+  <div class="section-title">DECLARACIÓN EN SUNAT</div>
+  <table>
+    <tr>
+      <td class="label">[1] ¿Declarado en SUNAT?</td>
+      <td class="value" th:text="${declaraSunat}">
+        Escribir el nombre del colaborador.
+      </td>
+    </tr>
+    <tr>
+      <td class="label">[2] Sede a declarar</td>
+      <td class="value" th:text="${sedeDeclarar}">
+        Sede a declarar
+      </td>
+    </tr>
+  </table>
+
+  <!-- MOVIMIENTO -->
+  <div class="section-title">MOVIMIENTO</div>
+  <table>
+    <tr>
+      <td rowspan="3" class="label">Cambio de estructura salarial</td>
+      <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${montoBase}" /> Base
+      </td>
+      <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${movilidadIngreso}" /> Movilidad
+      </td>
+      <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
+        Bono
+      </td>
+      <td class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${mensualIngreso}" /> Mensual
+      </td>
+    </tr>
+    <tr>
+      <td class="checkbox-cell" style="width: 17.5%;">
+        <input type="checkbox" th:checked="${trimestralIngreso}" /> Trimestral
+      </td>
+    </tr>
+    <tr>
+      <td class="checkbox-cell" th:text="${montoBase}">1600</td>
+      <td class="checkbox-cell" th:text="${montoMovilidad}">Monto</td>
+      <td colspan="2" class="checkbox-cell" style="border-right: 1px solid #a6c9e2;" th:text="${montoBono}">Monto</td>
+    </tr>
+    <tr>
+      <td class="label">Cambio de puesto</td>
+      <td colspan="4" class="value" th:text="${fechaInicio}">Escoja una fecha.</td>
+    </tr>
+    <tr>
+      <td class="label">Cambio de área</td>
+      <td colspan="4" class="value" th:text="${fechaFin}">Escoja una fecha.</td>
+    </tr>
+    <tr>
+      <td class="label">Cambio de jornada</td>
+      <td colspan="4" class="value" th:text="${proyecto}">Escribir el nombre del proyecto o servicio.</td>
+    </tr>
+    <tr>
+      <td class="label">F. Inicio de movimiento</td>
+      <td colspan="4" class="value" th:text="${fechaMovimiento}">Escoja una fecha.</td>
+    </tr>
+  </table>
+
+  <!-- CESE -->
+  <div class="section-title">CESE</div>
+  <table>
+    <tr>
+      <td class="label">Motivo de Cese</td>
+      <td class="value" th:text="${motivoCese}">Elija un motivo.</td>
+    </tr>
+    <tr>
+      <td class="label">Fecha de Cese</td>
+      <td class="value" th:text="${fechaCese}">Escoja una fecha.</td>
+    </tr>
+    <tr>
+      <td class="label">Fecha de devolución Equipo</td>
+      <td class="value" th:text="${fechaDevolucionEquipo}">Escoja una fecha.</td>
+    </tr>
+  </table>
+
+  <!-- FIRMA -->
+  <div class="footer-sign">
+    <p th:text="${nombreResponsable}">Nombre y apellido – Responsable de Unidad.</p>
+    <p>Gestor de Servicios</p>
+  </div>
+
+  <div>
+    <p style="font-size: 8pt; color: #696969">
+      (*) DECLARACION EN SUNAT - En esta sección deberá informar al colaborador que se encuentra en Planilla y será
+      declarado en SUNAT. Responda la
+      pregunta [1], en caso su respuesta sea afirmativa, por favor responda a la pregunta [2] tener en cuenta que si la
+      respuesta es "Oficina del Cliente" se debe
+      contar con un contrato entre empresas.
+    </p>
+    <p style="font-size: 7pt; text-align: center; margin-top: 5px;">
+      Generado con FMI © 2025 — Fecha de emisión: 7 de febrero de 2026
+    </p>
+  </div>
+
+</body>
+
+</html>

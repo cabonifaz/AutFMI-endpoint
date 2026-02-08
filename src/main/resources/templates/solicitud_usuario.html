@@ -238,23 +238,25 @@
     </tr>
   </table>
 
-  <div class="footer-sign" style="margin-top: 40px; text-align: center;">
-    <div th:text="${nombreResponsable}" style="font-weight: bold; font-size: 10pt; margin-bottom: 2px;">
-      Nombre del Encargado
+  <div style="position: fixed; bottom: 0; left: 0; width: 100%;">
+    <div class="footer-sign" style="text-align: center;">
+      <div th:text="${nombreResponsable}" style="font-weight: bold; font-size: 10pt; margin-bottom: 2px;">
+        Nombre del Encargado
+      </div>
+
+      <div style="border-top: 1px solid #000000; width: 350px; margin: 0 auto;"></div>
+
+      <div style="font-size: 9pt; margin-top: 3px;">
+        <span th:text="${nombreResponsable}">Nombre del encargado</span>
+        <p>Gestor de Servicios</p>
+      </div>
     </div>
 
-    <div style="border-top: 1px dotted #000000; width: 350px; margin: 0 auto;"></div>
-
-    <div style="font-size: 9pt; margin-top: 3px;">
-      <span th:text="${nombreResponsable}">Nombre del encargado</span>
-      <p>Gestor de Servicios</p>
+    <div>
+      <p style="font-size: 7pt; text-align: center; margin-top: 5px; margin-bottom: 0;">
+        Generado con FMI © 2025 — Fecha de emisión: <span th:text="${fechaEmision}">07 de febrero del 2025</span>
+      </p>
     </div>
-  </div>
-
-  <div>
-    <p style="font-size: 7pt; text-align: center; margin-top: 5px;">
-      Generado con FMI © 2025 — Fecha de emisión: <span th:text="${fechaEmision}">07 de febrero del 2025</span>
-    </p>
   </div>
 
 </body>

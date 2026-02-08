@@ -104,7 +104,6 @@
     .footer-sign {
       margin-top: 50px;
       text-align: center;
-      border-top: 1px dotted #999;
       width: 50%;
       margin-left: auto;
       margin-right: auto;
@@ -198,8 +197,9 @@
     </tr>
     <tr>
       <td class="checkbox-cell" th:text="${montoBaseIngreso}">1600</td>
-      <td class="checkbox-cell" th:text="${montoMovilidad}">Monto</td>
-      <td colspan="2" class="checkbox-cell" style="border-right: 1px solid #a6c9e2;" th:text="${montoBono}">Monto</td>
+      <td class="checkbox-cell" th:text="${montoMovilidadIngreso}">Monto</td>
+      <td colspan="2" class="checkbox-cell" style="border-right: 1px solid #a6c9e2;" th:text="${montoBonoIngreso}">Monto
+      </td>
     </tr>
     <tr>
       <td class="label">F. Inicio contrato</td>
@@ -300,9 +300,19 @@
   </table>
 
   <!-- FIRMA -->
-  <div class="footer-sign">
-    <p th:text="${nombreResponsable}">Nombre y apellido – Responsable de Unidad.</p>
-    <p>Gestor de Servicios</p>
+  <div class="footer-sign" style="margin-top: 40px; text-align: center;">
+    <div th:text="${nombreResponsable}" style="font-weight: bold; font-size: 10pt; margin-bottom: 2px;">
+      Nombre del Encargado
+    </div>
+
+    <div style="border-top: 1px dotted #000000; width: 350px; margin: 0 auto;"></div>
+
+    <div style="font-size: 9pt; margin-top: 3px;">
+      <span th:text="${nombreResponsable}">Nombre del encargado</span>
+      <p>
+        Gestor de Servicios
+      </p>
+    </div>
   </div>
 
   <div>
@@ -314,7 +324,7 @@
       contar con un contrato entre empresas.
     </p>
     <p style="font-size: 7pt; text-align: center; margin-top: 5px;">
-      Generado con FMI © 2025 — Fecha de emisión: 7 de febrero de 2026
+      Generado con FMI © 2025 — Fecha de emisión: <span th:text="${fechaEmision}">07 de febrero del 2025</span>
     </p>
   </div>
 

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @page {
+      size: A4;
+      margin-top: 0.28in;
+      margin-bottom: 0.3in;
+      margin-left: 1.18in;
+      margin-right: 1.18in;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 9pt;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0px;
+    }
+
+    td {
+      border: 1px solid #8c8c8c;
+      padding: 4px;
+      vertical-align: middle;
+    }
+
+    .header-bg {
+      background-color: #335a96;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .label {
+      font-weight: bold;
+      background-color: #f2f2f2;
+      width: 20%;
+    }
+
+    .value {
+      width: 30%;
+    }
+
+    .title-main {
+      font-size: 11pt;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .meta-info {
+      font-size: 7pt;
+      width: 20%;
+    }
+
+    .checkbox-cell {
+      text-align: center;
+      width: 5%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <table>
+    <tr>
+      <td rowspan="3" class="header-logo" style="width: 25%;">
+        <img th:src="${fractalLogo}" alt="Logo" style="max-height: 40px; width: auto;" />
+      </td>
+
+      <td rowspan="3" class="header-title"
+        style="width: 45%; color: #000; text-align: center; font-weight: bold; font-size: 10pt;">
+        SOLICITUD DE CREACIÓN, MODIFICACIÓN O<br />
+        DESACTIVACIÓN DE USUARIOS
+      </td>
+
+      <td style="width: 10%; font-size: 8pt; border-bottom: 1px solid #335a96;">Código:</td>
+      <td style="width: 20%; font-size: 8pt; border-bottom: 1px solid #335a96; border-left: 1px solid #335a96;">
+        FT-GS-01
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; border-bottom: 1px solid #335a96;">Versión:</td>
+      <td style="font-size: 8pt; border-bottom: 1px solid #335a96; border-left: 1px solid #335a96;">
+        01
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; border-bottom: 1px solid #335a96;">Fecha:</td>
+      <td style="font-size: 8pt; border-bottom: 1px solid #335a96; border-left: 1px solid #335a96;">
+        31/08/2016
+      </td>
+    </tr>
+  </table>
+
+  <table style="margin: 10px 0px; width: 100%; border-collapse: collapse;">
+    <tr>
+      <td colspan="4" class="header-bg"
+        style="text-align: center; background-color: #2e548a; color: white; font-weight: bold;">
+        DATOS DEL SOLICITANTE
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="3" class="label" style="padding: 5px;">
+        <strong>Nombres y Apellidos:</strong>
+        <span style="font-weight: normal;" th:text="${nombresSolicitante}">Justin Mason</span>
+      </td>
+      <td rowspan="2" style="vertical-align: middle;">
+        <strong>Anexo:</strong> <br />
+        <span>102</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding: 5px; width: 35%;">
+        <strong>Área:</strong>
+        <span style="font-weight: normal;" th:text="${areaSolicitante}">Sistemas</span>
+      </td>
+      <td colspan="2" style="padding: 5px;">
+        <strong>Cargo:</strong>
+        <span style="font-weight: normal;" th:text="${cargoSolicitante}">Ingeniero</span>
+      </td>
+    </tr>
+
+    <tr>
+      <td colspan="4" class="label" style="padding: 5px; background-color: #f9f9f9;">
+        <strong>Fecha:</strong>
+        <span th:text="${fechaSolicitud}" style="font-weight: normal;">20/01/2026</span>
+      </td>
+    </tr>
+  </table>
+
+  <table style="margin: 20px 0px;">
+    <tr>
+      <td colspan="4" class="header-bg">CREACIÓN DE USUARIOS</td>
+    </tr>
+    <tr>
+      <td class="label">Nombres y Apellidos:</td>
+      <td colspan="2" th:text="${nombresUsuario}">Justin Mason</td>
+      <td rowspan="3" class="value"></td>
+    </tr>
+    <tr>
+      <td class="label">Nombre de Usuario:</td>
+      <td colspan="2" th:text="${usernameIngreso}">jmason</td>
+    </tr>
+    <tr>
+      <td class="label">Correo:</td>
+      <td class="value" th:text="${emailUsuario}">ejemplo@fractal.com.pe</td>
+      <td class="label">Área:
+        <span th:text="${areaUsuario}" style="font-weight: normal;">Sistemas</span>
+      </td>
+
+    </tr>
+    <tr style="background-color: #f2f2f2;">
+      <td>
+        <input type="checkbox" /> Entrada<br />
+        <input type="checkbox" /> Salida
+      </td>
+      <td>
+        <input type="checkbox" /> Interno <br />
+        <input type="checkbox" /> Externo
+      </td>
+      <td colspan="2"></td>
+    </tr>
+  </table>
+
+  <table style="margin: 20px 0px; width: 100%; border-collapse: collapse;">
+    <tr>
+      <td colspan="4" class="header-bg" style="text-align: center;">
+        MODIFICACIÓN DE USUARIOS
+      </td>
+    </tr>
+
+    <tr>
+      <td class="label" style="width: 30%;">Modificar Usuario de Red</td>
+      <td colspan="2" style="width: 45%;">
+        <input type="checkbox" />
+      </td>
+      <td rowspan="6" style="width: 15%;"></td>
+    </tr>
+
+    <tr>
+      <td class="label">Usuario:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
+
+    <tr>
+      <td class="label">Modificar por:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
+
+    <tr>
+      <td class="label">Modificar correo electrónico:</td>
+      <td colspan="2">
+        <input type="checkbox" />
+      </td>
+    </tr>
+
+    <tr>
+      <td class="label">Correo:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
+
+    <tr>
+      <td class="label">Modificar por:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
+  </table>
+
+  <table style="margin: 20px 0px;">
+    <tr>
+      <td colspan="2" class="header-bg">DESACTIVACIÓN DE USUARIOS</td>
+    </tr>
+    <tr>
+      <td class="label">Nombre y Apellidos:</td>
+      <td th:text="${nombresDesactivacion}">Justin Mason</td>
+    </tr>
+    <tr>
+      <td class="label">Usuario:</td>
+      <td th:text="${usuarioDesactivacion}">jmason</td>
+    </tr>
+    <tr>
+      <td class="label">Correo:</td>
+      <td th:text="${correoDesactivacion}">ejemplo@fractal.com.pe</td>
+    </tr>
+    <tr>
+      <td class="label">Motivo:</td>
+      <td style="font-weight: bold;" th:text="${motivoDesactivacion}">Motivo de desactivación</td>
+    </tr>
+  </table>
+
+  <div class="footer-sign" style="margin-top: 40px; text-align: center;">
+    <div th:text="${nombreResponsable}" style="font-weight: bold; font-size: 10pt; margin-bottom: 2px;">
+      Nombre del Encargado
+    </div>
+
+    <div style="border-top: 1px dotted #000000; width: 350px; margin: 0 auto;"></div>
+
+    <div style="font-size: 9pt; margin-top: 3px;">
+      <span th:text="${nombreResponsable}">Nombre del encargado</span>
+      <p>Gestor de Servicios</p>
+    </div>
+  </div>
+
+  <div>
+    <p style="font-size: 7pt; text-align: center; margin-top: 5px;">
+      Generado con FMI © 2025 — Fecha de emisión: <span th:text="${fechaEmision}">07 de febrero del 2025</span>
+    </p>
+  </div>
+
+</body>
+
+</html>

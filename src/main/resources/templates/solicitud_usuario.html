@@ -26,10 +26,16 @@
       margin-bottom: 0px;
     }
 
+    /* Estilo general de bordes grises para todas las tablas */
     td {
       border: 1px solid #8c8c8c;
       padding: 4px;
       vertical-align: middle;
+    }
+
+    /* Clase específica para el header con bordes azules */
+    .header-table td {
+      border: 1px solid #a6c9e2;
     }
 
     .header-bg {
@@ -70,7 +76,7 @@
 
 <body>
 
-  <table>
+  <table class="header-table">
     <tr>
       <td rowspan="3" class="header-logo" style="width: 25%;">
         <img th:src="${fractalLogo}" alt="Logo" style="max-height: 40px; width: auto;" />
@@ -82,20 +88,20 @@
         DESACTIVACIÓN DE USUARIOS
       </td>
 
-      <td style="width: 10%; font-size: 8pt; border-bottom: 1px solid #335a96;">Código:</td>
-      <td style="width: 20%; font-size: 8pt; border-bottom: 1px solid #335a96; border-left: 1px solid #335a96;">
+      <td style="width: 10%; font-size: 8pt; border-bottom: 1px solid #a6c9e2;">Código:</td>
+      <td style="width: 20%; font-size: 8pt; border-bottom: 1px solid #a6c9e2; border-left: 1px solid #a6c9e2;">
         FT-GS-01
       </td>
     </tr>
     <tr>
-      <td style="font-size: 8pt; border-bottom: 1px solid #335a96;">Versión:</td>
-      <td style="font-size: 8pt; border-bottom: 1px solid #335a96; border-left: 1px solid #335a96;">
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2;">Versión:</td>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2; border-left: 1px solid #a6c9e2;">
         01
       </td>
     </tr>
     <tr>
-      <td style="font-size: 8pt; border-bottom: 1px solid #335a96;">Fecha:</td>
-      <td style="font-size: 8pt; border-bottom: 1px solid #335a96; border-left: 1px solid #335a96;">
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2;">Fecha:</td>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2; border-left: 1px solid #a6c9e2;">
         31/08/2016
       </td>
     </tr>

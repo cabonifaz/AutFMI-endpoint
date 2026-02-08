@@ -34,6 +34,9 @@ public class MailService implements IMailService {
   @Autowired
   private final PDFUtils pdfUtils;
 
+  @Autowired
+  private final ReportPDFBuilder reportPDFBuilder;
+
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
   /**
@@ -284,7 +287,7 @@ public class MailService implements IMailService {
     String subject = "Cese de Empleado - " + report.getNombres() + " " + report.getApellidos();
     GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
 
-    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+    List<FileDTO> attachments = this.reportPDFBuilder
         .forCese(report, gs)
         .withFormulario()
         .withDeactivateRequest()
@@ -314,7 +317,7 @@ public class MailService implements IMailService {
     String dest = report.getCorreoGestor();
     GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
 
-    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+    List<FileDTO> attachments = this.reportPDFBuilder
         .forMovimiento(report, gs)
         .withFormulario()
         .build();
@@ -349,7 +352,7 @@ public class MailService implements IMailService {
 
     GestorDTO gs = new GestorDTO(gsFullname, gsFullname);
 
-    List<FileDTO> attachments = new ReportPDFBuilder(pdfUtils)
+    List<FileDTO> attachments = this.reportPDFBuilder
         .fEquipoReport(report, gs)
         .withFormulario()
         .build();

@@ -19,7 +19,6 @@ import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
-import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
@@ -41,6 +40,7 @@ public class EmployeeService implements IEmployeeService {
     private final PDFUtils pdfUtils;
     private final JwtHelper jwt;
     private final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
+    private final ReportPDFBuilder reportPDFBuilder;
 
     @Override
     public BaseResponse getEmployee(Integer idTalento) {
@@ -231,13 +231,13 @@ public class EmployeeService implements IEmployeeService {
             return response;
 
         PDFUtils pdfUtils = new PDFUtils();
-        ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
+        // ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
 
         if (report instanceof EntryReport entry) {
             // @Pendiente
             GestorDTO gs = new GestorDTO(null, entry.getFirmante());
 
-            List<FileDTO> files = builder
+            List<FileDTO> files = this.reportPDFBuilder
                     .forIngreso(entry, gs)
                     .withFormulario()
                     .withUsuarioInfo()
@@ -254,7 +254,8 @@ public class EmployeeService implements IEmployeeService {
         } else if (report instanceof MovementReport movement) {
             String fullname = movement.getFirmante();
             GestorDTO gs = new GestorDTO(fullname, fullname);
-            List<FileDTO> files = builder.forMovimiento(movement, gs)
+            List<FileDTO> files = this.reportPDFBuilder
+                    .forMovimiento(movement, gs)
                     .withFormulario()
                     .build();
 
@@ -269,7 +270,8 @@ public class EmployeeService implements IEmployeeService {
         } else if (report instanceof CeseReport cese) {
             GestorDTO gs = new GestorDTO(null, cese.getFirmante());
 
-            List<FileDTO> files = builder.forCese(cese, gs)
+            List<FileDTO> files = this.reportPDFBuilder
+                    .forCese(cese, gs)
                     .withFormulario()
                     .withDeactivateRequest()
                     .build();
@@ -319,7 +321,7 @@ public class EmployeeService implements IEmployeeService {
         PDFUtils pdfUtils = new PDFUtils();
         String gestor = report.getNombreApellidoGestor();
         GestorDTO gs = new GestorDTO(gestor, gestor);
-        List<FileDTO> files = new ReportPDFBuilder(pdfUtils)
+        List<FileDTO> files = this.reportPDFBuilder
                 .fEquipoReport(report, gs)
                 .withFormulario()
                 .build();
@@ -370,7 +372,7 @@ public class EmployeeService implements IEmployeeService {
         PDFUtils pdfUtils = new PDFUtils();
         String gestor = report.getNombreApellidoGestor();
         GestorDTO gs = new GestorDTO(gestor, gestor);
-        List<FileDTO> files = new ReportPDFBuilder(pdfUtils)
+        List<FileDTO> files = this.reportPDFBuilder
                 .fEquipoReport(report, gs)
                 .withFormulario()
                 .build();
@@ -423,7 +425,7 @@ public class EmployeeService implements IEmployeeService {
             return response;
 
         PDFUtils pdfUtils = new PDFUtils();
-        ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
+        var builder = this.reportPDFBuilder;
 
         if (report instanceof EntryReport entry) {
             // @Pendiente

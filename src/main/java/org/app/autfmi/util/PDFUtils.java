@@ -89,13 +89,6 @@ public class PDFUtils {
             @NonNull String subject,
             @NonNull String text)
             throws MessagingException {
-        try {
-            for (FileDTO lstfile : lstfiles) {
-                lstfile.setByteArchivo(crearPDF(lstfile.getHtmlTemplate(), ""));
-            }
-        } catch (Exception e) {
-            throw new MessagingException("Error al generar el PDF", e);
-        }
 
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);

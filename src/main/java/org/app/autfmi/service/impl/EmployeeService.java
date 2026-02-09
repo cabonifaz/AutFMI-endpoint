@@ -231,13 +231,12 @@ public class EmployeeService implements IEmployeeService {
             return response;
 
         PDFUtils pdfUtils = new PDFUtils();
-        // ReportPDFBuilder builder = new ReportPDFBuilder(pdfUtils);
 
+        // Reporte de Ingreso
         if (report instanceof EntryReport entry) {
-            // @Pendiente
-            GestorDTO gs = new GestorDTO(null, entry.getFirmante());
+            var gs = new GestorDTO(null, entry.getFirmante());
 
-            List<FileDTO> files = this.reportPDFBuilder
+            var files = this.reportPDFBuilder
                     .forIngreso(entry, gs)
                     .withFormulario()
                     .withUsuarioInfo()
@@ -251,15 +250,19 @@ public class EmployeeService implements IEmployeeService {
             response.setLstArchivos(files64);
             return response;
 
-        } else if (report instanceof MovementReport movement) {
-            String fullname = movement.getFirmante();
-            GestorDTO gs = new GestorDTO(fullname, fullname);
-            List<FileDTO> files = this.reportPDFBuilder
+        }
+
+        // Reporte de movimiento
+        else if (report instanceof MovementReport movement) {
+            var fullname = movement.getFirmante();
+            var gs = new GestorDTO(fullname, fullname);
+
+            var files = this.reportPDFBuilder
                     .forMovimiento(movement, gs)
                     .withFormulario()
                     .build();
 
-            List<FilePDFDTO> files64 = files.stream().map(p -> {
+            var files64 = files.stream().map(p -> {
                 String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
                 return new FilePDFDTO(p.nombreArchivo, base64);
             }).toList();
@@ -267,17 +270,19 @@ public class EmployeeService implements IEmployeeService {
             response.setLstArchivos(files64);
             return response;
 
-        } else if (report instanceof CeseReport cese) {
-            GestorDTO gs = new GestorDTO(null, cese.getFirmante());
+        }
+        // Reporte de cese
+        else if (report instanceof CeseReport cese) {
+            var gs = new GestorDTO(null, cese.getFirmante());
 
-            List<FileDTO> files = this.reportPDFBuilder
+            var files = this.reportPDFBuilder
                     .forCese(cese, gs)
-                    .withFormulario()
+                    .withFormularioCese()
                     .withDeactivateRequest()
                     .build();
 
-            List<FilePDFDTO> files64 = files.stream().map(f -> {
-                String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+            var files64 = files.stream().map(f -> {
+                var base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
                 return new FilePDFDTO(f.nombreArchivo, base64);
             }).toList();
 
@@ -464,7 +469,7 @@ public class EmployeeService implements IEmployeeService {
             GestorDTO gs = new GestorDTO(null, cese.getFirmante());
 
             List<FileDTO> files = builder.forCese(cese, gs)
-                    .withFormulario()
+                    .withFormularioCese()
                     .withDeactivateRequest()
                     .build();
 

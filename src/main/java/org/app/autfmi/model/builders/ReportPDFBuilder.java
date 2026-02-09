@@ -15,11 +15,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReportPDFBuilder {
 
-  private PDFUtils pdfUtils;
+  private final PDFUtils pdfUtils;
   private final SpringTemplateEngine templateEngine;
 
   public ReportCeseBuilder forCese(CeseReport report, GestorDTO gs) {
-    return new ReportCeseBuilder(pdfUtils, report, gs);
+    return new ReportCeseBuilder(this.templateEngine, report, gs);
   }
 
   public ReportMovementBuilder forMovimiento(MovementReport report, GestorDTO gs) {

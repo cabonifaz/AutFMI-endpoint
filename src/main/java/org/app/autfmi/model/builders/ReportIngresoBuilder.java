@@ -66,7 +66,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     return this;
   }
 
-  public ReportIngresoBuilder withUsuarioInfo() {
+  public ReportIngresoBuilder withCreateUser() {
     var filename = "FT-GS-01 Solicitud de Creación de Usuario";
 
     var context = new Context();

@@ -23,7 +23,7 @@ public class ReportPDFBuilder {
   }
 
   public ReportMovementBuilder forMovimiento(MovementReport report, GestorDTO gs) {
-    return new ReportMovementBuilder(pdfUtils, report, gs);
+    return new ReportMovementBuilder(this.templateEngine, report, gs);
   }
 
   public ReportIngresoBuilder forIngreso(EntryReport report, GestorDTO gs) {

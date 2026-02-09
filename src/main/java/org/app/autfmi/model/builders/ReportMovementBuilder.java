@@ -5,23 +5,54 @@ import java.util.List;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.MovementReport;
-import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.Common;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
 
-  public ReportMovementBuilder(PDFUtils pdfUtils, MovementReport report, GestorDTO gs) {
-    super(pdfUtils, report, gs);
+  private final SpringTemplateEngine templateEngine;
+
+  public ReportMovementBuilder(SpringTemplateEngine templateEngine, MovementReport report, GestorDTO gs) {
+    super(null, report, gs);
+    this.templateEngine = templateEngine;
   }
 
   public ReportMovementBuilder withFormulario() {
-    String fullName = report.getNombres() + " " + report.getApellidos();
-    String fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
-    String fileTemplate = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO);
-    String filled = pdfUtils.replaceMovementRequestValues(fileTemplate, report);
+    var context = new Context();
 
-    byte[] fileBytes = pdfUtils.crearPDF(filled, fileName);
+    // Logo
+    var logoBase64 = imageToBase64("assets/logo-fractal.png");
+    context.setVariable("fractalLogo", logoBase64);
 
-    files.add(new FileDTO(fileName, filled, fileBytes));
+    // Datos del Colaborador
+    context.setVariable("nombreColaborador", report.getNombres() + " " + report.getApellidos());
+    context.setVariable("unidad", report.getUnidad());
+
+    // Estructura salarial
+    context.setVariable("montoBaseMov", report.getMontoBase());
+    context.setVariable("montoMovilidadMov", report.getMontoMovilidad());
+    context.setVariable("montoBonoMov", report.getMontoTrimestral());
+
+    // Fechas y cambios
+    context.setVariable("puestoMovimiento", report.getPuesto());
+    context.setVariable("areaMovimiento", report.getArea());
+    context.setVariable("fechaMovimiento", report.getFechaHistorial());
+    context.setVariable("jornadaMovimiento", report.getHorario());
+
+    // Responsable y Pie de página
+    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
+
+    // Procesar plantilla
+    var htmlContent = templateEngine.process("formulario_movimiento", context);
+
+    // Generar PDF
+    var fullName = report.getNombres() + " " + report.getApellidos();
+    var fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
+    var pdfBytes = renderPdfFromHtml(htmlContent);
+
+    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
     return this;
   }
 

@@ -242,39 +242,41 @@
     <tr>
       <td rowspan="3" class="label">Cambio de estructura salarial</td>
       <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
-        <input type="checkbox" th:checked="${montoBase}" /> Base
+        <input type="checkbox" th:checked="${montoBaseMov}" /> Base
       </td>
       <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
-        <input type="checkbox" th:checked="${movilidadIngreso}" /> Movilidad
+        <input type="checkbox" th:checked="${movilidadMov}" /> Movilidad
       </td>
       <td rowspan="2" class="checkbox-cell" style="width: 17.5%;">
         Bono
       </td>
       <td class="checkbox-cell" style="width: 17.5%;">
-        <input type="checkbox" th:checked="${mensualIngreso}" /> Mensual
+        <input type="checkbox" th:checked="${mensualMov}" /> Mensual
       </td>
     </tr>
     <tr>
       <td class="checkbox-cell" style="width: 17.5%;">
-        <input type="checkbox" th:checked="${trimestralIngreso}" /> Trimestral
+        <input type="checkbox" th:checked="${trimestralMov}" /> Trimestral
       </td>
     </tr>
     <tr>
-      <td class="checkbox-cell" th:text="${montoBase}">1600</td>
-      <td class="checkbox-cell" th:text="${montoMovilidad}">Monto</td>
-      <td colspan="2" class="checkbox-cell" style="border-right: 1px solid #a6c9e2;" th:text="${montoBono}">Monto</td>
+      <td class="checkbox-cell" th:text="${montoBaseMov}">1600</td>
+      <td class="checkbox-cell" th:text="${montoMovilidadMov}">Monto</td>
+      <td colspan="2" class="checkbox-cell" style="border-right: 1px solid #a6c9e2;" th:text="${montoBonoMov}">
+        Monto
+      </td>
     </tr>
     <tr>
       <td class="label">Cambio de puesto</td>
-      <td colspan="4" class="value" th:text="${fechaInicio}">Escoja una fecha.</td>
+      <td colspan="4" class="value" th:text="${puestoMovimiento}">Escoja una fecha.</td>
     </tr>
     <tr>
       <td class="label">Cambio de área</td>
-      <td colspan="4" class="value" th:text="${fechaFin}">Escoja una fecha.</td>
+      <td colspan="4" class="value" th:text="${areaMovimiento}">Escoja una fecha.</td>
     </tr>
     <tr>
       <td class="label">Cambio de jornada</td>
-      <td colspan="4" class="value" th:text="${proyecto}">Escribir el nombre del proyecto o servicio.</td>
+      <td colspan="4" class="value" th:text="${jornadaMovimiento}">Escribir el nombre del proyecto o servicio.</td>
     </tr>
     <tr>
       <td class="label">F. Inicio de movimiento</td>

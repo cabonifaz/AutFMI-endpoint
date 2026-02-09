@@ -289,7 +289,7 @@ public class MailService implements IMailService {
 
     List<FileDTO> attachments = this.reportPDFBuilder
         .forCese(report, gs)
-        .withFormulario()
+        .withFormularioCese()
         .withDeactivateRequest()
         .build();
 

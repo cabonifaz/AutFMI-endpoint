@@ -324,12 +324,14 @@ public class RequirementService implements IRequirementService {
             this.logger.info("Enviando formularos de solicitudes de equipo");
 
             // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            pdfUtils.enviarCorreoConPDF(
-                    filesToSend,
-                    gestorDocCorreo,
-                    contacts,
-                    "Requerimiento de Software y Hardware",
-                    "Formulario Requerimiento de Software y Hardware.");
+            if (solicitudesEquipo != null && !solicitudesEquipo.isEmpty()) {
+                pdfUtils.enviarCorreoConPDF(
+                        filesToSend,
+                        gestorDocCorreo,
+                        contacts,
+                        "Requerimiento de Software y Hardware",
+                        "Formulario Requerimiento de Software y Hardware.");
+            }
 
             this.logger.info("Formularos de solicitudes de equipo enviados");
 

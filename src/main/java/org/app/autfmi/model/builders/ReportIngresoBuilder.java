@@ -1,5 +1,6 @@
 package org.app.autfmi.model.builders;
 
+import java.util.Base64;
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
@@ -69,6 +70,17 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("fechaFinContrato", report.getFechaFinContrato());
     context.setVariable("proyectoContrato", report.getProyectoServicio());
     context.setVariable("objetoContrato", report.getObjetoContrato());
+
+    // Descagar firma del gestor
+    if (gs.getSignature() != null && !gs.getSignature().isEmpty()) {
+      var signatureBytes = this.dowloadSignature(gs.getSignature());
+
+      // Convertimos los bytes a String Base64 con el prefijo de imagen
+      var base64Image = "data:image/png;base64," + signatureBytes;
+      context.setVariable("firmaGestor", base64Image);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
 
     // Responsable y firma
     context.setVariable("nombreResponsable", gs.getFullname());

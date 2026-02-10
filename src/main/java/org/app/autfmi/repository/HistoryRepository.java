@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unchecked")
 @Repository
 @RequiredArgsConstructor
 public class HistoryRepository {

@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorDTO;
+import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -93,6 +94,10 @@ public abstract class BaseReportBuilder<T> {
       return null;
     }
     return value;
+  }
+
+  protected String dowloadSignature(String signaturePath) {
+    return FileUtils.cargarArchivoAws(signaturePath);
   }
 
 }

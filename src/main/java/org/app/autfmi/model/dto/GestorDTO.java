@@ -8,7 +8,7 @@ public class GestorDTO {
   private String fullname;
 
   public GestorDTO(String signature, String fullname) {
-    this.signature = signature == null ? fullname : signature;
+    this.signature = signature;
     this.fullname = fullname;
   }
 }

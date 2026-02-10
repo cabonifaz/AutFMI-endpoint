@@ -361,7 +361,9 @@ public class EmployeeService implements IEmployeeService {
     // Mapear la respuesta
     PDFUtils pdfUtils = new PDFUtils();
     String gestor = report.getNombreApellidoGestor();
-    GestorDTO gs = new GestorDTO(gestor, gestor);
+    String signature = report.getCorreoGestor();
+
+    GestorDTO gs = new GestorDTO(signature, gestor);
     List<FileDTO> files = this.reportPDFBuilder
         .fEquipoReport(report, gs)
         .withFormulario()
@@ -418,8 +420,8 @@ public class EmployeeService implements IEmployeeService {
     var builder = this.reportPDFBuilder;
 
     if (report instanceof EntryReport entry) {
-      // @Pendiente
-      GestorDTO gs = new GestorDTO(null, entry.getFirmante());
+
+      var gs = new GestorDTO(entry.getFirma(), entry.getFirmante());
 
       List<FileDTO> files = builder
           .forIngreso(entry, gs)

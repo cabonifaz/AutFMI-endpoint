@@ -58,7 +58,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("montoMensualIngreso", null);
 
     // TODO: Sumar el monto trimestral + monto mensual = monto bono
-    context.setVariable("montoBonoIngreso", montoTrimestral);
+    // context.setVariable("montoBonoIngreso", montoTrimestral);
 
     // Fechas
     context.setVariable("fechaInicioContrato", report.getFechaInicioContrato());

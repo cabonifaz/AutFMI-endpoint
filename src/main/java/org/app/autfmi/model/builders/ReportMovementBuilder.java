@@ -39,7 +39,7 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     context.setVariable("montoBaseMov", montoBase);
     context.setVariable("montoMovilidadMov", montoMovilidad);
     context.setVariable("montoTrimestralMov", montoTrimestral);
-    context.setVariable("montoBonoMov", montoTrimestral);
+    // context.setVariable("montoBonoMov", montoTrimestral);
 
     // Fechas y cambios
     context.setVariable("puestoMovimiento", report.getPuesto());

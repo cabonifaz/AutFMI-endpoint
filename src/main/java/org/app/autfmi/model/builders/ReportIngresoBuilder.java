@@ -116,8 +116,17 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("emailUsuario", report.getEmailEmpleado());
     context.setVariable("areaUsuario", report.getUnidad());
 
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
+
+      var signatureBase64 = this.dowloadSignature(report.getFirma());
+      context.setVariable("firmaGestor",
+          "data:image/png;base64," + signatureBase64);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
     // Responsable y firma
-    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // Procesar plantilla 'solicitud_usuario.html'

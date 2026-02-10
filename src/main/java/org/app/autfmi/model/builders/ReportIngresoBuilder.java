@@ -5,51 +5,113 @@ import java.util.List;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.EntryReport;
-import org.app.autfmi.model.report.SolicitudData;
-import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.Common;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
-  protected ReportIngresoBuilder(PDFUtils pdfUtils, EntryReport report, GestorDTO gs) {
-    super(pdfUtils, report, gs);
+  private SpringTemplateEngine templateEngine;
+
+  protected ReportIngresoBuilder(SpringTemplateEngine templateEngine, EntryReport report, GestorDTO gs) {
+    super(null, report, gs);
+    this.templateEngine = templateEngine;
   }
 
   public ReportIngresoBuilder withFormulario() {
 
-    String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO);
-    String fullname = report.getNombres() + " " + report.getApellidos();
-    String filename = "FT-GT-12-FMI-Formulario de Ingreso " + fullname;
+    var context = new Context();
 
-    String filled = pdfUtils.replaceEntryRequestValues(template, report, gs);
-    byte[] fileBytes = pdfUtils.crearPDF(filled, filename);
+    var logoBase64 = this.imageToBase64("assets/logo-fractal.png");
 
-    this.files.add(new FileDTO(filename, filled, fileBytes));
+    // Determinar si es locador
+    var esLocador = "Locación de servicios".equalsIgnoreCase(report.getModalidad());
+    context.setVariable("locador", esLocador);
+
+    context.setVariable("fractalLogo", logoBase64);
+
+    // Datos colobarador
+    context.setVariable("nombreColaborador", report.getNombres() + " " + report.getApellidos());
+    context.setVariable("unidad", report.getUnidad());
+
+    // Ingreso
+    context.setVariable("modalidadIngreso", report.getModalidad());
+    context.setVariable("motivoIngreso", report.getMotivo());
+    context.setVariable("cargoIngreso", report.getCargo());
+    context.setVariable("horarioIngreso", report.getHorario());
+
+    // Declara SUNAT
+    var declaraSunat = report.getDeclararSunat() != 1 ? "No" : "Sí";
+    context.setVariable("declaraSunat", declaraSunat);
+    context.setVariable("sedeDeclarar", report.getSedeDeclararSunat());
+
+    // Estructura salarial
+
+    // Sanetizar montos, evitar que se escriban 0.00
+    String montoBase = this.sanitizeMoney(report.getMontoBase());
+    String montoMovilidad = this.sanitizeMoney(report.getMontoMovilidad());
+    String montoTrimestral = this.sanitizeMoney(report.getMontoTrimestral());
+
+    context.setVariable("montoBaseIngreso", montoBase);
+    context.setVariable("movilidadIngreso", montoMovilidad);
+    context.setVariable("montoTrimestralIngreso", montoTrimestral);
+    context.setVariable("montoMensualIngreso", null);
+
+    // TODO: Sumar el monto trimestral + monto mensual = monto bono
+    // context.setVariable("montoBonoIngreso", montoTrimestral);
+
+    // Fechas
+    context.setVariable("fechaInicioContrato", report.getFechaInicioContrato());
+    context.setVariable("fechaFinContrato", report.getFechaFinContrato());
+    context.setVariable("proyectoContrato", report.getProyectoServicio());
+    context.setVariable("objetoContrato", report.getObjetoContrato());
+
+    // Responsable y firma
+    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
+
+    // Procesar la plantilla (busca 'formulario_movimiento.html' en templates)
+    var htmlContent = templateEngine.process("formulario_movimiento", context);
+
+    // Generar PDF
+    var filename = "FT-GT-12-FMI-Formulario de Ingreso " + report.getNombres();
+    var pdfBytes = this.renderPdfFromHtml(htmlContent);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 
-  public ReportIngresoBuilder withUsuarioInfo() {
-    String filename = "FT-GS-01 Solicitud de Creación de Usuario";
+  public ReportIngresoBuilder withCreateUser() {
+    var filename = "FT-GS-01 Solicitud de Creación de Usuario";
 
-    SolicitudData data = new SolicitudData();
-    data.setNombres(report.getNombres());
-    data.setApellidos(report.getApellidos());
-    data.setArea(report.getUnidad());
-    data.setFechaSolicitud(report.getFechaHistorial());
-    data.setNombresCreacion(report.getNombres());
-    data.setApellidosCreacion(report.getApellidos());
-    data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
-    data.setCorreoCreacion(report.getEmailEmpleado());
-    data.setAreaCreacion(report.getUnidad());
-    data.setFirmante(report.getFirmante());
+    var context = new Context();
+    var logoBase64 = imageToBase64("assets/logo-fractal-2.png");
+    context.setVariable("fractalLogo", logoBase64);
 
-    String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD);
-    String filled = pdfUtils.replaceSolicitudPDFValues(
-        template,
-        data, gs);
+    // Datos del solicitante
+    context.setVariable("nombresSolicitante", report.getFirmante());
+    context.setVariable("areaSolicitante", report.getUnidad());
+    context.setVariable("cargoSolicitante", report.getCargo());
+    context.setVariable("fechaSolicitud", report.getFechaHistorial());
+    context.setVariable("anexoSolicitud", report.getUnidad());
 
-    byte[] fileBytes = pdfUtils.crearPDF(filled, filename);
-    this.files.add(new FileDTO(filename, filled, fileBytes));
+    // Creación de usuario
+    context.setVariable("nombresUsuario", report.getNombres() + " " + report.getApellidos());
+    context.setVariable("usernameIngreso", report.getUsernameEmpleado());
+    context.setVariable("emailUsuario", report.getEmailEmpleado());
+    context.setVariable("areaUsuario", report.getUnidad());
 
+    // Responsable y firma
+    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
+
+    // Procesar plantilla 'solicitud_usuario.html'
+    var htmlContent = templateEngine.process("solicitud_usuario", context);
+
+    // Generar PDF en bytes
+    var pdfBytes = this.renderPdfFromHtml(htmlContent);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 
@@ -57,5 +119,4 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
   public List<FileDTO> build() {
     return this.files;
   }
-
 }

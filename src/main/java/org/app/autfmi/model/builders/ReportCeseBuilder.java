@@ -13,9 +13,8 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
 
   private final SpringTemplateEngine templateEngine;
 
-  // TODO: Eliminar el objeto GestorDTO, ya no es necesario
   public ReportCeseBuilder(SpringTemplateEngine templateEngine, CeseReport report, GestorDTO gs) {
-    super(null, report, null);
+    super(null, report, gs);
     this.templateEngine = templateEngine;
   }
 
@@ -38,8 +37,6 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     // Firma y Pie de Página
     if (report.getFirma() != null && !report.getFirma().isEmpty()) {
       var signatureBytes = this.dowloadSignature(report.getFirma());
-
-      // Convertimos los bytes a String Base64 con el prefijo de imagen
       var base64Image = "data:image/png;base64," + signatureBytes;
       context.setVariable("firmaGestor", base64Image);
     } else {
@@ -71,12 +68,8 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     // 2. Datos del Solicitante (El gestor o firmante)
     context.setVariable("nombresSolicitante", report.getFirmante());
     context.setVariable("areaSolicitante", report.getUnidad());
-    // Si tienes el cargo del firmante en el reporte, úsalo. Si no, pon un default o
-    // vacío.
     context.setVariable("cargoSolicitante", "");
-    context.setVariable("fechaSolicitud", Common.getCurrentDateFormatted());
-    // Anexo si aplica, o vacío
-    context.setVariable("anexo", "");
+    context.setVariable("fechaSolicitud", report.getFechaHistorial());
 
     // 3. Sección DESACTIVACIÓN DE USUARIOS
     var nombreCompleto = report.getNombres() + " " + report.getApellidos();
@@ -84,6 +77,15 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     context.setVariable("usuarioDesactivacion", report.getUsernameEmpleado());
     context.setVariable("correoDesactivacion", report.getEmailEmpleado());
     context.setVariable("motivoDesactivacion", report.getMotivo());
+
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
+
+      var signatureBase64 = this.dowloadSignature(report.getFirma());
+      context.setVariable("firmaGestor",
+          "data:image/png;base64," + signatureBase64);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
 
     // 4. Firma y Pie de Página
     context.setVariable("nombreResponsable", report.getFirmante());

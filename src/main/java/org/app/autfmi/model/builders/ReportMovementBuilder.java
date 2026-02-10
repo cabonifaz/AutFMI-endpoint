@@ -30,9 +30,16 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     context.setVariable("unidad", report.getUnidad());
 
     // Estructura salarial
-    context.setVariable("montoBaseMov", report.getMontoBase());
-    context.setVariable("montoMovilidadMov", report.getMontoMovilidad());
-    context.setVariable("montoBonoMov", report.getMontoTrimestral());
+
+    // Sanetizar montos, evitar que se escriban 0.00
+    String montoBase = this.sanitizeMoney(report.getMontoBase());
+    String montoMovilidad = this.sanitizeMoney(report.getMontoMovilidad());
+    String montoTrimestral = this.sanitizeMoney(report.getMontoTrimestral());
+
+    context.setVariable("montoBaseMov", montoBase);
+    context.setVariable("montoMovilidadMov", montoMovilidad);
+    context.setVariable("montoTrimestralMov", montoTrimestral);
+    context.setVariable("montoBonoMov", montoTrimestral);
 
     // Fechas y cambios
     context.setVariable("puestoMovimiento", report.getPuesto());

@@ -13,8 +13,9 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
 
   private final SpringTemplateEngine templateEngine;
 
+  // TODO: Eliminar el objeto GestorDTO, ya no es necesario
   public ReportCeseBuilder(SpringTemplateEngine templateEngine, CeseReport report, GestorDTO gs) {
-    super(null, report, gs);
+    super(null, report, null);
     this.templateEngine = templateEngine;
   }
 
@@ -35,7 +36,17 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     context.setVariable("fechaDevolucionEquipo", report.getFchDevolucionEquipo());
 
     // Firma y Pie de Página
-    context.setVariable("nombreResponsable", gs.getFullname());
+    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+      var signatureBytes = this.dowloadSignature(report.getFirma());
+
+      // Convertimos los bytes a String Base64 con el prefijo de imagen
+      var base64Image = "data:image/png;base64," + signatureBytes;
+      context.setVariable("firmaGestor", base64Image);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // Procesar Plantilla
@@ -75,7 +86,7 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     context.setVariable("motivoDesactivacion", report.getMotivo());
 
     // 4. Firma y Pie de Página
-    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // 5. Procesar Plantilla

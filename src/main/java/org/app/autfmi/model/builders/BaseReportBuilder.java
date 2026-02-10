@@ -75,4 +75,24 @@ public abstract class BaseReportBuilder<T> {
     }
   }
 
+  public String sanitizeMoney(String value) {
+    if (value == null)
+      return null;
+
+    // REGEX EXPLICACIÓN:
+    // ^ -> Inicio de línea
+    // [\D]* -> Cualquier cantidad de caracteres NO dígitos (monedas, espacios,
+    // letras)
+    // 0 -> Un cero obligatorio
+    // (?: -> Grupo de no captura para decimales
+    // [.,] -> Punto o coma decimal
+    // 0+ -> Uno o más ceros
+    // )? -> El grupo decimal es opcional
+    // $ -> Fin de línea
+    if (value.matches("^[\\D]*0(?:[.,]0+)?$")) {
+      return null;
+    }
+    return value;
+  }
+
 }

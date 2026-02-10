@@ -44,8 +44,6 @@ public class UserService implements IUserService {
         .append(user.getIdEmpresa())
         .append(Constante.RUTA_FIRMAS.replace("[ID_USUARIO]", userId.toString()))
         .append(file.getOriginalFilename())
-        .append(".")
-        .append(FileUtils.obtenerExtension(file.getOriginalFilename()))
         .toString();
 
     this.logger.info("Path: {}", path);

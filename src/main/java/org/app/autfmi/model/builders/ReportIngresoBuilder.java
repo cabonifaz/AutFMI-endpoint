@@ -23,6 +23,11 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     var context = new Context();
 
     var logoBase64 = this.imageToBase64("assets/logo-fractal.png");
+
+    // Determinar si es locador
+    var esLocador = "Locación de servicios".equalsIgnoreCase(report.getModalidad());
+    context.setVariable("locador", esLocador);
+
     context.setVariable("fractalLogo", logoBase64);
 
     // Datos colobarador
@@ -41,9 +46,19 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("sedeDeclarar", report.getSedeDeclararSunat());
 
     // Estructura salarial
-    context.setVariable("montoBaseIngreso", report.getMontoBase());
-    context.setVariable("movilidadIngreso", report.getMontoMovilidad());
-    context.setVariable("montoBonoIngreso", report.getMontoTrimestral());
+
+    // Sanetizar montos, evitar que se escriban 0.00
+    String montoBase = this.sanitizeMoney(report.getMontoBase());
+    String montoMovilidad = this.sanitizeMoney(report.getMontoMovilidad());
+    String montoTrimestral = this.sanitizeMoney(report.getMontoTrimestral());
+
+    context.setVariable("montoBaseIngreso", montoBase);
+    context.setVariable("movilidadIngreso", montoMovilidad);
+    context.setVariable("montoTrimestralIngreso", montoTrimestral);
+    context.setVariable("montoMensualIngreso", null);
+
+    // TODO: Sumar el monto trimestral + monto mensual = monto bono
+    context.setVariable("montoBonoIngreso", montoTrimestral);
 
     // Fechas
     context.setVariable("fechaInicioContrato", report.getFechaInicioContrato());

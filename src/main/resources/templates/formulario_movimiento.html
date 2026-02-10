@@ -126,7 +126,7 @@
 
   <body>
     <!-- ENCABEZADO -->
-    <table>
+    <table th:unless="${locador}">
       <tr>
         <td rowspan="3" class="header-logo" style="width: 25%">
           <img
@@ -180,6 +180,22 @@
           "
         >
           05/11/2025
+        </td>
+      </tr>
+    </table>
+
+    <table th:if="${locador}">
+      <tr>
+        <td
+          class="header-title"
+          style="
+            width: 100%;
+            color: #8a8a8a;
+            text-decoration: underline;
+            border: none;
+          "
+        >
+          FORMULARIO DE MOVIMIENTO
         </td>
       </tr>
     </table>

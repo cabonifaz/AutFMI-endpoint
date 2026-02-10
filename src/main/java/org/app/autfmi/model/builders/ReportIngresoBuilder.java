@@ -1,6 +1,5 @@
 package org.app.autfmi.model.builders;
 
-import java.util.Base64;
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;

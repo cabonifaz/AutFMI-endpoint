@@ -41,7 +41,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("horarioIngreso", report.getHorario());
 
     // Declara SUNAT
-    var declaraSunat = report.getDeclararSunat() != 1 ? "No" : "Sí";
+    var declaraSunat = report.getDeclararSunat() != 0 ? "Sí" : "No";
     context.setVariable("declaraSunat", declaraSunat);
     context.setVariable("sedeDeclarar", report.getSedeDeclararSunat());
 

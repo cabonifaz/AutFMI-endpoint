@@ -438,9 +438,11 @@ public class HistoryRepository {
 
         String fullname = (String) solicitanteDb.get("NOMBRES_COMPLETOS");
         String mail = (String) solicitanteDb.get("CORREO");
+        var firma = (String) solicitanteDb.get("FIRMA");
 
         report.setNombreApellidoGestor(fullname);
         report.setCorreoGestor(mail);
+        report.setFirmaGestor(firma);
 
         List<Map<String, Object>> solicitudList = (List<Map<String, Object>>) rs.get("#result-set-3");
 

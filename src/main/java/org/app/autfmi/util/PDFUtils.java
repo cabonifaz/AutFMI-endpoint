@@ -165,6 +165,22 @@ public class PDFUtils {
             }
         }
 
+        String htmlFirma;
+        if (report.getFirmaGestor() != null && !report.getFirmaGestor().isBlank()) {
+
+            String signatureB64 = FileUtils.cargarArchivoAws(report.getFirmaGestor());
+            String fullBase64 = "data:image/png;base64," + signatureB64;
+
+            htmlFirma = "<img src='" + fullBase64
+                    + "' style='max-height: 80px; max-width: 250px; display: inline-block;' />";
+
+        } else {
+            // Si no hay firma registrada, mostramos el nombre arriba de la línea
+            htmlFirma = "<span style='font-size: 11pt; font-weight: bold; line-height: 80px;'>"
+                    + report.getNombreApellidoGestor()
+                    + "</span>";
+        }
+
         htmlTemplate = htmlTemplate
                 .replace("{{title}}", "FT-GS-03 Formulario de Requerimiento de Software y Hardware")
                 .replace("{{apellidosNombres}}", nombresApellidos)
@@ -187,7 +203,7 @@ public class PDFUtils {
                 .replace("{{symbolIntNo}}", internetNo)
                 .replace("{{accesorios}}", report.getAccesorios())
                 .replace("{{listaProducto}}", String.join("\n", listaProductos))
-                .replace("{{nombreFirma}}", SafeValues.safeString(gs.getSignature()))
+                .replace("{{seccionFirma}}", htmlFirma)
                 .replace("{{nombreGestor}}", SafeValues.safeString(gs.getFullname()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 

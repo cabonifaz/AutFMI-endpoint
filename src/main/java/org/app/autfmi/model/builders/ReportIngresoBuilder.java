@@ -61,9 +61,6 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("montoTrimestralIngreso", montoTrimestral);
     context.setVariable("montoMensualIngreso", null);
 
-    // TODO: Sumar el monto trimestral + monto mensual = monto bono
-    // context.setVariable("montoBonoIngreso", montoTrimestral);
-
     // Fechas
     context.setVariable("fechaInicioContrato", report.getFechaInicioContrato());
     context.setVariable("fechaFinContrato", report.getFechaFinContrato());
@@ -106,7 +103,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     // Datos del solicitante
     context.setVariable("nombresSolicitante", report.getFirmante());
     context.setVariable("areaSolicitante", report.getUnidad());
-    context.setVariable("cargoSolicitante", report.getCargo());
+    context.setVariable("cargoSolicitante", "");
     context.setVariable("fechaSolicitud", report.getFechaHistorial());
     context.setVariable("anexoSolicitud", report.getUnidad());
 

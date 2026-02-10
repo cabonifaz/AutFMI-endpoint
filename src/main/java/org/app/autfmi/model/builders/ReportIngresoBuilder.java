@@ -41,9 +41,13 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("horarioIngreso", report.getHorario());
 
     // Declara SUNAT
-    var declaraSunat = report.getDeclararSunat() != 0 ? "Sí" : "No";
-    context.setVariable("declaraSunat", declaraSunat);
-    context.setVariable("sedeDeclarar", report.getSedeDeclararSunat());
+    if (!esLocador) {
+      context.setVariable("declaraSunat", "Sí");
+      context.setVariable("sedeDeclarar", report.getSedeDeclararSunat());
+    } else {
+      context.setVariable("declaraSunat", "No");
+      context.setVariable("sedeDeclarar", "");
+    }
 
     // Estructura salarial
 

@@ -11,7 +11,6 @@ import org.app.autfmi.model.dto.*;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.report.RequirementReportMapper;
-import org.app.autfmi.model.report.SolicitudData;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
@@ -23,8 +22,6 @@ import org.app.autfmi.model.response.VacanteCarreraResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
-import org.app.autfmi.util.MailUtils;
-import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -48,9 +45,7 @@ public class RequirementRepository {
 
 	@NonNull
 	private final JdbcTemplate jdbcTemplate;
-	private final MailUtils mailUtils;
-	private final PDFUtils pdfUtils;
-	private static final Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
+	private static Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
 
 	public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
 			String buscar, Date fechaSolicitud, Integer estado) {
@@ -569,278 +564,190 @@ public class RequirementRepository {
 		return new BaseResponse(idTipoMensaje, mensaje);
 	}
 
-	public BaseResponse saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest) {
-		try {
-			logger.info("SaveRequirementTalents started - ID_REQUERIMIENTO: {}", request.getIdRequerimiento());
+	@SuppressWarnings("unchecked")
+	public RequirementTalentsResult saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest)
+			throws SQLServerException {
 
-			BaseResponse baseResponse = new BaseResponse();
-			SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-					.withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
+		var builder = RequirementTalentsResult.builder();
+		logger.info("SaveRequirementTalents started - ID_REQUERIMIENTO: {}", request.getIdRequerimiento());
 
-			SQLServerDataTable tvpRqTalents = loadTvpRequirementTalents(request);
-			SQLServerDataTable tvpProductos = loadTvpProductos(request);
+		// 1. Configuración y Ejecución del SP
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_REQUERIMIENTO_TALENTO_INS");
 
-			MapSqlParameterSource params = new MapSqlParameterSource()
-					.addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
-					.addValue("LST_TALENTOS", tvpRqTalents)
-					.addValue("LST_SOFTWARE", tvpProductos)
-					.addValue("ID_USUARIO", baseRequest.getIdUsuario())
-					.addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
-					.addValue("ID_ROL", baseRequest.getIdRol())
-					.addValue("USUARIO", baseRequest.getUsername())
-					.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+		var tvpRqTalents = loadTvpRequirementTalents(request);
+		var tvpProductos = loadTvpProductos(request);
 
-			System.out.println("EJECUTANDO SP...");
-			Map<String, Object> result = simpleJdbcCall.execute(params);
+		var params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+				.addValue("LST_TALENTOS", tvpRqTalents)
+				.addValue("LST_SOFTWARE", tvpProductos)
+				.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+				.addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+				.addValue("ID_ROL", baseRequest.getIdRol())
+				.addValue("USUARIO", baseRequest.getUsername())
+				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
-			List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+		System.out.println("EJECUTANDO SP...");
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+		logger.info("Resultset: {}", result);
 
-			System.out.println(resultSet);
-			if (resultSet != null && !resultSet.isEmpty()) {
-				Map<String, Object> row = resultSet.get(0);
-				baseResponse.setIdTipoMensaje((Integer) row.get("ID_TIPO_MENSAJE"));
-				baseResponse.setMensaje((String) row.get("MENSAJE"));
+		// 2. Validación de Respuesta Base
+		var resultSet1 = (List<Map<String, Object>>) result.get("#result-set-1");
 
-				if (baseResponse.getIdTipoMensaje() == 2) {
-					List<Map<String, Object>> gestorRqSet = (List<Map<String, Object>>) result.get("#result-set-2"); // GESTOR
-					List<Map<String, Object>> postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3"); // TALENTOS
-																														// CONFIRMADOS
-					List<Map<String, Object>> contactosSet = (List<Map<String, Object>>) result.get("#result-set-4"); // CONTACTOS
-					List<Map<String, Object>> gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5"); // Gestor
+		if (resultSet1 == null || resultSet1.isEmpty()) {
+			var bs = new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
+			builder.baseResponse(bs);
+			return builder.build();
+		}
 
-					// Gestor del cliente
-					List<Map<String, Object>> clientGs = (List<Map<String, Object>>) result
-							.get("#result-set-6");
-					// DOCUMENTOS
-					List<Map<String, Object>> reportSet = (List<Map<String, Object>>) result.get("#result-set-7"); // REPORTES
-					List<Map<String, Object>> solicitudesEquipoSet = (List<Map<String, Object>>) result
-							.get("#result-set-8"); // REPORTE SOLICITUDES EQUIPO
-					List<Map<String, Object>> equipoSoftwaresSet = (List<Map<String, Object>>) result
-							.get("#result-set-9"); // REPORTE EQUIPO SOFTWARES
+		var baseResponseRow = resultSet1.get(0);
+		var messageId = (Integer) baseResponseRow.getOrDefault("ID_TIPO_MENSAJE", 3);
+		var mensaje = (String) baseResponseRow.get("MENSAJE");
 
-					// Mapear los datos del gestor
-					GestorDTO gs = null;
-					if (clientGs != null && !clientGs.isEmpty()) {
-						Map<String, Object> gsRow = clientGs.get(0);
-						String gsSignature = (String) gsRow.get("NOMBRE_FIRMANTE");
-						String gsFullname = (String) gsRow.get("NOMBRE_FIRMANTE");
+		builder.baseResponse(new BaseResponse(messageId, mensaje));
 
-						gs = new GestorDTO(gsSignature, gsFullname);
-					} else {
-						throw new NullPointerException("No se encontró el gestor del cliente");
-					}
+		// Si hubo error, retornamos aquí
+		if (messageId != 2) {
+			return builder.build();
+		}
 
-					if (postulantsSet != null && !postulantsSet.isEmpty() && gestorRqSet != null
-							&& !gestorRqSet.isEmpty()) {
-						Map<String, Object> gestorRqRow = gestorRqSet.get(0);
-						GestorRqDTO gestorRq = new GestorRqDTO(
-								(String) gestorRqRow.get("NOMBRES"),
-								(String) gestorRqRow.get("APELLIDOS"),
-								(String) gestorRqRow.get("CORREO"),
-								(String) gestorRqRow.get("CODIGO_RQ"),
-								(String) gestorRqRow.get("CLIENTE"),
-								"Ingreso");
+		// 3. Extracción de ResultSets (Variables independientes para legibilidad)
+		var gestorRqSet = (List<Map<String, Object>>) result.get("#result-set-2");
+		var postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3");
+		var contactosSet = (List<Map<String, Object>>) result.get("#result-set-4");
+		var gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5");
+		var clientGsSet = (List<Map<String, Object>>) result.get("#result-set-6");
+		var reportSet = (List<Map<String, Object>>) result.get("#result-set-7");
+		var solicitudesEquipoSet = (List<Map<String, Object>>) result.get("#result-set-8");
+		var equipoSoftwaresSet = (List<Map<String, Object>>) result.get("#result-set-9");
 
-						List<String> copyTo = new ArrayList<>();
-						copyTo.add(gestorRq.getCorreo());
+		// 4. Mapeo de Gestor Cliente
+		if (clientGsSet != null && !clientGsSet.isEmpty()) {
+			Map<String, Object> gsRow = clientGsSet.get(0);
+			String gsSignature = (String) gsRow.get("NOMBRE_FIRMANTE");
+			builder.gestorCliente(new GestorDTO(gsSignature, gsSignature));
+		} else {
+			logger.warn("No se encontró el gestor del cliente en el SP");
+		}
 
-						Map<String, Object> gestorDocs = gestorDocsSet.get(0);
-						String gestorDocsCorreo = gestorDocs.get("GESTOR_DOCS_CORREO").toString();
-						String gestorDocsFullName = gestorDocs.get("GESTOR_DOCS").toString();
+		// 5. Mapeo de Gestor RQ
+		if (gestorRqSet != null && !gestorRqSet.isEmpty()) {
+			Map<String, Object> row = gestorRqSet.get(0);
+			builder.gestorRq(new GestorRqDTO(
+					(String) row.get("NOMBRES"),
+					(String) row.get("APELLIDOS"),
+					(String) row.get("CORREO"),
+					(String) row.get("CODIGO_RQ"),
+					(String) row.get("CLIENTE"),
+					"Ingreso"));
+		}
 
-						List<PostulantDTO> postulantList = new ArrayList<>();
-						if (!postulantsSet.isEmpty()) {
-							for (Map<String, Object> postulantRow : postulantsSet) {
-								postulantList.add(mapListPostulantDTO(postulantRow));
-							}
-						}
+		// 6. Mapeo de Postulantes
+		if (postulantsSet != null && !postulantsSet.isEmpty()) {
+			List<PostulantDTO> postulantList = new ArrayList<>();
+			for (var row : postulantsSet) {
+				postulantList.add(mapListPostulantDTO(row));
+			}
+			builder.postulantes(postulantList);
+		}
 
-						List<String> contactosList = new ArrayList<>();
-						if (contactosSet != null && !contactosSet.isEmpty()) {
-							for (Map<String, Object> contactoRow : contactosSet) {
-								contactosList.add(
-										(String) contactoRow.get("CORREO"));
-							}
-						}
+		// 7. Mapeo de Contactos
+		if (contactosSet != null && !contactosSet.isEmpty()) {
+			List<String> contactosList = new ArrayList<>();
+			for (Map<String, Object> row : contactosSet) {
+				var email = (String) row.getOrDefault("CORREO", "");
+				if (email != null && !email.trim().isEmpty()) {
+					contactosList.add(email);
+				}
+			}
+			builder.contacts(contactosList);
+		}
 
-						// ENVIAR CORREO
-						if (request.getFlagCorreo()) {
+		// 8. Mapeo de Reportes de Ingreso
+		if (reportSet != null && !reportSet.isEmpty()) {
+			List<EntryReport> entryReports = new ArrayList<>();
+			for (var row : reportSet) {
+				entryReports.add(mapToEntryReport(row));
+			}
+			builder.entryReports(entryReports);
+		}
 
-							try {
-								mailUtils.sendRequirementPostulantMail(gestorRq, "Ingreso de nuevo talento",
-										postulantList,
-										contactosList);
-							} catch (Exception e) {
-								logger.error("Error enviando correo de talentos para RQ: {}. Error: {}",
-										gestorRq.getCodigoRQ(), e.getStackTrace());
-								return new BaseResponse(2,
-										"Registro completado, pero falló el envío de correo para talentos confirmados",
-										e.getMessage());
-							}
+		String gestorDocsCorreo = "";
+		String gestorDocsFullName = "";
 
-							// ENVIAR CORREO CON REPORTE DE NUEVOS INGRESOS
-							if (reportSet != null && !reportSet.isEmpty()) {
-								List<FileDTO> lstfiles = new ArrayList<>();
-								SolicitudData data = new SolicitudData();
+		if (gestorDocsSet != null && !gestorDocsSet.isEmpty()) {
+			var docsRow = gestorDocsSet.get(0);
+			gestorDocsCorreo = (String) docsRow.get("GESTOR_DOCS_CORREO");
+			gestorDocsFullName = (String) docsRow.get("GESTOR_DOCS");
 
-								try {
+			builder.gestorDocCorreo(gestorDocsCorreo);
+			builder.gestorDocNombre(gestorDocsFullName);
+		}
 
-									for (Map<String, Object> reportRow : reportSet) {
-										EntryReport report = mapToEntryReport(reportRow);
-										// FORM FILE
-										String fullname = report.getNombres() + " " + report.getApellidos();
+		// 9. Mapeo de Solicitudes de Equipo y Software (Lógica compleja)
+		if (solicitudesEquipoSet != null && !solicitudesEquipoSet.isEmpty()) {
 
-										FileDTO fileFormulario = new FileDTO(
-												"FT-GT-12-FMI-" + fullname,
-												pdfUtils.replaceEntryRequestValues(
-														pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),
-														report, gs),
-												null);
+			// Obtener datos del Gestor de Docs (necesario para el reporte de equipo)
 
-										// SOLICITUD FILE
-										data.setNombres(report.getNombres());
-										data.setApellidos(report.getApellidos());
-										data.setArea(report.getUnidad());
-										data.setFechaSolicitud(report.getFechaInicioContrato());
+			List<SolicitudEquipoReport> solicitudesEquipo = new ArrayList<>();
 
-										data.setNombresCreacion(report.getNombres());
-										data.setApellidosCreacion(report.getApellidos());
-										data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
-										data.setCorreoCreacion(report.getEmailEmpleado());
-										data.setAreaCreacion(report.getUnidad());
-										data.setFirmante(report.getFirmante());
+			for (var solicitudRow : solicitudesEquipoSet) {
+				var report = new SolicitudEquipoReport();
 
-										FileDTO fileSolicitud = new FileDTO(
-												"FT-GS-01-FMI-" + fullname,
-												pdfUtils.replaceSolicitudPDFValues(
-														pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD),
-														data, gs),
-												null);
+				// Datos cabecera
+				report.setCorreoGestor(gestorDocsCorreo);
+				report.setNombreApellidoGestor(gestorDocsFullName);
 
-										lstfiles.add(fileFormulario);
-										lstfiles.add(fileSolicitud);
-									}
+				// Datos solicitud
+				report.setNombreEmpleado((String) solicitudRow.get("NOMBRE_EMPLEADO"));
+				report.setApellidosEmpleado((String) solicitudRow.get("APELLIDOS_EMPLEADO"));
+				report.setCliente((String) solicitudRow.get("CLIENTE"));
+				report.setArea((String) solicitudRow.get("AREA"));
+				report.setPuesto((String) solicitudRow.get("PUESTO"));
+				report.setFechaSolicitud((String) solicitudRow.get("FECHA_SOLICITUD"));
+				report.setFechaEntrega((String) solicitudRow.get("FECHA_ENTREGA"));
 
-									// ENVIAR CORREO CON PDF's
-									logger.info("Enviando correos con PDF");
-									if (gestorDocsCorreo != null && !gestorDocsCorreo.isEmpty()) {
-										pdfUtils.enviarCorreoConPDF(
-												lstfiles,
-												gestorDocsCorreo,
-												copyTo,
-												"Ingreso de empleado",
-												"Formulario de nuevo ingreso de empleado.");
-										logger.info("Correos enviados con PDF");
-									} else {
-										logger.error("Gestor de correo no configurado");
-										throw new NullPointerException("Gestor de correo no configurado");
-									}
+				// Datos Hardware
+				report.setIdTipoEquipo((Integer) solicitudRow.get("ID_TIPO_EQUIPO"));
+				report.setProcesador((String) solicitudRow.get("PROCESADOR"));
+				report.setRam((String) solicitudRow.get("RAM"));
+				report.setHd((String) solicitudRow.get("HD"));
+				report.setMarca((String) solicitudRow.get("MARCA"));
+				report.setIdAnexo((Integer) solicitudRow.get("ID_ANEXO"));
+				report.setCelular((Boolean) solicitudRow.get("CELULAR"));
+				report.setInternetMovil((Boolean) solicitudRow.get("INTERNET_MOVIL"));
+				report.setAccesorios((String) solicitudRow.get("ACCESORIOS"));
 
-								} catch (Exception e) {
-									logger.error("Error enviando correo con PDF de ingreso para RQ: {}. Error: {}",
-											gestorRq.getCodigoRQ(), e.getStackTrace());
-									return new BaseResponse(2,
-											"Registro completado, pero falló el envío de correo con PDF de ingreso",
-											e.getMessage());
-								}
-							}
+				// Mapeo Software (Relación 1 a Muchos)
+				var lstSoftware = new ArrayList<SolicitudSoftwareRequest>();
 
-							// Solicitudes Equipo
-							if (solicitudesEquipoSet != null && !solicitudesEquipoSet.isEmpty()) {
+				// ID de la solicitud actual
+				var currentSolicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
 
-								try {
+				if (equipoSoftwaresSet != null && currentSolicitudId != null) {
+					for (Map<String, Object> softwareRow : equipoSoftwaresSet) {
+						Integer fkSolicitudId = (Integer) softwareRow.get("ID_EQUIPO_SOLICITUD");
 
-									List<FileDTO> lstSolicitudEquipoFiles = new ArrayList<>();
-									String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
-
-									for (Map<String, Object> solicitudRow : solicitudesEquipoSet) {
-										SolicitudEquipoReport report = new SolicitudEquipoReport();
-										// datos gestor
-										report.setCorreoGestor(gestorDocsCorreo);
-										report.setNombreApellidoGestor(gestorDocsFullName);
-										// datos reporte
-										report.setNombreEmpleado((String) solicitudRow.get("NOMBRE_EMPLEADO"));
-										report.setApellidosEmpleado((String) solicitudRow.get("APELLIDOS_EMPLEADO"));
-										report.setCliente((String) solicitudRow.get("CLIENTE"));
-										report.setArea((String) solicitudRow.get("AREA"));
-										report.setPuesto((String) solicitudRow.get("PUESTO"));
-										report.setFechaSolicitud((String) solicitudRow.get("FECHA_SOLICITUD"));
-										report.setFechaEntrega((String) solicitudRow.get("FECHA_ENTREGA"));
-										report.setIdTipoEquipo((Integer) solicitudRow.get("ID_TIPO_EQUIPO"));
-										report.setProcesador((String) solicitudRow.get("PROCESADOR"));
-										report.setRam((String) solicitudRow.get("RAM"));
-										report.setHd((String) solicitudRow.get("HD"));
-										report.setMarca((String) solicitudRow.get("MARCA"));
-										report.setIdAnexo((Integer) solicitudRow.get("ID_ANEXO"));
-										report.setCelular((Boolean) solicitudRow.get("CELULAR"));
-										report.setInternetMovil((Boolean) solicitudRow.get("INTERNET_MOVIL"));
-										report.setAccesorios((String) solicitudRow.get("ACCESORIOS"));
-
-										// lista de software por solicitud
-										List<SolicitudSoftwareRequest> lstSoftware = new ArrayList<>();
-										if (equipoSoftwaresSet != null && !equipoSoftwaresSet.isEmpty()) {
-											for (Map<String, Object> softwareRow : equipoSoftwaresSet) {
-												Integer solicitudSoftwareId = (Integer) softwareRow
-														.get("ID_EQUIPO_SOLICITUD");
-												Integer solicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
-
-												// Solo agregar si pertenece a esta solicitud
-												if (solicitudSoftwareId != null
-														&& solicitudSoftwareId.equals(solicitudId)) {
-													SolicitudSoftwareRequest software = new SolicitudSoftwareRequest();
-													software.setIdItem(
-															(Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
-													software.setProducto((String) softwareRow.get("PRODUCTO"));
-													software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
-													lstSoftware.add(software);
-												}
-											}
-											report.setLstSoftware(lstSoftware);
-										}
-										String fullname = report.getNombreEmpleado() + " "
-												+ report.getApellidosEmpleado();
-										FileDTO fileFormulario = new FileDTO(
-												"FT-GS-03-FMI-" + fullname,
-												pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs),
-												null);
-
-										lstSolicitudEquipoFiles.add(fileFormulario);
-									}
-
-									if (gestorDocsCorreo == null || gestorDocsCorreo.isEmpty()) {
-										logger.error("Gestor de correo no configurado");
-										throw new NullPointerException("Gestor de correo no configurado");
-
-									}
-
-									pdfUtils.enviarCorreoConPDF(
-											lstSolicitudEquipoFiles,
-											gestorDocsCorreo,
-											copyTo,
-											"Requerimiento de Software y Hardware",
-											"Formulario Requerimiento de Software y Hardware.");
-								} catch (Exception e) {
-									logger.error(
-											"Error enviando correo con PDF de solicitud de equipo para RQ: {}. Error: {}",
-											gestorRq.getCodigoRQ(), e.getStackTrace());
-									return new BaseResponse(2,
-											"Registro completado, pero falló el envío de correo con PDF de solicitud de equipo",
-											e.getMessage());
-								}
-							}
+						// Match: Solo agregamos si el software pertenece a esta solicitud
+						if (currentSolicitudId.equals(fkSolicitudId)) {
+							var software = new SolicitudSoftwareRequest();
+							software.setIdItem((Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
+							software.setProducto((String) softwareRow.get("PRODUCTO"));
+							software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
+							lstSoftware.add(software);
 						}
 					}
 				}
+				report.setLstSoftware(lstSoftware);
+				solicitudesEquipo.add(report);
 			}
 
-			logger.info("Finished task: saveRequirementTalents");
-			return baseResponse;
-		} catch (Exception e) {
-			logger.error("ERROR REPOSITORY saveRequirementTalents: {}", e.getMessage());
-			logger.error("Error{}", e);
-			return new BaseResponse(3, "Ha ocurrido un error en el proceso de guardado de talentos.",
-					e.getMessage());
+			builder.solicitudesEquipo(solicitudesEquipo);
 		}
+
+		logger.info("Finished task: saveRequirementTalents");
+		return builder.build();
 	}
 
 	private EntryReport mapToEntryReport(Map<String, Object> report) {

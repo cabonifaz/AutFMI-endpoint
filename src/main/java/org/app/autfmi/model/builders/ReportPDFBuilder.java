@@ -7,24 +7,27 @@ import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.util.PDFUtils;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
 public class ReportPDFBuilder {
+
   private final PDFUtils pdfUtils;
+  private final SpringTemplateEngine templateEngine;
 
   public ReportCeseBuilder forCese(CeseReport report, GestorDTO gs) {
-    return new ReportCeseBuilder(pdfUtils, report, gs);
+    return new ReportCeseBuilder(this.templateEngine, report, gs);
   }
 
   public ReportMovementBuilder forMovimiento(MovementReport report, GestorDTO gs) {
-    return new ReportMovementBuilder(pdfUtils, report, gs);
+    return new ReportMovementBuilder(this.templateEngine, report, gs);
   }
 
   public ReportIngresoBuilder forIngreso(EntryReport report, GestorDTO gs) {
-    return new ReportIngresoBuilder(pdfUtils, report, gs);
+    return new ReportIngresoBuilder(this.templateEngine, report, gs);
   }
 
   public ReportEquipoBuilder fEquipoReport(SolicitudEquipoReport report, GestorDTO gs) {

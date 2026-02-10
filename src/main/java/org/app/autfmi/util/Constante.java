@@ -8,6 +8,7 @@ public class Constante {
     // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";
     public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";
+    public static final String RUTA_FIRMAS = "/firmas/[ID_USUARIO]/";
 
     // TIPO REPORTES
 

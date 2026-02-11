@@ -135,7 +135,7 @@ public class FileUtils {
         }
     }
 
-    public static void guardarArchivoAws(String archivoBase64, String ruta) {
+    public static boolean guardarArchivoAws(String archivoBase64, String ruta) {
         try {
             logger.info(Constante.TXT_SEPARADOR);
             logger.info("Inicio Utilitarios - GuardarArchivoAws");
@@ -146,7 +146,7 @@ public class FileUtils {
             String bucketName = System.getenv("AWS_BUCKET");
             if (bucketName == null || bucketName.isEmpty()) {
                 logger.error("Variable de entorno AWS_BUCKET no está definida");
-                return;
+                return false;
             }
 
             S3Client s3 = ClienteS3.getInstance();
@@ -182,11 +182,14 @@ public class FileUtils {
             logger.info("Fin Utilitarios - GuardarArchivoAws");
             logger.info(Constante.TXT_SEPARADOR);
 
+            return true;
         } catch (IllegalArgumentException e) {
             logger.error("Cadena Base64 inválida: " + e.getMessage(), e);
         } catch (Exception e) {
             logger.error("Error inesperado al subir archivo a S3: " + e.getMessage(), e);
         }
+
+        return false;
     }
 
     public static void eliminarArchivoAws(String archivoRutaPre) {
@@ -231,6 +234,10 @@ public class FileUtils {
             logger.info("Fin Utilitarios - EliminarArchivoAws");
             logger.info(Constante.TXT_SEPARADOR);
         }
+    }
+
+    public static String bytesToBase64(byte[] bytes) {
+        return Base64.getEncoder().encodeToString(bytes);
     }
 
     public static String cargarArchivoAws(String rutaS3) {
@@ -310,13 +317,9 @@ public class FileUtils {
         return ext.equals("png") || ext.equals("jpg") || ext.equals("jpeg") || ext.equals("webp");
     }
 
-    private static String obtenerExtension(String ruta) {
+    public static String obtenerExtension(String ruta) {
         int i = ruta.lastIndexOf('.');
         return (i > 0 && i < ruta.length() - 1) ? ruta.substring(i + 1) : "";
-    }
-
-    private static boolean esExtensionSoportada(String ext) {
-        return esImagen(ext) || ext.equals("pdf");
     }
 
 }

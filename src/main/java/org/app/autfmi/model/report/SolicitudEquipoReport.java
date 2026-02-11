@@ -32,4 +32,5 @@ public class SolicitudEquipoReport {
     private List<SolicitudSoftwareRequest> lstSoftware;
     private String correoGestor;
     private String nombreApellidoGestor;
+    private String firmaGestor;
 }

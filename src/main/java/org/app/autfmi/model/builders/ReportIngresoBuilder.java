@@ -61,14 +61,22 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("montoTrimestralIngreso", montoTrimestral);
     context.setVariable("montoMensualIngreso", null);
 
-    // TODO: Sumar el monto trimestral + monto mensual = monto bono
-    // context.setVariable("montoBonoIngreso", montoTrimestral);
-
     // Fechas
     context.setVariable("fechaInicioContrato", report.getFechaInicioContrato());
     context.setVariable("fechaFinContrato", report.getFechaFinContrato());
     context.setVariable("proyectoContrato", report.getProyectoServicio());
     context.setVariable("objetoContrato", report.getObjetoContrato());
+
+    // Descagar firma del gestor
+    if (gs.getSignature() != null && !gs.getSignature().isEmpty()) {
+      var signatureBytes = this.dowloadSignature(gs.getSignature());
+
+      // Convertimos los bytes a String Base64 con el prefijo de imagen
+      var base64Image = "data:image/png;base64," + signatureBytes;
+      context.setVariable("firmaGestor", base64Image);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
 
     // Responsable y firma
     context.setVariable("nombreResponsable", gs.getFullname());
@@ -95,7 +103,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     // Datos del solicitante
     context.setVariable("nombresSolicitante", report.getFirmante());
     context.setVariable("areaSolicitante", report.getUnidad());
-    context.setVariable("cargoSolicitante", report.getCargo());
+    context.setVariable("cargoSolicitante", "");
     context.setVariable("fechaSolicitud", report.getFechaHistorial());
     context.setVariable("anexoSolicitud", report.getUnidad());
 
@@ -105,8 +113,17 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("emailUsuario", report.getEmailEmpleado());
     context.setVariable("areaUsuario", report.getUnidad());
 
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
+
+      var signatureBase64 = this.dowloadSignature(report.getFirma());
+      context.setVariable("firmaGestor",
+          "data:image/png;base64," + signatureBase64);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
     // Responsable y firma
-    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // Procesar plantilla 'solicitud_usuario.html'

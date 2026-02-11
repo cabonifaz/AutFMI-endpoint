@@ -35,7 +35,15 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     context.setVariable("fechaDevolucionEquipo", report.getFchDevolucionEquipo());
 
     // Firma y Pie de Página
-    context.setVariable("nombreResponsable", gs.getFullname());
+    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+      var signatureBytes = this.dowloadSignature(report.getFirma());
+      var base64Image = "data:image/png;base64," + signatureBytes;
+      context.setVariable("firmaGestor", base64Image);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // Procesar Plantilla
@@ -60,12 +68,8 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     // 2. Datos del Solicitante (El gestor o firmante)
     context.setVariable("nombresSolicitante", report.getFirmante());
     context.setVariable("areaSolicitante", report.getUnidad());
-    // Si tienes el cargo del firmante en el reporte, úsalo. Si no, pon un default o
-    // vacío.
     context.setVariable("cargoSolicitante", "");
-    context.setVariable("fechaSolicitud", Common.getCurrentDateFormatted());
-    // Anexo si aplica, o vacío
-    context.setVariable("anexo", "");
+    context.setVariable("fechaSolicitud", report.getFechaHistorial());
 
     // 3. Sección DESACTIVACIÓN DE USUARIOS
     var nombreCompleto = report.getNombres() + " " + report.getApellidos();
@@ -74,8 +78,17 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     context.setVariable("correoDesactivacion", report.getEmailEmpleado());
     context.setVariable("motivoDesactivacion", report.getMotivo());
 
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
+
+      var signatureBase64 = this.dowloadSignature(report.getFirma());
+      context.setVariable("firmaGestor",
+          "data:image/png;base64," + signatureBase64);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
     // 4. Firma y Pie de Página
-    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // 5. Procesar Plantilla

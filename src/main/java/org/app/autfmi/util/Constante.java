@@ -8,6 +8,7 @@ public class Constante {
     // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";
     public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";
+    public static final String RUTA_FIRMAS = "/firmas/[ID_USUARIO]/";
 
     // TIPO REPORTES
 
@@ -288,13 +289,14 @@ public class Constante {
                         {{listaProducto}}
                     </table>
 
-                    <div style="height: 100px;"></div>
-                    <div style="text-align: center;">
-                        <p style="font-weight: bold; text-decoration: underline;">{{nombreFirma}}</p>
+                    <div style="height: 100px; text-align: center; width: 100%;">
+                        <div style="height: 80px; width: 100%; text-align: center; margin-top: 50px;">
+                               {{seccionFirma}}
+                        </div>
                         <div style="height: 1px; width: 280px; background-color: #83a9e9; margin: auto;"></div>
-                        <p style="font-weight: bold;">{{nombreGestor}}</p>
-                        <p style="font-weight: bold;">Gestor de Servicio</p>
-                        <p style="font-weight: bold;">Gerencia de Operaciones</p>
+                        <p style="font-weight: bold; margin-top: 5px;">{{nombreGestor}}</p>
+                        <p style="font-size: 9pt; margin: 0;">Gestor de Servicio</p>
+                        <p style="font-size: 9pt; margin: 0;">Gerencia de Operaciones</p>
                     </div>
                 </div>
 

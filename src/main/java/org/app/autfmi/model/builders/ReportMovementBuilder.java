@@ -47,6 +47,16 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     context.setVariable("fechaMovimiento", report.getFechaHistorial());
     context.setVariable("jornadaMovimiento", report.getHorario());
 
+    if (gs.getSignature() != null && !gs.getSignature().isEmpty()) {
+      var signatureBytes = this.dowloadSignature(gs.getSignature());
+
+      // Convertimos los bytes a String Base64 con el prefijo de imagen
+      var base64Image = "data:image/png;base64," + signatureBytes;
+      context.setVariable("firmaGestor", base64Image);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
     // Responsable y Pie de página
     context.setVariable("nombreResponsable", gs.getFullname());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());

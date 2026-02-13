@@ -173,8 +173,8 @@ public class HistoryRepository {
 
     public IReport getHistoryReport(
             BaseRequest baseRequest,
-            @NonNull Integer talentId,
-            @NonNull Integer reportTypeRequest,
+            Integer talentId,
+            Integer reportTypeRequest,
             @Nullable Integer operationId,
             @NonNull Boolean isLast) {
 
@@ -396,7 +396,7 @@ public class HistoryRepository {
 
     public SolicitudEquipoReport getSolicitudEquipoReport(
             BaseRequest baseRequest,
-            @NonNull Integer talentId,
+            Integer talentId,
             @Nullable Integer operationId,
             @NonNull Boolean isLast) {
 

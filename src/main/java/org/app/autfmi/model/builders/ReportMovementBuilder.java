@@ -58,7 +58,7 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     }
 
     // Responsable y Pie de página
-    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // Procesar plantilla

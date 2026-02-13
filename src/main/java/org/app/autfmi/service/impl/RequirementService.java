@@ -6,14 +6,17 @@ import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
+import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
+import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.Common;
@@ -28,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -41,6 +45,7 @@ public class RequirementService implements IRequirementService {
     private final MailUtils mailUtils;
     private final PDFUtils pdfUtils;
     private final ReportPDFBuilder reportPDFBuilder;
+    private final HistoryRepository historyRepository;
 
     @Autowired
     private MailService mailService;
@@ -252,88 +257,125 @@ public class RequirementService implements IRequirementService {
         if (!request.getFlagCorreo())
             return baseResponse;
 
-        // Envío de notificaciones sin bloquear el flujo
+        // Envío de notificaciones
         try {
             this.logger.info("Enviando notificaciones");
 
-            this.logger.info("Gestor RQ: {}", response.getGestorRq());
-            this.logger.info("Contacts: {}", response.getContacts());
+            var gestorRq = response.getGestorRq();
+            var gestorRqEmail = gestorRq.getCorreo();
+            var ccList = response.getCcList();
+            var postulantes = response.getPostulantes();
 
-            /* Notificar sobre talentos confirmados */
-            // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            this.mailUtils.sendRequirementPostulantMail(
-                    response.getGestorRq(),
-                    "Ingreso de nuevo talento",
-                    response.getPostulantes(),
-                    response.getContacts());
-
-            this.logger.info("Notificación de talentos confirmados enviada");
-
-            /* Formularos de ingresos */
-            this.logger.info("Generando formularos de ingresos");
-            var entryReports = response.getEntryReports();
-            List<FileDTO> filesToSend = new ArrayList<>();
-
-            entryReports.stream().forEach((report) -> {
-                var files = this.reportPDFBuilder
-                        .forIngreso(report, response.getGestorCliente())
-                        .withFormulario()
-                        .withCreateUser()
-                        .build();
-                filesToSend.addAll(files);
-            });
-
-            this.logger.info("Formularos de ingresos generados");
-
-            this.logger.info("Enviando formularos de ingresos");
-
-            var gestorDocCorreo = response.getGestorDocCorreo();
-            var contacts = response.getContacts();
-
-            if (gestorDocCorreo == null || contacts == null) {
-                throw new Exception("Gestor doc correo o contacts es null");
+            if (gestorRqEmail == null) {
+                this.logger.error("No se encontro el correo del gestor del requerimiento");
+                return baseResponse;
             }
 
-            // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            pdfUtils.enviarCorreoConPDF(
-                    filesToSend,
-                    gestorDocCorreo,
-                    contacts,
-                    "Ingreso de empleado",
-                    "Formulario de nuevo ingreso de empleado.");
+            if (ccList == null) {
+                this.logger.warn("No se encontro la lista de correo de los cc");
+                ccList = Collections.emptyList();
+            }
 
-            this.logger.info("Formularos de ingresos enviados");
+            /* Notificar sobre talentos confirmados */
+            if (postulantes != null && !postulantes.isEmpty()) {
+                this.mailUtils.sendRequirementPostulantMail(
+                        gestorRq,
+                        "Ingreso de nuevo talento",
+                        postulantes,
+                        ccList);
+                this.logger.info("Notificación de talentos confirmados enviada");
+            }
+
+            /* Formularos de ingresos IDs */
+            this.logger.info("Generando formularos de ingresos");
+            var entryReportsIds = response.getReportesIngreso();
+
+            if (entryReportsIds != null) {
+                List<FileDTO> filesToSend = new ArrayList<>();
+                entryReportsIds.stream().forEach((report) -> {
+
+                    // Obtener reporte de ingreso
+                    baseRequest.setFuncionalidades(Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+
+                    var idTalento = report.getIdTalento();
+
+                    if (idTalento == null) {
+                        this.logger.error("No se encontro el talento para el reporte de ingreso");
+                        return;
+                    }
+
+                    var entryReport = (EntryReport) this.historyRepository.getHistoryReport(
+                            baseRequest,
+                            idTalento,
+                            report.getIdTipoHistorial(),
+                            report.getIdHistorial(),
+                            false);
+
+                    // TODO: Remover gestor del ReportBuilder, ya no es necesario
+                    var gs = new GestorDTO("", "");
+                    var files = this.reportPDFBuilder
+                            .forIngreso(entryReport, gs)
+                            .withFormulario()
+                            .withCreateUser()
+                            .build();
+
+                    filesToSend.addAll(files);
+                });
+
+                this.logger.info("Formularios de ingresos generados: {}", filesToSend.size());
+
+                if (!filesToSend.isEmpty()) {
+
+                    this.logger.info("Enviando formularos de ingresos");
+                    pdfUtils.enviarCorreoConPDF(
+                            filesToSend,
+                            gestorRqEmail,
+                            ccList,
+                            "Ingreso de empleado",
+                            "Formulario de nuevo ingreso de empleado.");
+                    filesToSend.clear();
+                    this.logger.info("Formularos de ingresos enviados");
+                }
+            }
 
             /** Notificar sobre solicitudes de equipo */
-            this.logger.info("Generando formularos de solicitudes de equipo");
-            filesToSend.clear();
+            var solicitudesEqipo = response.getReportesSolicitudEquipo();
+            if (solicitudesEqipo != null && !solicitudesEqipo.isEmpty()) {
+                List<FileDTO> filesToSend = new ArrayList<>();
+                // Obtener las solicitudes de equipo
+                this.logger.info("Generando formularos de solicitudes de equipo");
+                response.getReportesSolicitudEquipo().stream().forEach((solicitud) -> {
 
-            var solicitudesEquipo = response.getSolicitudesEquipo();
+                    var reporte = this.historyRepository.getSolicitudEquipoReport(
+                            baseRequest,
+                            solicitud.getIdTalento(),
+                            solicitud.getIdSolicitudEquipo(),
+                            false);
 
-            if (solicitudesEquipo != null && !solicitudesEquipo.isEmpty()) {
-                solicitudesEquipo.stream().forEach((solicitud) -> {
+                    // TODO: Remover gestor del ReportBuilder, ya no es necesario
+                    var gs = new GestorDTO("", "");
+
                     var files = this.reportPDFBuilder
-                            .fEquipoReport(solicitud, response.getGestorCliente())
+                            .fEquipoReport(reporte, gs)
                             .withFormulario()
                             .build();
                     filesToSend.addAll(files);
                 });
+
+                this.logger.info("Formularos de solicitudes de equipo generados: {}", filesToSend.size());
+
+                if (!filesToSend.isEmpty()) {
+                    this.logger.info("Enviando formularos de solicitudes de equipo");
+                    pdfUtils.enviarCorreoConPDF(
+                            filesToSend,
+                            gestorRqEmail,
+                            ccList,
+                            "Solicitud de equipo",
+                            "Formulario de solicitud de equipo.");
+                    filesToSend.clear();
+                    this.logger.info("Formularos de solicitudes de equipo enviados");
+                }
             }
-
-            this.logger.info("Formularos de solicitudes de equipo generados");
-            this.logger.info("Enviando formularos de solicitudes de equipo");
-
-            // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            if (solicitudesEquipo != null && !solicitudesEquipo.isEmpty()) {
-                pdfUtils.enviarCorreoConPDF(
-                        filesToSend,
-                        gestorDocCorreo,
-                        contacts,
-                        "Requerimiento de Software y Hardware",
-                        "Formulario Requerimiento de Software y Hardware.");
-            }
-
-            this.logger.info("Formularos de solicitudes de equipo enviados");
 
         } catch (Exception e) {
             this.logger.error("Error al enviar notificaciones: {}", e);

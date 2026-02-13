@@ -39,6 +39,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unchecked")
 @Repository
 @RequiredArgsConstructor
 public class RequirementRepository {
@@ -564,7 +565,6 @@ public class RequirementRepository {
 		return new BaseResponse(idTipoMensaje, mensaje);
 	}
 
-	@SuppressWarnings("unchecked")
 	public RequirementTalentsResult saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest)
 			throws SQLServerException {
 

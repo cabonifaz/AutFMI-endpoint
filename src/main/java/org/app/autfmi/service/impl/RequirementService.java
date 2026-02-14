@@ -18,6 +18,7 @@ import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.repository.RequirementRepository;
+import org.app.autfmi.service.IMailService;
 import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
@@ -48,7 +49,7 @@ public class RequirementService implements IRequirementService {
     private final HistoryRepository historyRepository;
 
     @Autowired
-    private MailService mailService;
+    private IMailService mailService;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,

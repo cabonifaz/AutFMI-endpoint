@@ -85,9 +85,12 @@ public class MailUtils {
     }
 
     private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos) {
+
+        var tipoFormulario = gestor.getTipoFormulario() != null ? gestor.getTipoFormulario() : "Ingreso";
+
         return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
                 .replace("[CLIENTE]", gestor.getCliente())
-                .replace("[TIPO_FORMULARIO]", gestor.getTipoFormulario())
+                .replace("[TIPO_FORMULARIO]", tipoFormulario)
                 .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 

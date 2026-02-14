@@ -1,22 +1,22 @@
 package org.app.autfmi.service.impl;
 
-import com.microsoft.sqlserver.jdbc.SQLServerException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
-import lombok.RequiredArgsConstructor;
-
-import org.app.autfmi.model.builders.ReportPDFBuilder;
-import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
-import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.RequirementReport;
-import org.app.autfmi.model.request.*;
+import org.app.autfmi.model.request.AgentRQRequest;
+import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.RequirementFileRequest;
+import org.app.autfmi.model.request.RequirementRequest;
+import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
-import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.service.IRequirementService;
@@ -24,17 +24,13 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
-import org.app.autfmi.util.MailUtils;
-import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -43,13 +39,8 @@ public class RequirementService implements IRequirementService {
     private final RequirementRepository requirementRepository;
     private final JwtHelper jwt;
     private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
-    private final MailUtils mailUtils;
-    private final PDFUtils pdfUtils;
-    private final ReportPDFBuilder reportPDFBuilder;
-    private final HistoryRepository historyRepository;
-
-    @Autowired
-    private IMailService mailService;
+    private final NotificationService notificationService;
+    private final IMailService mailService;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
@@ -258,132 +249,43 @@ public class RequirementService implements IRequirementService {
         if (!request.getFlagCorreo())
             return baseResponse;
 
-        // Envío de notificaciones
+        // Envío de notificaciones de forma asíncrona
         try {
-            this.logger.info("Enviando notificaciones");
+            this.logger.info("Delegando envío de notificaciones al servicio asíncrono");
 
             var gestorRq = response.getGestorRq();
-            var gestorRqEmail = gestorRq.getCorreo();
             var ccList = response.getCcList();
             var postulantes = response.getPostulantes();
+            var entryReportsIds = response.getReportesIngreso();
+            var solicitudesEquipo = response.getReportesSolicitudEquipo();
 
-            if (gestorRqEmail == null) {
-                this.logger.error("No se encontro el correo del gestor del requerimiento");
+            // Validación básica antes de delegar
+            if (gestorRq == null || gestorRq.getCorreo() == null) {
+                this.logger.error("No se encontró el correo del gestor del requerimiento");
                 return baseResponse;
             }
 
-            if (ccList == null) {
-                this.logger.warn("No se encontro la lista de correo de los cc");
-                ccList = Collections.emptyList();
-            }
+            // Crear una copia del baseRequest para el contexto asíncrono
+            var asyncBaseRequest = Common.createBaseRequest(
+                    user,
+                    Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
 
-            /* Notificar sobre talentos confirmados */
-            if (postulantes != null && !postulantes.isEmpty()) {
-                this.mailUtils.sendRequirementPostulantMail(
-                        gestorRq,
-                        "Ingreso de nuevo talento",
-                        postulantes,
-                        ccList);
-                this.logger.info("Notificación de talentos confirmados enviada");
-            }
+            // Llamada asíncrona
+            notificationService.sendRequirementNotifications(
+                    gestorRq,
+                    ccList != null ? ccList : Collections.emptyList(),
+                    postulantes,
+                    entryReportsIds,
+                    solicitudesEquipo,
+                    asyncBaseRequest);
 
-            /* Formularos de ingresos IDs */
-            this.logger.info("Generando formularos de ingresos");
-            var entryReportsIds = response.getReportesIngreso();
-
-            if (entryReportsIds != null) {
-                List<FileDTO> filesToSend = new ArrayList<>();
-                entryReportsIds.stream().forEach((report) -> {
-
-                    // Obtener reporte de ingreso
-                    baseRequest.setFuncionalidades(Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-
-                    var idTalento = report.getIdTalento();
-
-                    if (idTalento == null) {
-                        this.logger.error("No se encontro el talento para el reporte de ingreso");
-                        return;
-                    }
-
-                    var entryReport = (EntryReport) this.historyRepository.getHistoryReport(
-                            baseRequest,
-                            idTalento,
-                            report.getIdTipoHistorial(),
-                            report.getIdHistorial(),
-                            false);
-
-                    // TODO: Remover gestor del ReportBuilder, ya no es necesario
-                    var gs = new GestorDTO("", "");
-                    var files = this.reportPDFBuilder
-                            .forIngreso(entryReport, gs)
-                            .withFormulario()
-                            .withCreateUser()
-                            .build();
-
-                    filesToSend.addAll(files);
-                });
-
-                this.logger.info("Formularios de ingresos generados: {}", filesToSend.size());
-
-                if (!filesToSend.isEmpty()) {
-
-                    this.logger.info("Enviando formularos de ingresos");
-                    pdfUtils.enviarCorreoConPDF(
-                            filesToSend,
-                            gestorRqEmail,
-                            ccList,
-                            "Ingreso de empleado",
-                            "Formulario de nuevo ingreso de empleado.");
-                    filesToSend.clear();
-                    this.logger.info("Formularos de ingresos enviados");
-                }
-            }
-
-            /** Notificar sobre solicitudes de equipo */
-            var solicitudesEqipo = response.getReportesSolicitudEquipo();
-            if (solicitudesEqipo != null && !solicitudesEqipo.isEmpty()) {
-                List<FileDTO> filesToSend = new ArrayList<>();
-                // Obtener las solicitudes de equipo
-                this.logger.info("Generando formularos de solicitudes de equipo");
-                response.getReportesSolicitudEquipo().stream().forEach((solicitud) -> {
-
-                    var reporte = this.historyRepository.getSolicitudEquipoReport(
-                            baseRequest,
-                            solicitud.getIdTalento(),
-                            solicitud.getIdSolicitudEquipo(),
-                            false);
-
-                    // TODO: Remover gestor del ReportBuilder, ya no es necesario
-                    var gs = new GestorDTO("", "");
-
-                    var files = this.reportPDFBuilder
-                            .fEquipoReport(reporte, gs)
-                            .withFormulario()
-                            .build();
-                    filesToSend.addAll(files);
-                });
-
-                this.logger.info("Formularos de solicitudes de equipo generados: {}", filesToSend.size());
-
-                if (!filesToSend.isEmpty()) {
-                    this.logger.info("Enviando formularos de solicitudes de equipo");
-                    pdfUtils.enviarCorreoConPDF(
-                            filesToSend,
-                            gestorRqEmail,
-                            ccList,
-                            "Solicitud de equipo",
-                            "Formulario de solicitud de equipo.");
-                    filesToSend.clear();
-                    this.logger.info("Formularos de solicitudes de equipo enviados");
-                }
-            }
+            this.logger.info("Notificaciones delegadas al servicio asíncrono");
 
         } catch (Exception e) {
-            this.logger.error("Error al enviar notificaciones: {}", e);
+            this.logger.error("Error al delegar notificaciones: {}", e.getMessage(), e);
         }
 
         return response.getBaseResponse();
-
     }
 
     @Override

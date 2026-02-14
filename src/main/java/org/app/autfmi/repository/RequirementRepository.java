@@ -671,6 +671,7 @@ public class RequirementRepository {
 			gestorRq.setApellidos((String) usuario.get("APELLIDOS"));
 			gestorRq.setCorreo((String) usuario.get("CORREO"));
 			gestorRq.setCodigoRQ((String) usuario.get("CODIGO_RQ"));
+			gestorRq.setCliente((String) usuario.getOrDefault("CLIENTE", ""));
 
 			builder.gestorRq(gestorRq);
 		}

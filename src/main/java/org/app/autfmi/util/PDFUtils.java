@@ -8,6 +8,8 @@ import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.SolicitudSoftwareRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -24,6 +26,8 @@ import java.util.List;
 
 @Component
 public class PDFUtils {
+
+    private final Logger logger = LoggerFactory.getLogger(PDFUtils.class);
 
     public enum TemplateType {
         SOLICITUD,
@@ -94,21 +98,38 @@ public class PDFUtils {
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         helper.setFrom(emisorCorreo != null ? emisorCorreo : "");
-        helper.setTo(to);
+
+        String dest = to;
+
+        if (dest == null || dest.trim().isBlank()) {
+            this.logger.error("Correo cancelado porque no hay un destinatario adecuado");
+            return;
+        }
+
+        helper.setTo(dest);
         helper.setSubject(subject);
         helper.setText(text);
 
-        if (copyTo != null && !copyTo.isEmpty()) {
-            copyTo.removeIf(email -> email.equals(to));
+        if (copyTo != null) {
+            // Filtramos correos nulos, vacíos o que sean solo espacios
+            // También eliminamos al destinatario principal de la lista de CC
+            String[] cleanCc = copyTo.stream()
+                    .filter(email -> email != null && !email.trim().isEmpty())
+                    .map(String::trim)
+                    .filter(email -> !email.equalsIgnoreCase(to.trim()))
+                    .toArray(String[]::new);
 
-            if (!copyTo.isEmpty()) {
-                helper.setCc(copyTo.toArray(new String[0]));
+            if (cleanCc.length > 0) {
+                // setCc solo se ejecuta si hay direcciones válidas
+                helper.setCc(cleanCc);
             }
         }
 
         for (FileDTO objfile : lstfiles) {
-            ByteArrayDataSource dataSource = new ByteArrayDataSource(objfile.getByteArchivo(), "application/pdf");
-            helper.addAttachment(objfile.getNombreArchivo() + ".pdf", dataSource);
+            if (objfile.getByteArchivo() != null) {
+                ByteArrayDataSource dataSource = new ByteArrayDataSource(objfile.getByteArchivo(), "application/pdf");
+                helper.addAttachment(objfile.getNombreArchivo() + ".pdf", dataSource);
+            }
         }
 
         mailSender.send(message);

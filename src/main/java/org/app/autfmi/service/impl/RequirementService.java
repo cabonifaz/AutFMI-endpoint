@@ -268,7 +268,7 @@ public class RequirementService implements IRequirementService {
             // Crear una copia del baseRequest para el contexto asíncrono
             var asyncBaseRequest = Common.createBaseRequest(
                     user,
-                    Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+                    baseRequest.getFuncionalidades());
 
             // Llamada asíncrona
             notificationService.sendRequirementNotifications(

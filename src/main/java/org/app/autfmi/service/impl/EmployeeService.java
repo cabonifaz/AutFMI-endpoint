@@ -17,6 +17,7 @@ import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
+import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
@@ -34,7 +35,7 @@ import java.util.List;
 public class EmployeeService implements IEmployeeService {
 
   @Autowired
-  private final MailService mailService;
+  private final IMailService mailService;
   private final EmployeeRepository employeeRepository;
   private final HistoryRepository historyRepository;
   private final PDFUtils pdfUtils;

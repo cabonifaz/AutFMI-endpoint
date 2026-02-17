@@ -1,35 +1,36 @@
 package org.app.autfmi.service.impl;
 
-import com.microsoft.sqlserver.jdbc.SQLServerException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
-import lombok.RequiredArgsConstructor;
-
-import org.app.autfmi.model.builders.ReportPDFBuilder;
-import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.report.RequirementReport;
-import org.app.autfmi.model.request.*;
+import org.app.autfmi.model.request.AgentRQRequest;
+import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.RequirementFileRequest;
+import org.app.autfmi.model.request.RequirementRequest;
+import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.repository.RequirementRepository;
+import org.app.autfmi.service.IMailService;
 import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
-import org.app.autfmi.util.MailUtils;
-import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import com.microsoft.sqlserver.jdbc.SQLServerException;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -38,12 +39,8 @@ public class RequirementService implements IRequirementService {
     private final RequirementRepository requirementRepository;
     private final JwtHelper jwt;
     private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
-    private final MailUtils mailUtils;
-    private final PDFUtils pdfUtils;
-    private final ReportPDFBuilder reportPDFBuilder;
-
-    @Autowired
-    private MailService mailService;
+    private final NotificationService notificationService;
+    private final IMailService mailService;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
@@ -252,95 +249,43 @@ public class RequirementService implements IRequirementService {
         if (!request.getFlagCorreo())
             return baseResponse;
 
-        // Envío de notificaciones sin bloquear el flujo
+        // Envío de notificaciones de forma asíncrona
         try {
-            this.logger.info("Enviando notificaciones");
+            this.logger.info("Delegando envío de notificaciones al servicio asíncrono");
 
-            this.logger.info("Gestor RQ: {}", response.getGestorRq());
-            this.logger.info("Contacts: {}", response.getContacts());
+            var gestorRq = response.getGestorRq();
+            var ccList = response.getCcList();
+            var postulantes = response.getPostulantes();
+            var entryReportsIds = response.getReportesIngreso();
+            var solicitudesEquipo = response.getReportesSolicitudEquipo();
 
-            /* Notificar sobre talentos confirmados */
-            // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            this.mailUtils.sendRequirementPostulantMail(
-                    response.getGestorRq(),
-                    "Ingreso de nuevo talento",
-                    response.getPostulantes(),
-                    response.getContacts());
-
-            this.logger.info("Notificación de talentos confirmados enviada");
-
-            /* Formularos de ingresos */
-            this.logger.info("Generando formularos de ingresos");
-            var entryReports = response.getEntryReports();
-            List<FileDTO> filesToSend = new ArrayList<>();
-
-            entryReports.stream().forEach((report) -> {
-                var files = this.reportPDFBuilder
-                        .forIngreso(report, response.getGestorCliente())
-                        .withFormulario()
-                        .withCreateUser()
-                        .build();
-                filesToSend.addAll(files);
-            });
-
-            this.logger.info("Formularos de ingresos generados");
-
-            this.logger.info("Enviando formularos de ingresos");
-
-            var gestorDocCorreo = response.getGestorDocCorreo();
-            var contacts = response.getContacts();
-
-            if (gestorDocCorreo == null || contacts == null) {
-                throw new Exception("Gestor doc correo o contacts es null");
+            // Validación básica antes de delegar
+            if (gestorRq == null || gestorRq.getCorreo() == null) {
+                this.logger.error("No se encontró el correo del gestor del requerimiento");
+                return baseResponse;
             }
 
-            // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            pdfUtils.enviarCorreoConPDF(
-                    filesToSend,
-                    gestorDocCorreo,
-                    contacts,
-                    "Ingreso de empleado",
-                    "Formulario de nuevo ingreso de empleado.");
+            // Crear una copia del baseRequest para el contexto asíncrono
+            var asyncBaseRequest = Common.createBaseRequest(
+                    user,
+                    Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
 
-            this.logger.info("Formularos de ingresos enviados");
+            // Llamada asíncrona
+            notificationService.sendRequirementNotifications(
+                    gestorRq,
+                    ccList != null ? ccList : Collections.emptyList(),
+                    postulantes,
+                    entryReportsIds,
+                    solicitudesEquipo,
+                    asyncBaseRequest);
 
-            /** Notificar sobre solicitudes de equipo */
-            this.logger.info("Generando formularos de solicitudes de equipo");
-            filesToSend.clear();
-
-            var solicitudesEquipo = response.getSolicitudesEquipo();
-
-            if (solicitudesEquipo != null && !solicitudesEquipo.isEmpty()) {
-                solicitudesEquipo.stream().forEach((solicitud) -> {
-                    var files = this.reportPDFBuilder
-                            .fEquipoReport(solicitud, response.getGestorCliente())
-                            .withFormulario()
-                            .build();
-                    filesToSend.addAll(files);
-                });
-            }
-
-            this.logger.info("Formularos de solicitudes de equipo generados");
-            this.logger.info("Enviando formularos de solicitudes de equipo");
-
-            // TODO: Mover esta lógica al mail service, no tiene nada que ver con PDF
-            if (solicitudesEquipo != null && !solicitudesEquipo.isEmpty()) {
-                pdfUtils.enviarCorreoConPDF(
-                        filesToSend,
-                        gestorDocCorreo,
-                        contacts,
-                        "Requerimiento de Software y Hardware",
-                        "Formulario Requerimiento de Software y Hardware.");
-            }
-
-            this.logger.info("Formularos de solicitudes de equipo enviados");
+            this.logger.info("Notificaciones delegadas al servicio asíncrono");
 
         } catch (Exception e) {
-            this.logger.error("Error al enviar notificaciones: {}", e);
+            this.logger.error("Error al delegar notificaciones: {}", e.getMessage(), e);
         }
 
         return response.getBaseResponse();
-
     }
 
     @Override

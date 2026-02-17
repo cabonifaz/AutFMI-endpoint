@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unchecked")
 @Repository
 @RequiredArgsConstructor
 public class EmployeeRepository {
@@ -214,7 +215,6 @@ public class EmployeeRepository {
    * @param talentId
    * @return
    */
-  @SuppressWarnings("unchecked")
   public EmployeeFullHistoryDTO getEmployeeFullHistory(BaseRequest baseRequest, Integer talentId) {
 
     SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)

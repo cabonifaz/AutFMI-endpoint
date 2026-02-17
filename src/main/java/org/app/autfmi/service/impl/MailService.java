@@ -54,7 +54,7 @@ public class MailService implements IMailService {
    * @param action      La acción que se está realizando (por ejemplo,
    *                    "CREAR_EDITAR_REQUERIMIENTO_AGENTE").
    */
-  @Async
+  @Async("notificationExecutor")
   @Override
   public void sendRequirementNotificationV2(RequirementReport report, String subject, List<String> toAddresses,
       List<String> ccAddresses,
@@ -279,7 +279,7 @@ public class MailService implements IMailService {
         email.lastIndexOf(".") > email.indexOf("@");
   }
 
-  @Async
+  @Async("notificationExecutor")
   @Override
   public void sendCeseReportNotification(CeseReport report) {
     logger.info("Preparing to send cese report notification email...");
@@ -341,7 +341,7 @@ public class MailService implements IMailService {
     }
   }
 
-  @Async
+  @Async("notificationExecutor")
   @Override
   public void sendEquipmentRequestNotification(SolicitudEquipoReport report) {
 

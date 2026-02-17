@@ -8,10 +8,8 @@ import com.microsoft.sqlserver.jdbc.SQLServerException;
 
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
-import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.report.RequirementReportMapper;
-import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
@@ -39,13 +37,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unchecked")
 @Repository
 @RequiredArgsConstructor
 public class RequirementRepository {
 
 	@NonNull
 	private final JdbcTemplate jdbcTemplate;
-	private static Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
+	private Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
 
 	public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
 			String buscar, Date fechaSolicitud, Integer estado) {
@@ -564,7 +563,6 @@ public class RequirementRepository {
 		return new BaseResponse(idTipoMensaje, mensaje);
 	}
 
-	@SuppressWarnings("unchecked")
 	public RequirementTalentsResult saveRequirementTalents(RequirementTalentRequest request, BaseRequest baseRequest)
 			throws SQLServerException {
 
@@ -588,9 +586,8 @@ public class RequirementRepository {
 				.addValue("USUARIO", baseRequest.getUsername())
 				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
 
-		System.out.println("EJECUTANDO SP...");
+		this.logger.info("Executing stored procedure SP_REQUERIMIENTO_TALENTO_INS");
 		Map<String, Object> result = simpleJdbcCall.execute(params);
-		logger.info("Resultset: {}", result);
 
 		// 2. Validación de Respuesta Base
 		var resultSet1 = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -613,37 +610,13 @@ public class RequirementRepository {
 		}
 
 		// 3. Extracción de ResultSets (Variables independientes para legibilidad)
-		var gestorRqSet = (List<Map<String, Object>>) result.get("#result-set-2");
-		var postulantsSet = (List<Map<String, Object>>) result.get("#result-set-3");
-		var contactosSet = (List<Map<String, Object>>) result.get("#result-set-4");
-		var gestorDocsSet = (List<Map<String, Object>>) result.get("#result-set-5");
-		var clientGsSet = (List<Map<String, Object>>) result.get("#result-set-6");
-		var reportSet = (List<Map<String, Object>>) result.get("#result-set-7");
-		var solicitudesEquipoSet = (List<Map<String, Object>>) result.get("#result-set-8");
-		var equipoSoftwaresSet = (List<Map<String, Object>>) result.get("#result-set-9");
+		var postulantsSet = (List<Map<String, Object>>) result.get("#result-set-2");
+		var notificacionesCc = (List<Map<String, Object>>) result.get("#result-set-3");
+		var entryReportsRs = (List<Map<String, Object>>) result.get("#result-set-4");
+		var solicitudesEquipoRs = (List<Map<String, Object>>) result.get("#result-set-5");
+		var usuarioActuador = (List<Map<String, Object>>) result.get("#result-set-6");
 
-		// 4. Mapeo de Gestor Cliente
-		if (clientGsSet != null && !clientGsSet.isEmpty()) {
-			Map<String, Object> gsRow = clientGsSet.get(0);
-			String gsSignature = (String) gsRow.get("NOMBRE_FIRMANTE");
-			builder.gestorCliente(new GestorDTO(gsSignature, gsSignature));
-		} else {
-			logger.warn("No se encontró el gestor del cliente en el SP");
-		}
-
-		// 5. Mapeo de Gestor RQ
-		if (gestorRqSet != null && !gestorRqSet.isEmpty()) {
-			Map<String, Object> row = gestorRqSet.get(0);
-			builder.gestorRq(new GestorRqDTO(
-					(String) row.get("NOMBRES"),
-					(String) row.get("APELLIDOS"),
-					(String) row.get("CORREO"),
-					(String) row.get("CODIGO_RQ"),
-					(String) row.get("CLIENTE"),
-					"Ingreso"));
-		}
-
-		// 6. Mapeo de Postulantes
+		// 4. Mapeo de Postulantes
 		if (postulantsSet != null && !postulantsSet.isEmpty()) {
 			List<PostulantDTO> postulantList = new ArrayList<>();
 			for (var row : postulantsSet) {
@@ -652,129 +625,60 @@ public class RequirementRepository {
 			builder.postulantes(postulantList);
 		}
 
-		// 7. Mapeo de Contactos
-		if (contactosSet != null && !contactosSet.isEmpty()) {
-			List<String> contactosList = new ArrayList<>();
-			for (Map<String, Object> row : contactosSet) {
-				var email = (String) row.getOrDefault("CORREO", "");
-				if (email != null && !email.trim().isEmpty()) {
-					contactosList.add(email);
-				}
-			}
-			builder.contacts(contactosList);
+		// 5. Mapeo de Notificaciones
+		List<String> lstCc = new ArrayList<>();
+		if (notificacionesCc != null && !notificacionesCc.isEmpty()) {
+			notificacionesCc.stream().forEach((n) -> {
+				var correo = (String) n.getOrDefault("CORREO", "");
+				lstCc.add(correo);
+			});
 		}
 
-		// 8. Mapeo de Reportes de Ingreso
-		if (reportSet != null && !reportSet.isEmpty()) {
-			List<EntryReport> entryReports = new ArrayList<>();
-			for (var row : reportSet) {
-				entryReports.add(mapToEntryReport(row));
-			}
-			builder.entryReports(entryReports);
+		builder.ccList(lstCc);
+
+		// 6. Mapeo de Reportes de Ingreso
+		if (entryReportsRs != null && !entryReportsRs.isEmpty()) {
+			List<RequirementTalentsResult.ReporteIngreso> reportesIngreso = new ArrayList<>();
+
+			entryReportsRs.stream().forEach((report) -> {
+				var reporte = new RequirementTalentsResult.ReporteIngreso();
+				reporte.setIdHistorial((Integer) report.get("ID_HISTORIAL"));
+				reporte.setIdTalento((Integer) report.get("ID_TALENTO"));
+				reporte.setIdTipoHistorial((Integer) report.get("ID_TIPO_HISTORIAL"));
+				reportesIngreso.add(reporte);
+			});
+
+			builder.reportesIngreso(reportesIngreso);
 		}
 
-		String gestorDocsCorreo = "";
-		String gestorDocsFullName = "";
-
-		if (gestorDocsSet != null && !gestorDocsSet.isEmpty()) {
-			var docsRow = gestorDocsSet.get(0);
-			gestorDocsCorreo = (String) docsRow.get("GESTOR_DOCS_CORREO");
-			gestorDocsFullName = (String) docsRow.get("GESTOR_DOCS");
-
-			builder.gestorDocCorreo(gestorDocsCorreo);
-			builder.gestorDocNombre(gestorDocsFullName);
+		// 7. Mapeo de Reportes de Solicitud de Equipo
+		if (solicitudesEquipoRs != null && !solicitudesEquipoRs.isEmpty()) {
+			List<RequirementTalentsResult.ReporteSolicitudEquipo> reportesSolicitudEquipo = new ArrayList<>();
+			solicitudesEquipoRs.stream().forEach((report) -> {
+				var reporte = new RequirementTalentsResult.ReporteSolicitudEquipo();
+				reporte.setIdSolicitudEquipo((Integer) report.get("ID_SOLICITUD_EQUIPO"));
+				reporte.setIdTalento((Integer) report.get("ID_TALENTO"));
+				reportesSolicitudEquipo.add(reporte);
+			});
+			builder.reportesSolicitudEquipo(reportesSolicitudEquipo);
 		}
 
-		// 9. Mapeo de Solicitudes de Equipo y Software (Lógica compleja)
-		if (solicitudesEquipoSet != null && !solicitudesEquipoSet.isEmpty()) {
+		// 8. Mapeao del usuario actuador conocido como (GestorRQ, no siempre lo es)
+		if (usuarioActuador != null && !usuarioActuador.isEmpty()) {
+			var usuario = usuarioActuador.get(0);
+			var gestorRq = new GestorRqDTO();
+			gestorRq.setNombres((String) usuario.get("NOMBRES"));
+			gestorRq.setApellidos((String) usuario.get("APELLIDOS"));
+			gestorRq.setCorreo((String) usuario.get("CORREO"));
+			gestorRq.setCodigoRQ((String) usuario.get("CODIGO_RQ"));
+			gestorRq.setCliente((String) usuario.getOrDefault("CLIENTE", ""));
 
-			// Obtener datos del Gestor de Docs (necesario para el reporte de equipo)
-
-			List<SolicitudEquipoReport> solicitudesEquipo = new ArrayList<>();
-
-			for (var solicitudRow : solicitudesEquipoSet) {
-				var report = new SolicitudEquipoReport();
-
-				// Datos cabecera
-				report.setCorreoGestor(gestorDocsCorreo);
-				report.setNombreApellidoGestor(gestorDocsFullName);
-
-				// Datos solicitud
-				report.setNombreEmpleado((String) solicitudRow.get("NOMBRE_EMPLEADO"));
-				report.setApellidosEmpleado((String) solicitudRow.get("APELLIDOS_EMPLEADO"));
-				report.setCliente((String) solicitudRow.get("CLIENTE"));
-				report.setArea((String) solicitudRow.get("AREA"));
-				report.setPuesto((String) solicitudRow.get("PUESTO"));
-				report.setFechaSolicitud((String) solicitudRow.get("FECHA_SOLICITUD"));
-				report.setFechaEntrega((String) solicitudRow.get("FECHA_ENTREGA"));
-
-				// Datos Hardware
-				report.setIdTipoEquipo((Integer) solicitudRow.get("ID_TIPO_EQUIPO"));
-				report.setProcesador((String) solicitudRow.get("PROCESADOR"));
-				report.setRam((String) solicitudRow.get("RAM"));
-				report.setHd((String) solicitudRow.get("HD"));
-				report.setMarca((String) solicitudRow.get("MARCA"));
-				report.setIdAnexo((Integer) solicitudRow.get("ID_ANEXO"));
-				report.setCelular((Boolean) solicitudRow.get("CELULAR"));
-				report.setInternetMovil((Boolean) solicitudRow.get("INTERNET_MOVIL"));
-				report.setAccesorios((String) solicitudRow.get("ACCESORIOS"));
-
-				// Mapeo Software (Relación 1 a Muchos)
-				var lstSoftware = new ArrayList<SolicitudSoftwareRequest>();
-
-				// ID de la solicitud actual
-				var currentSolicitudId = (Integer) solicitudRow.get("ID_EQUIPO_SOLICITUD");
-
-				if (equipoSoftwaresSet != null && currentSolicitudId != null) {
-					for (Map<String, Object> softwareRow : equipoSoftwaresSet) {
-						Integer fkSolicitudId = (Integer) softwareRow.get("ID_EQUIPO_SOLICITUD");
-
-						// Match: Solo agregamos si el software pertenece a esta solicitud
-						if (currentSolicitudId.equals(fkSolicitudId)) {
-							var software = new SolicitudSoftwareRequest();
-							software.setIdItem((Integer) softwareRow.get("ID_EQUIPO_SOLICITUD"));
-							software.setProducto((String) softwareRow.get("PRODUCTO"));
-							software.setProdVersion((String) softwareRow.get("PROD_VERSION"));
-							lstSoftware.add(software);
-						}
-					}
-				}
-				report.setLstSoftware(lstSoftware);
-				solicitudesEquipo.add(report);
-			}
-
-			builder.solicitudesEquipo(solicitudesEquipo);
+			builder.gestorRq(gestorRq);
 		}
 
 		logger.info("Finished task: saveRequirementTalents");
 		return builder.build();
-	}
 
-	private EntryReport mapToEntryReport(Map<String, Object> report) {
-		return new EntryReport(
-				null,
-				(String) report.get("NOMBRES"),
-				(String) report.get("APELLIDOS"),
-				(String) report.get("AREA"),
-				(String) report.get("FCH_HISTORIAL"),
-				(String) report.get("MODALIDAD"),
-				(String) report.get("MOTIVO"),
-				(String) report.get("CARGO"),
-				(String) report.get("HORARIO"),
-				(String) report.get("MONTO_BASE"),
-				(String) report.get("MONTO_MOVILIDAD"),
-				(String) report.get("MONTO_TRIMESTRAL"),
-				(String) report.get("FCH_INICIO_CONTRATO"),
-				(String) report.get("FCH_TERMINO_CONTRATO"),
-				(String) report.get("PROYECTO_SERVICIO"),
-				(String) report.get("OBJETO_CONTRATO"),
-				(Integer) report.get("DECLARAR_SUNAT"),
-				(String) report.get("SEDE_DECLARAR"),
-				null,
-				(String) report.get("FIRMANTE"),
-				null,
-				(String) report.get("USERNAME_EMPLEADO"),
-				(String) report.get("EMAIL_EMPLEADO"));
 	}
 
 	public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {

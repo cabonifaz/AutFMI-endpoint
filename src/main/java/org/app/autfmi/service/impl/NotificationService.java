@@ -13,7 +13,6 @@ import org.app.autfmi.model.dto.RequirementTalentsResult;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.HistoryRepository;
-import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.slf4j.Logger;
@@ -73,9 +72,6 @@ public class NotificationService {
         this.logger.info("Generando formularos de ingresos");
         List<FileDTO> filesToSend = new ArrayList<>();
         entryReportsIds.stream().forEach((report) -> {
-
-          // Obtener reporte de ingreso
-          baseRequest.setFuncionalidades(Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
 
           var idTalento = report.getIdTalento();
 

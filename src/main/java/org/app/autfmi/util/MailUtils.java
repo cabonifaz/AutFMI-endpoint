@@ -36,7 +36,7 @@ public class MailUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(MailUtils.class);
 
-    @Async
+    @Async("notificationExecutor")
     public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes,
             List<String> lstEmails) {
         try {
@@ -105,7 +105,7 @@ public class MailUtils {
      *                     "requerimiento-template").
      * @param variables    Un mapa con las variables que se usarán en la plantilla.
      */
-    @Async
+    @Async("notificationExecutor")
     public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables) {
         try {

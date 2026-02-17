@@ -227,7 +227,7 @@ public class PDFUtils {
                 .replace("{{accesorios}}", report.getAccesorios())
                 .replace("{{listaProducto}}", String.join("\n", listaProductos))
                 .replace("{{seccionFirma}}", htmlFirma)
-                .replace("{{nombreGestor}}", SafeValues.safeString(gs.getFullname()))
+                .replace("{{nombreGestor}}", SafeValues.safeString(report.getNombreApellidoGestor()))
                 .replace("{{fechaEmision}}", Common.getCurrentDateFormatted());
 
         return htmlTemplate;

@@ -119,6 +119,8 @@ public class PDFUtils {
                     .filter(email -> !email.equalsIgnoreCase(to.trim()))
                     .toArray(String[]::new);
 
+            this.logger.info("Cleaned CC: {}", cleanCc.length);
+
             if (cleanCc.length > 0) {
                 // setCc solo se ejecuta si hay direcciones válidas
                 helper.setCc(cleanCc);

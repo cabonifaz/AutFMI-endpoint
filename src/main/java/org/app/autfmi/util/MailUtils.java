@@ -36,7 +36,7 @@ public class MailUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(MailUtils.class);
 
-    @Async
+    @Async("notificationExecutor")
     public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes,
             List<String> lstEmails) {
         try {
@@ -85,9 +85,12 @@ public class MailUtils {
     }
 
     private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos) {
+
+        var tipoFormulario = gestor.getTipoFormulario() != null ? gestor.getTipoFormulario() : "Ingreso";
+
         return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
                 .replace("[CLIENTE]", gestor.getCliente())
-                .replace("[TIPO_FORMULARIO]", gestor.getTipoFormulario())
+                .replace("[TIPO_FORMULARIO]", tipoFormulario)
                 .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 
@@ -102,7 +105,7 @@ public class MailUtils {
      *                     "requerimiento-template").
      * @param variables    Un mapa con las variables que se usarán en la plantilla.
      */
-    @Async
+    @Async("notificationExecutor")
     public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables) {
         try {

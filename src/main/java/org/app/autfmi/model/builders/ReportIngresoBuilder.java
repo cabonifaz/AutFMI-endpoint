@@ -68,8 +68,8 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("objetoContrato", report.getObjetoContrato());
 
     // Descagar firma del gestor
-    if (gs.getSignature() != null && !gs.getSignature().isEmpty()) {
-      var signatureBytes = this.dowloadSignature(gs.getSignature());
+    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+      var signatureBytes = this.dowloadSignature(report.getFirma());
 
       // Convertimos los bytes a String Base64 con el prefijo de imagen
       var base64Image = "data:image/png;base64," + signatureBytes;
@@ -79,7 +79,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     }
 
     // Responsable y firma
-    context.setVariable("nombreResponsable", gs.getFullname());
+    context.setVariable("nombreResponsable", report.getFirmante());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
     // Procesar la plantilla (busca 'formulario_movimiento.html' en templates)

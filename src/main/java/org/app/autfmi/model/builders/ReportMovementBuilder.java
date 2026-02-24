@@ -47,7 +47,7 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     context.setVariable("fechaMovimiento", report.getFechaHistorial());
     context.setVariable("jornadaMovimiento", report.getHorario());
 
-    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
       var signatureBytes = this.dowloadSignature(report.getFirma());
 
       // Convertimos los bytes a String Base64 con el prefijo de imagen
@@ -68,6 +68,8 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     var fullName = report.getNombres() + " " + report.getApellidos();
     var fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
     var pdfBytes = renderPdfFromHtml(htmlContent);
+
+    fileName = this.sanitizeFilename(fileName);
 
     this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
     return this;

@@ -47,6 +47,8 @@ public class NotificationService {
 
       var gestorRqEmail = gestorRq.getCorreo();
 
+      String subject = "Ingreso nuevo talento | " + gestorRq.getCodigoRQ() + " | " + gestorRq.getCliente();
+
       if (gestorRqEmail == null) {
         this.logger.error("No se encontro el correo del gestor del requerimiento");
         return;
@@ -102,15 +104,15 @@ public class NotificationService {
 
         if (!filesToSend.isEmpty()) {
 
-          this.logger.info("Enviando formularos de ingresos");
+          this.logger.info("Enviando formularios de ingresos");
           pdfUtils.enviarCorreoConPDF(
               filesToSend,
               gestorRqEmail,
               ccList != null ? ccList : Collections.emptyList(),
-              "Ingreso de empleado",
+              subject,
               "Formulario de nuevo ingreso de empleado.");
           filesToSend.clear();
-          this.logger.info("Formularos de ingresos enviados");
+          this.logger.info("Formularios de ingresos enviados");
         }
       }
 
@@ -145,7 +147,7 @@ public class NotificationService {
               filesToSend,
               gestorRqEmail,
               ccList != null ? ccList : Collections.emptyList(),
-              "Solicitud de equipo",
+              "Solicitud de equipo " + subject,
               "Formulario de solicitud de equipo.");
           filesToSend.clear();
           this.logger.info("Formularos de solicitudes de equipo enviados");

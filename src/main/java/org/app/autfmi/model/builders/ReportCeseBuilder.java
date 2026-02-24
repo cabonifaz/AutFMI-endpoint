@@ -54,6 +54,8 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var fileName = "FT-GT-12-FMI-CESE-" + fullName;
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
+    fileName = this.sanitizeFilename(fileName);
+
     this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
     return this;
   }

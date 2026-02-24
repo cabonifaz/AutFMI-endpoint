@@ -68,7 +68,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("objetoContrato", report.getObjetoContrato());
 
     // Descagar firma del gestor
-    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
       var signatureBytes = this.dowloadSignature(report.getFirma());
 
       // Convertimos los bytes a String Base64 con el prefijo de imagen
@@ -87,6 +87,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
     // Generar PDF
     var filename = "FT-GT-12-FMI-Formulario de Ingreso " + report.getNombres();
+    filename = this.sanitizeFilename(filename);
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
@@ -94,7 +95,10 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
   }
 
   public ReportIngresoBuilder withCreateUser() {
-    var filename = "FT-GS-01 Solicitud de Creación de Usuario";
+
+    String fullname = report.getNombres() + report.getApellidos();
+
+    var filename = "FT-GS-01-Solicitud de Creación de Usuario " + fullname;
 
     var context = new Context();
     var logoBase64 = imageToBase64("assets/logo-fractal-2.png");
@@ -131,6 +135,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
     // Generar PDF en bytes
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
+    filename = this.sanitizeFilename(filename);
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;

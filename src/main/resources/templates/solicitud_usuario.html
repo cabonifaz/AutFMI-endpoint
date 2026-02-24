@@ -1,375 +1,328 @@
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <style>
-      @page {
-        size: A4;
-        margin-top: 0.28in;
-        margin-bottom: 0.3in;
-        margin-left: 1.18in;
-        margin-right: 1.18in;
-      }
 
-      body {
-        font-family: Arial, sans-serif;
-        font-size: 9pt;
-        color: #333;
-        margin: 0;
-        padding: 0;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @page {
+      size: A4;
+      margin-top: 0.28in;
+      margin-bottom: 0.3in;
+      margin-left: 1.18in;
+      margin-right: 1.18in;
+    }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 0px;
-      }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 9pt;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
 
-      /* Estilo general de bordes grises para todas las tablas */
-      td {
-        border: 1px solid #8c8c8c;
-        padding: 4px;
-        vertical-align: middle;
-      }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0px;
+    }
 
-      /* Clase específica para el header con bordes azules */
-      .header-table td {
-        border: 1px solid #a6c9e2;
-      }
+    /* Estilo general de bordes grises para todas las tablas */
+    td {
+      border: 1px solid #8c8c8c;
+      padding: 4px;
+      vertical-align: middle;
+    }
 
-      .header-bg {
-        background-color: #335a96;
-        color: white;
-        font-weight: bold;
-        text-align: center;
-        text-transform: uppercase;
-      }
+    /* Clase específica para el header con bordes azules */
+    .header-table td {
+      border: 1px solid #a6c9e2;
+    }
 
-      .label {
-        font-weight: bold;
-        background-color: #f2f2f2;
-        width: 20%;
-      }
+    .header-bg {
+      background-color: #335a96;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+    }
 
-      .value {
-        width: 30%;
-      }
+    .label {
+      font-weight: bold;
+      background-color: #f2f2f2;
+      width: 20%;
+    }
 
-      .title-main {
-        font-size: 11pt;
-        text-align: center;
-        font-weight: bold;
-      }
+    .value {
+      width: 30%;
+    }
 
-      .meta-info {
-        font-size: 7pt;
-        width: 20%;
-      }
+    .title-main {
+      font-size: 11pt;
+      text-align: center;
+      font-weight: bold;
+    }
 
-      .checkbox-cell {
-        text-align: center;
-        width: 5%;
-      }
-    </style>
-  </head>
+    .meta-info {
+      font-size: 7pt;
+      width: 20%;
+    }
 
-  <body>
-    <table class="header-table">
-      <tr>
-        <td rowspan="3" class="header-logo" style="width: 25%">
-          <img
-            th:src="${fractalLogo}"
-            alt="Logo"
-            style="max-height: 40px; width: auto"
-          />
-        </td>
+    .checkbox-cell {
+      text-align: center;
+      width: 5%;
+    }
+  </style>
+</head>
 
-        <td
-          rowspan="3"
-          class="header-title"
-          style="
+<body>
+  <table class="header-table">
+    <tr>
+      <td rowspan="3" class="header-logo" style="width: 25%">
+        <img th:src="${fractalLogo}" alt="Logo" style="max-height: 40px; width: auto" />
+      </td>
+
+      <td rowspan="3" class="header-title" style="
             width: 45%;
             color: #000;
             text-align: center;
             font-weight: bold;
             font-size: 10pt;
-          "
-        >
-          SOLICITUD DE CREACIÓN, MODIFICACIÓN O<br />
-          DESACTIVACIÓN DE USUARIOS
-        </td>
+          ">
+        SOLICITUD DE CREACIÓN, MODIFICACIÓN O<br />
+        DESACTIVACIÓN DE USUARIOS
+      </td>
 
-        <td
-          style="width: 10%; font-size: 8pt; border-bottom: 1px solid #a6c9e2"
-        >
-          Código:
-        </td>
-        <td
-          style="
+      <td style="width: 10%; font-size: 8pt; border-bottom: 1px solid #a6c9e2">
+        Código:
+      </td>
+      <td style="
             width: 20%;
             font-size: 8pt;
             border-bottom: 1px solid #a6c9e2;
             border-left: 1px solid #a6c9e2;
-          "
-        >
-          FT-GS-01
-        </td>
-      </tr>
-      <tr>
-        <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2">
-          Versión:
-        </td>
-        <td
-          style="
+          ">
+        FT-GS-01
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2">
+        Versión:
+      </td>
+      <td style="
             font-size: 8pt;
             border-bottom: 1px solid #a6c9e2;
             border-left: 1px solid #a6c9e2;
-          "
-        >
-          01
-        </td>
-      </tr>
-      <tr>
-        <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2">Fecha:</td>
-        <td
-          style="
+          ">
+        01
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; border-bottom: 1px solid #a6c9e2">Fecha:</td>
+      <td style="
             font-size: 8pt;
             border-bottom: 1px solid #a6c9e2;
             border-left: 1px solid #a6c9e2;
-          "
-        >
-          31/08/2016
-        </td>
-      </tr>
-    </table>
+          ">
+        31/08/2016
+      </td>
+    </tr>
+  </table>
 
-    <table style="margin: 10px 0px; width: 100%; border-collapse: collapse">
-      <tr>
-        <td
-          colspan="4"
-          class="header-bg"
-          style="
+  <table style="margin: 10px 0px; width: 100%; border-collapse: collapse">
+    <tr>
+      <td colspan="4" class="header-bg" style="
             text-align: center;
             background-color: #2e548a;
             color: white;
             font-weight: bold;
-          "
-        >
-          DATOS DEL SOLICITANTE
-        </td>
-      </tr>
+          ">
+        DATOS DEL SOLICITANTE
+      </td>
+    </tr>
 
-      <tr>
-        <td colspan="3" class="label" style="padding: 5px">
-          <strong>Nombres y Apellidos:</strong>
-          <span style="font-weight: normal" th:text="${nombresSolicitante}"
-            >Justin Mason</span
-          >
-        </td>
-        <td rowspan="2" style="vertical-align: middle">
-          <strong>Anexo:</strong> <br />
-          <span>102</span>
-        </td>
-      </tr>
+    <tr>
+      <td colspan="3" class="label" style="padding: 5px">
+        <strong>Nombres y Apellidos:</strong>
+        <span style="font-weight: normal" th:text="${nombresSolicitante}">Justin Mason</span>
+      </td>
+      <td rowspan="2" style="vertical-align: middle">
+        <strong>Anexo:</strong> <br />
+        <span>102</span>
+      </td>
+    </tr>
 
-      <tr>
-        <td style="padding: 5px; width: 35%">
-          <strong>Área:</strong>
-          <span style="font-weight: normal" th:text="${areaSolicitante}"
-            >Sistemas</span
-          >
-        </td>
-        <td colspan="2" style="padding: 5px">
-          <strong>Cargo:</strong>
-          <span style="font-weight: normal" th:text="${cargoSolicitante}"
-            >Ingeniero</span
-          >
-        </td>
-      </tr>
+    <tr>
+      <td style="padding: 5px; width: 35%">
+        <strong>Área:</strong>
+        <span style="font-weight: normal" th:text="${areaSolicitante}">Sistemas</span>
+      </td>
+      <td colspan="2" style="padding: 5px">
+        <strong>Cargo:</strong>
+        <span style="font-weight: normal">Gestor de Servicios</span>
+      </td>
+    </tr>
 
-      <tr>
-        <td
-          colspan="4"
-          class="label"
-          style="padding: 5px; background-color: #f9f9f9"
-        >
-          <strong>Fecha:</strong>
-          <span th:text="${fechaSolicitud}" style="font-weight: normal"
-            >20/01/2026</span
-          >
-        </td>
-      </tr>
-    </table>
+    <tr>
+      <td colspan="4" class="label" style="padding: 5px; background-color: #f9f9f9">
+        <strong>Fecha:</strong>
+        <span th:text="${fechaSolicitud}" style="font-weight: normal">20/01/2026</span>
+      </td>
+    </tr>
+  </table>
 
-    <table style="margin: 20px 0px">
-      <tr>
-        <td colspan="4" class="header-bg">CREACIÓN DE USUARIOS</td>
-      </tr>
-      <tr>
-        <td class="label">Nombres y Apellidos:</td>
-        <td colspan="2" th:text="${nombresUsuario}">Justin Mason</td>
-        <td rowspan="3" class="value"></td>
-      </tr>
-      <tr>
-        <td class="label">Nombre de Usuario:</td>
-        <td colspan="2" th:text="${usernameIngreso}">jmason</td>
-      </tr>
-      <tr>
-        <td class="label">Correo:</td>
-        <td class="value" th:text="${emailUsuario}">ejemplo@fractal.com.pe</td>
-        <td class="label">
-          Área:
-          <span th:text="${areaUsuario}" style="font-weight: normal"
-            >Sistemas</span
-          >
-        </td>
-      </tr>
-      <tr style="background-color: #f2f2f2">
-        <td>
-          <input type="checkbox" /> Entrada<br />
-          <input type="checkbox" /> Salida
-        </td>
-        <td>
-          <input type="checkbox" /> Interno <br />
-          <input type="checkbox" /> Externo
-        </td>
-        <td colspan="2"></td>
-      </tr>
-    </table>
+  <table style="margin: 20px 0px">
+    <tr>
+      <td colspan="4" class="header-bg">CREACIÓN DE USUARIOS</td>
+    </tr>
+    <tr>
+      <td class="label">Nombres y Apellidos:</td>
+      <td colspan="2" th:text="${nombresUsuario}">Justin Mason</td>
+      <td rowspan="3" class="value"></td>
+    </tr>
+    <tr>
+      <td class="label">Nombre de Usuario:</td>
+      <td colspan="2" th:text="${usernameIngreso}">jmason</td>
+    </tr>
+    <tr>
+      <td class="label">Correo:</td>
+      <td class="value" th:text="${emailUsuario}">ejemplo@fractal.com.pe</td>
+      <td class="label">
+        Área:
+        <span th:text="${areaUsuario}" style="font-weight: normal">Sistemas</span>
+      </td>
+    </tr>
+    <tr style="background-color: #f2f2f2">
+      <td>
+        <input type="checkbox" /> Entrada<br />
+        <input type="checkbox" /> Salida
+      </td>
+      <td>
+        <input type="checkbox" /> Interno <br />
+        <input type="checkbox" /> Externo
+      </td>
+      <td colspan="2"></td>
+    </tr>
+  </table>
 
-    <table style="margin: 20px 0px; width: 100%; border-collapse: collapse">
-      <tr>
-        <td colspan="4" class="header-bg" style="text-align: center">
-          MODIFICACIÓN DE USUARIOS
-        </td>
-      </tr>
+  <table style="margin: 20px 0px; width: 100%; border-collapse: collapse">
+    <tr>
+      <td colspan="4" class="header-bg" style="text-align: center">
+        MODIFICACIÓN DE USUARIOS
+      </td>
+    </tr>
 
-      <tr>
-        <td class="label" style="width: 30%">Modificar Usuario de Red</td>
-        <td colspan="2" style="width: 45%">
-          <input type="checkbox" />
-        </td>
-        <td rowspan="6" style="width: 15%"></td>
-      </tr>
+    <tr>
+      <td class="label" style="width: 30%">Modificar Usuario de Red</td>
+      <td colspan="2" style="width: 45%">
+        <input type="checkbox" />
+      </td>
+      <td rowspan="6" style="width: 15%"></td>
+    </tr>
 
-      <tr>
-        <td class="label">Usuario:</td>
-        <td colspan="2" class="value" th:text="${username}">jmason</td>
-      </tr>
+    <tr>
+      <td class="label">Usuario:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
 
-      <tr>
-        <td class="label">Modificar por:</td>
-        <td colspan="2" class="value" th:text="${username}">jmason</td>
-      </tr>
+    <tr>
+      <td class="label">Modificar por:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
 
-      <tr>
-        <td class="label">Modificar correo electrónico:</td>
-        <td colspan="2">
-          <input type="checkbox" />
-        </td>
-      </tr>
+    <tr>
+      <td class="label">Modificar correo electrónico:</td>
+      <td colspan="2">
+        <input type="checkbox" />
+      </td>
+    </tr>
 
-      <tr>
-        <td class="label">Correo:</td>
-        <td colspan="2" class="value" th:text="${username}">jmason</td>
-      </tr>
+    <tr>
+      <td class="label">Correo:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
 
-      <tr>
-        <td class="label">Modificar por:</td>
-        <td colspan="2" class="value" th:text="${username}">jmason</td>
-      </tr>
-    </table>
+    <tr>
+      <td class="label">Modificar por:</td>
+      <td colspan="2" class="value" th:text="${username}">jmason</td>
+    </tr>
+  </table>
 
-    <table style="margin: 20px 0px">
-      <tr>
-        <td colspan="2" class="header-bg">DESACTIVACIÓN DE USUARIOS</td>
-      </tr>
-      <tr>
-        <td class="label">Nombre y Apellidos:</td>
-        <td th:text="${nombresDesactivacion}">Justin Mason</td>
-      </tr>
-      <tr>
-        <td class="label">Usuario:</td>
-        <td th:text="${usuarioDesactivacion}">jmason</td>
-      </tr>
-      <tr>
-        <td class="label">Correo:</td>
-        <td th:text="${correoDesactivacion}">ejemplo@fractal.com.pe</td>
-      </tr>
-      <tr>
-        <td class="label">Motivo:</td>
-        <td style="font-weight: bold" th:text="${motivoDesactivacion}">
-          Motivo de desactivación
-        </td>
-      </tr>
-    </table>
+  <table style="margin: 20px 0px">
+    <tr>
+      <td colspan="2" class="header-bg">DESACTIVACIÓN DE USUARIOS</td>
+    </tr>
+    <tr>
+      <td class="label">Nombre y Apellidos:</td>
+      <td th:text="${nombresDesactivacion}">Justin Mason</td>
+    </tr>
+    <tr>
+      <td class="label">Usuario:</td>
+      <td th:text="${usuarioDesactivacion}">jmason</td>
+    </tr>
+    <tr>
+      <td class="label">Correo:</td>
+      <td th:text="${correoDesactivacion}">ejemplo@fractal.com.pe</td>
+    </tr>
+    <tr>
+      <td class="label">Motivo:</td>
+      <td style="font-weight: bold" th:text="${motivoDesactivacion}">
+        Motivo de desactivación
+      </td>
+    </tr>
+  </table>
 
-    <div
-      style="
+  <div style="
         position: fixed;
         bottom: 0;
         left: 0;
         width: 100%;
         font-family: sans-serif;
-      "
-    >
-      <div class="footer-sign" style="text-align: center">
-        <div style="height: 80px; width: 100%; text-align: center">
-          <img
-            th:if="${firmaGestor != null}"
-            th:src="${firmaGestor}"
-            style="
+      ">
+    <div class="footer-sign" style="text-align: center">
+      <div style="height: 80px; width: 100%; text-align: center">
+        <img th:if="${firmaGestor != null}" th:src="${firmaGestor}" style="
               max-height: 80px;
               max-width: 250px;
               display: inline-block;
               vertical-align: bottom;
-            "
-          />
+            " />
 
-          <div
-            th:unless="${firmaGestor != null}"
-            style="
+        <div th:unless="${firmaGestor != null}" style="
               font-size: 11pt;
               font-weight: bold;
               padding-top: 60px;
               line-height: 1;
-            "
-          >
-            <span th:text="${nombreResponsable}">Nombre del encargado</span>
-          </div>
+            ">
+          <span th:text="${nombreResponsable}">Nombre del encargado</span>
         </div>
+      </div>
 
-        <div
-          style="
+      <div style="
             border-top: 1px solid #000000;
             width: 350px;
             margin: 0 auto;
             height: 0;
-          "
-        ></div>
+          "></div>
 
-        <div style="font-size: 9pt; margin-top: 3px">
-          <span th:text="${nombreResponsable}" style="font-weight: bold"
-            >Nombre del encargado</span
-          >
-          <p style="margin: 0">Gestor de Servicios</p>
-        </div>
+      <div style="font-size: 9pt; margin-top: 3px">
+        <span th:text="${nombreResponsable}" style="font-weight: bold">Nombre del encargado</span>
+        <p style="margin: 0">Gestor de Servicios</p>
       </div>
+    </div>
 
-      <div>
-        <p
-          style="
+    <div>
+      <p style="
             font-size: 7pt;
             text-align: center;
             margin-top: 5px;
             margin-bottom: 0;
             color: #696969;
-          "
-        >
-          Generado con FMI © 2025 — Fecha de emisión:
-          <span th:text="${fechaEmision}">07 de febrero del 2026</span>
-        </p>
-      </div>
+          ">
+        Generado con FMI © 2025 — Fecha de emisión:
+        <span th:text="${fechaEmision}">07 de febrero del 2026</span>
+      </p>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

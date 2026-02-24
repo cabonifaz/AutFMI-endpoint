@@ -98,7 +98,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
     String fullname = report.getNombres() + report.getApellidos();
 
-    var filename = "FT-GS-01-Solicitud de Creación de Usuario" + fullname;
+    var filename = "FT-GS-01-Solicitud de Creación de Usuario " + fullname;
 
     var context = new Context();
     var logoBase64 = imageToBase64("assets/logo-fractal-2.png");

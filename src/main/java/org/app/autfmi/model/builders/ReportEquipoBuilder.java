@@ -5,26 +5,81 @@ import java.util.List;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
-import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.Common;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport> {
 
-  protected ReportEquipoBuilder(PDFUtils pdfUtils, SolicitudEquipoReport report, GestorDTO gs) {
-    super(pdfUtils, report, gs);
+  private SpringTemplateEngine templateEngine;
+
+  protected ReportEquipoBuilder(SpringTemplateEngine templateEngine, SolicitudEquipoReport report, GestorDTO gs) {
+    super(null, report, gs);
+    this.templateEngine = templateEngine;
   }
 
   public ReportEquipoBuilder withFormulario() {
+    var context = new Context();
 
-    String employeeName = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
-    String template = this.pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
-    String filled = pdfUtils.replaceSolicitudEquipoPDFValues(template, report, gs);
-    String filename = "FT-GS-03-FMI-" + employeeName;
+    // Logo
+    context.setVariable("fractalLogo", this.imageToBase64("assets/logo-fractal-2.png"));
 
-    filename = this.sanitizeFilename(filename);
+    // Datos del colaborador
+    context.setVariable("apellidosNombres", report.getNombreEmpleado() + " " + report.getApellidosEmpleado());
+    context.setVariable("cliente", report.getCliente());
+    context.setVariable("area", report.getArea());
+    context.setVariable("cargo", report.getPuesto());
+    context.setVariable("dni", "");
+    context.setVariable("telefono", "");
 
-    byte[] fileBytes = pdfUtils.crearPDF(filled, filename);
+    // Fechas
+    context.setVariable("fechaSolicitud", Common.parseDateToFormDate(report.getFechaSolicitud()));
+    context.setVariable("fechaEntrega", Common.parseDateToFormDate(report.getFechaEntrega()));
 
-    this.files.add(new FileDTO(filename, filled, fileBytes));
+    // Hardware – tipo (booleanos, el template decide si pone X o no) ─────
+    context.setVariable("tipoPC", report.getIdTipoEquipo() == 1);
+    context.setVariable("tipoLaptop", report.getIdTipoEquipo() == 2);
+    context.setVariable("procesador", report.getProcesador());
+    context.setVariable("ram", report.getRam());
+    context.setVariable("hd", report.getHd());
+    context.setVariable("marca", report.getMarca());
+
+    // ── Comunicaciones ─────────────────────────────────────────────────────
+    context.setVariable("anexoFijo", report.getIdAnexo() == 1);
+    context.setVariable("anexoSoftphone", report.getIdAnexo() == 2);
+    context.setVariable("celularSi", Boolean.TRUE.equals(report.getCelular()));
+    context.setVariable("celularNo", !Boolean.TRUE.equals(report.getCelular()));
+    context.setVariable("internetMovilSi", Boolean.TRUE.equals(report.getInternetMovil()));
+    context.setVariable("internetMovilNo", !Boolean.TRUE.equals(report.getInternetMovil()));
+
+    // ── Accesorios ─────────────────────────────────────────────────────────
+    context.setVariable("accesorios", report.getAccesorios());
+
+    // ── Lista de software ──────────────────────────────────────────────────
+    var software = report.getLstSoftware() != null ? report.getLstSoftware() : List.of();
+    context.setVariable("softwareList", software);
+
+    // ── Firma ──────────────────────────────────────────────────────────────
+    if (report.getFirmaGestor() != null && !report.getFirmaGestor().isBlank()) {
+      String signatureB64 = this.dowloadSignature(report.getFirmaGestor());
+      context.setVariable("firmaGestor", "data:image/png;base64," + signatureB64);
+    } else {
+      context.setVariable("firmaGestor", null);
+    }
+
+    context.setVariable("nombreGestor", report.getNombreApellidoGestor());
+    context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
+
+    // ── Procesar template y generar PDF ────────────────────────────────────
+    var htmlContent = templateEngine.process("formulario_sol_equipo", context);
+
+    var employeeName = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
+    // Nombre: FT-GS-03 Solicitud de Requerimiento de Hardware y
+    // Software_AÑOYMES_NOMBRES Y APELLIDOS
+    var filename = this.sanitizeFilename("FT-GS-03-FMI-" + employeeName);
+    var pdfBytes = this.renderPdfFromHtml(htmlContent);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 

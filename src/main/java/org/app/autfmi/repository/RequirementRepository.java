@@ -606,6 +606,7 @@ public class RequirementRepository {
 
 		// Si hubo error, retornamos aquí
 		if (messageId != 2) {
+			this.logger.error("Base response desde SP: {}", baseResponseRow);
 			return builder.build();
 		}
 
@@ -623,6 +624,8 @@ public class RequirementRepository {
 				postulantList.add(mapListPostulantDTO(row));
 			}
 			builder.postulantes(postulantList);
+		} else {
+			this.logger.warn("No hubo respuesta con la lista de postulantes");
 		}
 
 		// 5. Mapeo de Notificaciones
@@ -632,6 +635,8 @@ public class RequirementRepository {
 				var correo = (String) n.getOrDefault("CORREO", "");
 				lstCc.add(correo);
 			});
+		} else {
+			this.logger.warn("No hubo respuesta con la lista de a quienes notificar CC");
 		}
 
 		builder.ccList(lstCc);
@@ -649,6 +654,8 @@ public class RequirementRepository {
 			});
 
 			builder.reportesIngreso(reportesIngreso);
+		} else {
+			this.logger.warn("No hubo respuesta para los reportes de ingreso");
 		}
 
 		// 7. Mapeo de Reportes de Solicitud de Equipo
@@ -661,6 +668,8 @@ public class RequirementRepository {
 				reportesSolicitudEquipo.add(reporte);
 			});
 			builder.reportesSolicitudEquipo(reportesSolicitudEquipo);
+		} else {
+			this.logger.warn("No hubo respuesta con la lista de solicitudes de equipo");
 		}
 
 		// 8. Mapeao del usuario actuador conocido como (GestorRQ, no siempre lo es)
@@ -674,6 +683,8 @@ public class RequirementRepository {
 			gestorRq.setCliente((String) usuario.getOrDefault("CLIENTE", ""));
 
 			builder.gestorRq(gestorRq);
+		} else {
+			this.logger.warn("No hubo respuesta con el gestor del RQ (quien realiza la acción)");
 		}
 
 		logger.info("Finished task: saveRequirementTalents");

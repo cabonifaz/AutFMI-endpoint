@@ -15,6 +15,7 @@ import org.jsoup.nodes.Document;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.lang.NonNull;
 import org.springframework.util.StreamUtils;
+import java.text.Normalizer;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
@@ -98,6 +99,14 @@ public abstract class BaseReportBuilder<T> {
 
   protected String dowloadSignature(String signaturePath) {
     return FileUtils.cargarArchivoAws(signaturePath);
+  }
+
+  protected String sanitizeFilename(String filename) {
+    if (filename == null)
+      return "";
+    return Normalizer.normalize(filename, Normalizer.Form.NFD)
+        .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "") // Elimina tildes
+        .replaceAll("[^a-zA-Z0-9\\s\\-_\\.]", ""); // Elimina caracteres especiales
   }
 
 }

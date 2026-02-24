@@ -69,6 +69,8 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     var fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
     var pdfBytes = renderPdfFromHtml(htmlContent);
 
+    fileName = this.sanitizeFilename(fileName);
+
     this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
     return this;
   }

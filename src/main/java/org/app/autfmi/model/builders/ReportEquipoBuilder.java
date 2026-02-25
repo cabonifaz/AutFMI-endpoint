@@ -75,13 +75,23 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     // Procesar template y generar PDF
     var htmlContent = templateEngine.process("formulario_sol_equipo", context);
 
-    var employeeName = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
-    // Nombre: FT-GS-03 Solicitud de Requerimiento de Hardware y
-    // Software_AÑOYMES_NOMBRES Y APELLIDOS
-    var filename = this.sanitizeFilename("FT-GS-03-FMI-" + employeeName);
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GS-03 Solicitud de Requerimiento de Hardware y Software")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
-    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
+    this.files.add(new FileDTO(this.sanitizeFilename(filename), htmlContent, pdfBytes));
     return this;
   }
 

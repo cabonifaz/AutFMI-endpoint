@@ -5,7 +5,6 @@ import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
-import org.app.autfmi.util.PDFUtils;
 import org.springframework.stereotype.Component;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -15,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReportPDFBuilder {
 
-  private final PDFUtils pdfUtils;
   private final SpringTemplateEngine templateEngine;
 
   public ReportCeseBuilder forCese(CeseReport report, GestorDTO gs) {
@@ -31,7 +29,7 @@ public class ReportPDFBuilder {
   }
 
   public ReportEquipoBuilder fEquipoReport(SolicitudEquipoReport report, GestorDTO gs) {
-    return new ReportEquipoBuilder(pdfUtils, report, gs);
+    return new ReportEquipoBuilder(templateEngine, report, gs);
   }
 
 }

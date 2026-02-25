@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
@@ -65,10 +64,9 @@ public class EmployeeService implements IEmployeeService {
       return report.getResponse();
 
     // Build PDF files
-    var gs = new GestorDTO(null, report.getFirmante());
 
     var builder = this.reportPDFBuilder
-        .forIngreso(report, gs)
+        .forIngreso(report)
         .withCreateUser();
 
     String correoGestor = report.getCorreoGestor();
@@ -220,10 +218,9 @@ public class EmployeeService implements IEmployeeService {
 
     // Reporte de Ingreso
     if (report instanceof EntryReport entry) {
-      var gs = new GestorDTO(null, entry.getFirmante());
 
       var files = this.reportPDFBuilder
-          .forIngreso(entry, gs)
+          .forIngreso(entry)
           .withFormulario()
           .withCreateUser()
           .build();
@@ -240,11 +237,9 @@ public class EmployeeService implements IEmployeeService {
 
     // Reporte de movimiento
     else if (report instanceof MovementReport movement) {
-      var fullname = movement.getFirmante();
-      var gs = new GestorDTO(fullname, fullname);
 
       var files = this.reportPDFBuilder
-          .forMovimiento(movement, gs)
+          .forMovimiento(movement)
           .withFormulario()
           .build();
 
@@ -259,10 +254,9 @@ public class EmployeeService implements IEmployeeService {
     }
     // Reporte de cese
     else if (report instanceof CeseReport cese) {
-      var gs = new GestorDTO(null, cese.getFirmante());
 
       var files = this.reportPDFBuilder
-          .forCese(cese, gs)
+          .forCese(cese)
           .withFormularioCese()
           .withDeactivateRequest()
           .build();
@@ -310,10 +304,9 @@ public class EmployeeService implements IEmployeeService {
 
     // Mapear la respuesta
     PDFUtils pdfUtils = new PDFUtils();
-    String gestor = report.getNombreApellidoGestor();
-    GestorDTO gs = new GestorDTO(gestor, gestor);
+
     List<FileDTO> files = this.reportPDFBuilder
-        .fEquipoReport(report, gs)
+        .fEquipoReport(report)
         .withFormulario()
         .build();
 
@@ -361,12 +354,9 @@ public class EmployeeService implements IEmployeeService {
 
     // Mapear la respuesta
     PDFUtils pdfUtils = new PDFUtils();
-    String gestor = report.getNombreApellidoGestor();
-    String signature = report.getCorreoGestor();
 
-    GestorDTO gs = new GestorDTO(signature, gestor);
     List<FileDTO> files = this.reportPDFBuilder
-        .fEquipoReport(report, gs)
+        .fEquipoReport(report)
         .withFormulario()
         .build();
 
@@ -422,10 +412,8 @@ public class EmployeeService implements IEmployeeService {
 
     if (report instanceof EntryReport entry) {
 
-      var gs = new GestorDTO(entry.getFirma(), entry.getFirmante());
-
       List<FileDTO> files = builder
-          .forIngreso(entry, gs)
+          .forIngreso(entry)
           .withFormulario()
           .withCreateUser()
           .build();
@@ -439,9 +427,8 @@ public class EmployeeService implements IEmployeeService {
       return response;
 
     } else if (report instanceof MovementReport movement) {
-      String fullname = movement.getFirmante();
-      GestorDTO gs = new GestorDTO(fullname, fullname);
-      List<FileDTO> files = builder.forMovimiento(movement, gs)
+
+      List<FileDTO> files = builder.forMovimiento(movement)
           .withFormulario()
           .build();
 
@@ -454,9 +441,8 @@ public class EmployeeService implements IEmployeeService {
       return response;
 
     } else if (report instanceof CeseReport cese) {
-      GestorDTO gs = new GestorDTO(null, cese.getFirmante());
 
-      List<FileDTO> files = builder.forCese(cese, gs)
+      List<FileDTO> files = builder.forCese(cese)
           .withFormularioCese()
           .withDeactivateRequest()
           .build();

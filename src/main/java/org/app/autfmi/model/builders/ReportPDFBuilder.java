@@ -1,6 +1,5 @@
 package org.app.autfmi.model.builders;
 
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
@@ -16,20 +15,20 @@ public class ReportPDFBuilder {
 
   private final SpringTemplateEngine templateEngine;
 
-  public ReportCeseBuilder forCese(CeseReport report, GestorDTO gs) {
-    return new ReportCeseBuilder(this.templateEngine, report, gs);
+  public ReportCeseBuilder forCese(CeseReport report) {
+    return new ReportCeseBuilder(this.templateEngine, report);
   }
 
-  public ReportMovementBuilder forMovimiento(MovementReport report, GestorDTO gs) {
-    return new ReportMovementBuilder(this.templateEngine, report, gs);
+  public ReportMovementBuilder forMovimiento(MovementReport report) {
+    return new ReportMovementBuilder(this.templateEngine, report);
   }
 
-  public ReportIngresoBuilder forIngreso(EntryReport report, GestorDTO gs) {
-    return new ReportIngresoBuilder(this.templateEngine, report, gs);
+  public ReportIngresoBuilder forIngreso(EntryReport report) {
+    return new ReportIngresoBuilder(this.templateEngine, report);
   }
 
-  public ReportEquipoBuilder fEquipoReport(SolicitudEquipoReport report, GestorDTO gs) {
-    return new ReportEquipoBuilder(templateEngine, report, gs);
+  public ReportEquipoBuilder fEquipoReport(SolicitudEquipoReport report) {
+    return new ReportEquipoBuilder(templateEngine, report);
   }
 
 }

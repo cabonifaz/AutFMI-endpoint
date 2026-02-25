@@ -3,7 +3,6 @@ package org.app.autfmi.model.builders;
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.util.Common;
 import org.thymeleaf.context.Context;
@@ -13,8 +12,8 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
 
   private SpringTemplateEngine templateEngine;
 
-  protected ReportEquipoBuilder(SpringTemplateEngine templateEngine, SolicitudEquipoReport report, GestorDTO gs) {
-    super(null, report, gs);
+  protected ReportEquipoBuilder(SpringTemplateEngine templateEngine, SolicitudEquipoReport report) {
+    super(report);
     this.templateEngine = templateEngine;
   }
 

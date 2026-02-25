@@ -3,7 +3,6 @@ package org.app.autfmi.model.builders;
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.util.Common;
 import org.thymeleaf.context.Context;
@@ -13,8 +12,8 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
 
   private final SpringTemplateEngine templateEngine;
 
-  public ReportCeseBuilder(SpringTemplateEngine templateEngine, CeseReport report, GestorDTO gs) {
-    super(null, report, gs);
+  public ReportCeseBuilder(SpringTemplateEngine templateEngine, CeseReport report) {
+    super(report);
     this.templateEngine = templateEngine;
   }
 

@@ -1,9 +1,8 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.util.Common;
 import org.thymeleaf.context.Context;
@@ -13,8 +12,8 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
   private SpringTemplateEngine templateEngine;
 
-  protected ReportIngresoBuilder(SpringTemplateEngine templateEngine, EntryReport report, GestorDTO gs) {
-    super(null, report, gs);
+  protected ReportIngresoBuilder(SpringTemplateEngine templateEngine, EntryReport report) {
+    super(report);
     this.templateEngine = templateEngine;
   }
 
@@ -68,7 +67,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("objetoContrato", report.getObjetoContrato());
 
     // Descagar firma del gestor
-    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
       var signatureBytes = this.dowloadSignature(report.getFirma());
 
       // Convertimos los bytes a String Base64 con el prefijo de imagen
@@ -85,8 +84,24 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     // Procesar la plantilla (busca 'formulario_movimiento.html' en templates)
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
-    // Generar PDF
-    var filename = "FT-GT-12-FMI-Formulario de Ingreso " + report.getNombres();
+    // Filename
+    var fullname = report.getNombres() + " " + report.getApellidos();
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GTH-12 Formulario de Ingreso")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
@@ -94,7 +109,8 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
   }
 
   public ReportIngresoBuilder withCreateUser() {
-    var filename = "FT-GS-01 Solicitud de Creación de Usuario";
+
+    String fullname = report.getNombres() + report.getApellidos();
 
     var context = new Context();
     var logoBase64 = imageToBase64("assets/logo-fractal-2.png");
@@ -131,6 +147,23 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
     // Generar PDF en bytes
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
+
+    // Filename
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GS-01-Solicitud de Creación de Usuarios")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;

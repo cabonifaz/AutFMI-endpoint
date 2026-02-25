@@ -1,9 +1,8 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.util.Common;
 import org.thymeleaf.context.Context;
@@ -13,8 +12,8 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
 
   private final SpringTemplateEngine templateEngine;
 
-  public ReportCeseBuilder(SpringTemplateEngine templateEngine, CeseReport report, GestorDTO gs) {
-    super(null, report, gs);
+  public ReportCeseBuilder(SpringTemplateEngine templateEngine, CeseReport report) {
+    super(report);
     this.templateEngine = templateEngine;
   }
 
@@ -50,11 +49,27 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GT-12-FMI-CESE-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    // Filename
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GTH-12 Formulario Cese")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 
@@ -95,11 +110,26 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var htmlContent = templateEngine.process("solicitud_usuario", context);
 
     // 6. Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GS-01-FMI-DESACTIVAR-USUARIO-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GS-01-Solicitud de Desactivación de Usuarios")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 

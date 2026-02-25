@@ -1,9 +1,8 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.util.Common;
 import org.thymeleaf.context.Context;
@@ -13,8 +12,8 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
 
   private final SpringTemplateEngine templateEngine;
 
-  public ReportMovementBuilder(SpringTemplateEngine templateEngine, MovementReport report, GestorDTO gs) {
-    super(null, report, gs);
+  public ReportMovementBuilder(SpringTemplateEngine templateEngine, MovementReport report) {
+    super(report);
     this.templateEngine = templateEngine;
   }
 
@@ -47,7 +46,7 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     context.setVariable("fechaMovimiento", report.getFechaHistorial());
     context.setVariable("jornadaMovimiento", report.getHorario());
 
-    if (report.getFirma() != null && !report.getFirma().isEmpty()) {
+    if (report.getFirma() != null && !report.getFirma().isBlank()) {
       var signatureBytes = this.dowloadSignature(report.getFirma());
 
       // Convertimos los bytes a String Base64 con el prefijo de imagen
@@ -65,11 +64,27 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = renderPdfFromHtml(htmlContent);
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    // Filename
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GTH-12 Formulario de Movimiento")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 

@@ -59,4 +59,25 @@ public class Common {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
         return currentDate.format(formatter);
     }
+
+    /**
+     * Returns the actual year
+     */
+    public static int getCurrentYear() {
+        return LocalDate.now().getYear();
+    }
+
+    public static String getMonthText() {
+
+        LocalDate now = LocalDate.now();
+
+        Locale LOCALE_ES = new Locale("es", "ES");
+
+        String month = now.getMonth()
+                .getDisplayName(java.time.format.TextStyle.FULL, LOCALE_ES)
+                .toLowerCase();
+
+        return month;
+    }
+
 }

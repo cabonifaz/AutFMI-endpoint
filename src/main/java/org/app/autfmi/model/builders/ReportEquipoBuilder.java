@@ -25,18 +25,20 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     context.setVariable("fractalLogo", this.imageToBase64("assets/logo-fractal-2.png"));
 
     // Datos del colaborador
-    context.setVariable("apellidosNombres", report.getNombreEmpleado() + " " + report.getApellidosEmpleado());
+    String fullname = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
+
+    context.setVariable("apellidosNombres", fullname);
     context.setVariable("cliente", report.getCliente());
     context.setVariable("area", report.getArea());
     context.setVariable("cargo", report.getPuesto());
-    context.setVariable("dni", "");
-    context.setVariable("telefono", "");
+    context.setVariable("dni", report.getDniTalento());
+    context.setVariable("telefono", report.getCelularTalento());
 
     // Fechas
     context.setVariable("fechaSolicitud", Common.parseDateToFormDate(report.getFechaSolicitud()));
     context.setVariable("fechaEntrega", Common.parseDateToFormDate(report.getFechaEntrega()));
 
-    // Hardware – tipo (booleanos, el template decide si pone X o no) ─────
+    // Hardware – tipo (booleanos, el template decide si pone X o no)
     context.setVariable("tipoPC", report.getIdTipoEquipo() == 1);
     context.setVariable("tipoLaptop", report.getIdTipoEquipo() == 2);
     context.setVariable("procesador", report.getProcesador());
@@ -44,7 +46,7 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     context.setVariable("hd", report.getHd());
     context.setVariable("marca", report.getMarca());
 
-    // ── Comunicaciones ─────────────────────────────────────────────────────
+    // Comunicaciones
     context.setVariable("anexoFijo", report.getIdAnexo() == 1);
     context.setVariable("anexoSoftphone", report.getIdAnexo() == 2);
     context.setVariable("celularSi", Boolean.TRUE.equals(report.getCelular()));
@@ -52,14 +54,14 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     context.setVariable("internetMovilSi", Boolean.TRUE.equals(report.getInternetMovil()));
     context.setVariable("internetMovilNo", !Boolean.TRUE.equals(report.getInternetMovil()));
 
-    // ── Accesorios ─────────────────────────────────────────────────────────
+    // Accesorios
     context.setVariable("accesorios", report.getAccesorios());
 
-    // ── Lista de software ──────────────────────────────────────────────────
+    // Lista de software
     var software = report.getLstSoftware() != null ? report.getLstSoftware() : List.of();
     context.setVariable("softwareList", software);
 
-    // ── Firma ──────────────────────────────────────────────────────────────
+    // Firma
     if (report.getFirmaGestor() != null && !report.getFirmaGestor().isBlank()) {
       String signatureB64 = this.dowloadSignature(report.getFirmaGestor());
       context.setVariable("firmaGestor", "data:image/png;base64," + signatureB64);
@@ -70,7 +72,7 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     context.setVariable("nombreGestor", report.getNombreApellidoGestor());
     context.setVariable("fechaEmision", Common.getCurrentDateFormatted());
 
-    // ── Procesar template y generar PDF ────────────────────────────────────
+    // Procesar template y generar PDF
     var htmlContent = templateEngine.process("formulario_sol_equipo", context);
 
     var employeeName = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();

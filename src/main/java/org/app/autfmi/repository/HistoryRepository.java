@@ -474,6 +474,10 @@ public class HistoryRepository {
 
         report.setAccesorios((String) solicitudDb.get("ACCESORIOS"));
 
+        // Campos de teléfono y DNI
+        report.setDniTalento((String) solicitudDb.get("DNI"));
+        report.setCelularTalento((String) solicitudDb.get("NUM_CELULAR"));
+
         // Mapear software
         List<Map<String, Object>> softwareList = (List<Map<String, Object>>) rs.get("#result-set-4");
         AtomicInteger index = new AtomicInteger(1);

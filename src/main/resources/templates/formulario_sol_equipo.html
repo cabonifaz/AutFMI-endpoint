@@ -14,6 +14,7 @@
 
     body {
       font-family: Arial, sans-serif;
+      font-weight: bold;
       font-size: 11pt;
       color: #000;
       margin: 0;
@@ -117,17 +118,17 @@
       <td rowspan="3" class="header-title" style="width: 45%; font-size: 10pt; border: 1px solid #1083C6;">
         SOLICITUD DE INSTALACION DE<br />SOFTWARE Y HARDWARE
       </td>
-      <td style="width: 10%; font-size: 8pt; border: 1px solid #1083C6;">Código:</td>
-      <td style="width: 20%; font-size: 8pt; border: 1px solid #1083C6;">FT-GS-03
+      <td style="width: 10%; font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">Código:</td>
+      <td style="width: 20%; font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">FT-GS-03
       </td>
     </tr>
     <tr>
-      <td style="font-size: 8pt; border: 1px solid #1083C6;">Versión:</td>
-      <td style="font-size: 8pt; border: 1px solid #1083C6;">01</td>
+      <td style="font-size: 7pt; font-weight: normal; border: 1px solid #1083C6;">Versión:</td>
+      <td style="font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">01</td>
     </tr>
     <tr>
-      <td style="font-size: 8pt; border: 1px solid #1083C6;">Fecha:</td>
-      <td style="font-size: 8pt; border: 1px solid #1083C6;">02/07/2020</td>
+      <td style="font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">Fecha:</td>
+      <td style="font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">02/07/2020</td>
     </tr>
   </table>
 
@@ -167,6 +168,11 @@
         Fecha de Entrega: <span th:text="${fechaEntrega}">__/__/____</span>
       </td>
     </tr>
+    <tr>
+      <td style="border: none; padding: 0;">
+        <div style="border-bottom: 1px solid #1083C6; width: 100%;"></div>
+      </td>
+    </tr>
   </table>
 
   <!-- DATOS DE REQUERIMIENTO DE HARDWARE -->
@@ -175,11 +181,11 @@
       <td colspan="5" class="section-header">DATOS DE REQUERIMIENTO DE HARDWARE</td>
     </tr>
     <tr>
-      <td class="col-header" style="width: 20%;">TIPO</td>
-      <td class="col-header" style="width: 30%;">PROCESADOR</td>
-      <td class="col-header" style="width: 15%;">RAM</td>
-      <td class="col-header" style="width: 15%;">HD</td>
-      <td class="col-header" style="width: 20%;">MARCA(*)</td>
+      <td class="col-header" style="width: 30%;">TIPO</td>
+      <td class="col-header" style="width: 25%;">PROCESADOR</td>
+      <td class="col-header" style="width: 25%;">RAM</td>
+      <td class="col-header" style="width: 10%;">HD</td>
+      <td class="col-header" style="width: 10%;">MARCA(*)</td>
     </tr>
     <tr class="data-row">
       <td class="checkbox-cell">
@@ -245,13 +251,6 @@
       <td class="value" th:text="${sw.producto}"></td>
       <td class="value" th:text="${sw.prodVersion}"></td>
     </tr>
-    <!-- Filas vacías si hay menos de 6 items -->
-    <tr th:each="i : ${#numbers.sequence(1, 6 - softwareList.size())}" class="data-row"
-      th:if="${softwareList.size() < 6}">
-      <td style="height: 18px;">&nbsp;</td>
-      <td>&nbsp;</td>
-      <td>&nbsp;</td>
-    </tr>
   </table>
   <p style="font-size: 8pt; margin: 0; font-weight: bold; margin-bottom: 60px;">(*) Opcional</p>
 
@@ -266,7 +265,7 @@
       </div>
     </div>
 
-    <div style="border-top: 1px solid #000000; width: 350px; margin: 0 auto; height: 0; font-size: 0; line-height: 0;">
+    <div style="border-top: 1px solid #1083C6; width: 350px; margin: 0 auto; height: 0; font-size: 0; line-height: 0;">
     </div>
 
     <div style="font-size: 9pt; margin-top: 4px; line-height: 1.2;">
@@ -274,7 +273,7 @@
       <p style="margin: 0; padding: 0;"> Gestor de Servicios</p>
     </div>
 
-    <p style="font-size: 7pt; text-align: center; margin-top: 8px; color: #696969;">
+    <p style="font-size: 7pt; font-weight: normal; text-align: center; margin-top: 8px; color: #696969;">
       Generado con FMI © 2025 — Fecha de emisión:
       <span th:text="${fechaEmision}">10 de febrero de 2026</span>
     </p>

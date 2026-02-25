@@ -5,9 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
@@ -16,6 +14,7 @@ import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.SafeValues;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -285,10 +284,9 @@ public class MailService implements IMailService {
     logger.info("Preparing to send cese report notification email...");
 
     String subject = "Cese de Empleado - " + report.getNombres() + " " + report.getApellidos();
-    GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
 
     List<FileDTO> attachments = this.reportPDFBuilder
-        .forCese(report, gs)
+        .forCese(report)
         .withFormularioCese()
         .withDeactivateRequest()
         .build();
@@ -315,10 +313,9 @@ public class MailService implements IMailService {
     String fullname = report.getNombres() + " " + report.getApellidos();
     String subject = "Movimiento de Empleado - " + fullname;
     String dest = report.getCorreoGestor();
-    GestorDTO gs = new GestorDTO(report.getFirma(), report.getFirmante());
 
     List<FileDTO> attachments = this.reportPDFBuilder
-        .forMovimiento(report, gs)
+        .forMovimiento(report)
         .withFormulario()
         .build();
 
@@ -348,12 +345,9 @@ public class MailService implements IMailService {
     String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
     String subject = "Requerimiento de Software y Hardware - " + employee;
     String message = "Solicitud de equipo para: " + employee;
-    String gsFullname = report.getNombreApellidoGestor();
-
-    GestorDTO gs = new GestorDTO(gsFullname, gsFullname);
 
     List<FileDTO> attachments = this.reportPDFBuilder
-        .fEquipoReport(report, gs)
+        .fEquipoReport(report)
         .withFormulario()
         .build();
 

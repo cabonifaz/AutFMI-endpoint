@@ -1,39 +1,29 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.util.FileUtils;
-import org.app.autfmi.util.PDFUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.lang.NonNull;
 import org.springframework.util.StreamUtils;
-import java.text.Normalizer;
 
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 
 public abstract class BaseReportBuilder<T> {
 
-  protected final PDFUtils pdfUtils;
   protected final T report;
-  @NonNull
-  protected final GestorDTO gs;
   protected final List<FileDTO> files = new ArrayList<>();
 
-  protected BaseReportBuilder(PDFUtils pdfUtils, T report, GestorDTO gs) {
-    if (gs == null)
-      throw new IllegalArgumentException("GestorDTO cannot be null");
-
-    this.pdfUtils = pdfUtils;
+  protected BaseReportBuilder(T report) {
     this.report = report;
-    this.gs = gs;
   }
 
   public abstract List<FileDTO> build();

@@ -33,4 +33,6 @@ public class SolicitudEquipoReport {
     private String correoGestor;
     private String nombreApellidoGestor;
     private String firmaGestor;
+    private String dniTalento;
+    private String celularTalento;
 }

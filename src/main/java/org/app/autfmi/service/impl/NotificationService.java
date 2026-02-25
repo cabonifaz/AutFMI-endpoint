@@ -4,9 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.PostulantDTO;
 import org.app.autfmi.model.dto.RequirementTalentsResult;
@@ -15,6 +13,7 @@ import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -89,10 +88,8 @@ public class NotificationService {
               report.getIdHistorial(),
               false);
 
-          // TODO: Remover gestor del ReportBuilder, ya no es necesario
-          var gs = new GestorDTO("", "");
           var files = this.reportPDFBuilder
-              .forIngreso(entryReport, gs)
+              .forIngreso(entryReport)
               .withFormulario()
               .withCreateUser()
               .build();
@@ -129,11 +126,8 @@ public class NotificationService {
               solicitud.getIdSolicitudEquipo(),
               false);
 
-          // TODO: Remover gestor del ReportBuilder, ya no es necesario
-          var gs = new GestorDTO("", "");
-
           var files = this.reportPDFBuilder
-              .fEquipoReport(reporte, gs)
+              .fEquipoReport(reporte)
               .withFormulario()
               .build();
           filesToSend.addAll(files);

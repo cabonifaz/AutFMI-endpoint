@@ -1,9 +1,8 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
-import org.app.autfmi.model.dto.GestorDTO;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.util.Common;
 import org.thymeleaf.context.Context;
@@ -13,8 +12,8 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
 
   private final SpringTemplateEngine templateEngine;
 
-  public ReportMovementBuilder(SpringTemplateEngine templateEngine, MovementReport report, GestorDTO gs) {
-    super(null, report, gs);
+  public ReportMovementBuilder(SpringTemplateEngine templateEngine, MovementReport report) {
+    super(report);
     this.templateEngine = templateEngine;
   }
 
@@ -65,13 +64,27 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = renderPdfFromHtml(htmlContent);
 
-    fileName = this.sanitizeFilename(fileName);
+    // Filename
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    var filename = new StringBuilder()
+        .append("FT-GTH-12 Formulario de Movimiento")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 

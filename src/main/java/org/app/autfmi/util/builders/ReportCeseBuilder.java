@@ -49,13 +49,27 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GT-12-FMI-CESE-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
-    fileName = this.sanitizeFilename(fileName);
+    // Filename
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    var filename = new StringBuilder()
+        .append("FT-GTH-12 Formulario Cese")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 
@@ -96,11 +110,26 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var htmlContent = templateEngine.process("solicitud_usuario", context);
 
     // 6. Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GS-01-FMI-DESACTIVAR-USUARIO-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
+
+    var filename = new StringBuilder()
+        .append("FT-GS-01-Solicitud de Desactivación de Usuarios")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 

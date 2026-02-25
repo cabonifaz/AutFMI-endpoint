@@ -64,13 +64,27 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullName = report.getNombres() + " " + report.getApellidos();
-    var fileName = "FT-GT-12-FMI-MOVIMIENTO-" + fullName;
+    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = renderPdfFromHtml(htmlContent);
 
-    fileName = this.sanitizeFilename(fileName);
+    // Filename
+    var year = Common.getCurrentYear();
+    var monthName = Common.getMonthText();
+    var formattedName = fullname.replaceAll("\\s+", "_");
 
-    this.files.add(new FileDTO(fileName, htmlContent, pdfBytes));
+    var filename = new StringBuilder()
+        .append("FT-GTH-12 Formulario de Movimiento")
+        .append("_")
+        .append(year)
+        .append("_")
+        .append(monthName)
+        .append("_")
+        .append(formattedName)
+        .toString();
+
+    filename = this.sanitizeFilename(filename);
+
+    this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
   }
 

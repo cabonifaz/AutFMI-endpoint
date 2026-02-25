@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.PostulantDTO;
@@ -14,6 +13,7 @@ import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;

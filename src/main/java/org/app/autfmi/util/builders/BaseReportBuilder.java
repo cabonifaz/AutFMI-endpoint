@@ -1,4 +1,4 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

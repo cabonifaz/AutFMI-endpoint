@@ -1,4 +1,4 @@
-package org.app.autfmi.model.builders;
+package org.app.autfmi.util.builders;
 
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;

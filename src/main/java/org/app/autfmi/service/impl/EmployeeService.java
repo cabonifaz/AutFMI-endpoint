@@ -4,7 +4,6 @@ import com.microsoft.sqlserver.jdbc.SQLServerException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 
-import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
 import org.app.autfmi.model.dto.UserDTO;
@@ -21,6 +20,7 @@ import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

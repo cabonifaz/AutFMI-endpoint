@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.app.autfmi.model.builders.ReportPDFBuilder;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
@@ -15,6 +14,7 @@ import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.SafeValues;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

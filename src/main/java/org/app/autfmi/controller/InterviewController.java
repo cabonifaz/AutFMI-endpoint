@@ -1,10 +1,13 @@
 package org.app.autfmi.controller;
 
+import org.app.autfmi.model.dto.InterviewResponseDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.OperationResult;
+import org.app.autfmi.model.response.PaginatedResponse;
 import org.app.autfmi.service.impl.InterviewService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
@@ -41,6 +44,24 @@ public class InterviewController {
       return ResponseEntity.ok(result.getBaseResponse());
     } catch (Exception e) {
       return ResponseEntity.ok(new BaseResponse(3, "Error al obtener el token"));
+    }
+  }
+
+  @PostMapping("/list")
+  public ResponseEntity<OperationResult<PaginatedResponse<InterviewResponseDTO>>> listInterviews(
+      @RequestBody InterviewListRequest interviewListRequest,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LIST_INTERVIEW);
+      var result = this.interviewService.listInterviews(interviewListRequest,
+          baseRequest);
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      return ResponseEntity.status(500)
+          .body(new OperationResult<>(new BaseResponse(3, "Error al listar las entrevistas"), null));
     }
   }
 }

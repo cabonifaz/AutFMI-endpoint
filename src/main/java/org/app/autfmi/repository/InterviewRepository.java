@@ -10,6 +10,7 @@ import org.app.autfmi.model.dto.InterviewRqDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
+import org.app.autfmi.model.request.InterviewUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.InterviewDetailResponseDTO;
 import org.app.autfmi.model.response.OperationResult;
@@ -284,6 +285,57 @@ public class InterviewRepository {
     } catch (Exception e) {
       this.logger.error("Error en getInterviewById: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error técnico: " + e.getMessage()), null);
+    }
+  }
+
+  /**
+   * Ejecuta el SP_ENTREVISTA_UPD para actualizar una entrevista.
+   */
+  public OperationResult<Void> updateInterview(InterviewUpdateRequest request, BaseRequest baseRequest) {
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTA_UPD");
+
+    try {
+      String lstIdReqJson = objectMapper.writeValueAsString(request.getIdsRqs());
+
+      var params = new MapSqlParameterSource()
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("USUMOD", baseRequest.getUsername())
+          .addValue("ID_ENTREVISTA", request.getIdEntrevista())
+          .addValue("ID_TALENTO", request.getIdTalento())
+          .addValue("FECHA", request.getFecha())
+          .addValue("HORA", request.getHora())
+          .addValue("ID_ESTADO", request.getEstado())
+          .addValue("ID_ETAPA", request.getEtapa())
+          .addValue("ENLACE_ENTREVISTA", request.getEnlaceEntrevista())
+          .addValue("CALIFICACION", request.getCalificacion())
+          .addValue("NOTAS_PERSONALES", request.getNotasPersonales())
+          .addValue("NOTAS_EXPERIENCIA", request.getNotasExperiencia())
+          .addValue("NOTAS_IDIOMAS", request.getNotasIdiomas())
+          .addValue("NOTAS_EDUCACION", request.getNotasEducacion())
+          .addValue("LST_ID_RQS", lstIdReqJson);
+
+      Map<String, Object> result = simpleJdbcCall.execute(params);
+      List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+      if (resultSet == null || resultSet.isEmpty()) {
+        return new OperationResult<>(new BaseResponse(3, "La base de datos no retornó información."), null);
+      }
+
+      Map<String, Object> row = resultSet.get(0);
+      Integer messageId = (Integer) row.get("ID_TIPO_MENSAJE");
+      String message = (String) row.get("MENSAJE");
+
+      return new OperationResult<>(new BaseResponse(messageId, message), null);
+
+    } catch (JsonProcessingException e) {
+      this.logger.error("Error al serializar requerimientos a JSON", e);
+      return new OperationResult<>(new BaseResponse(3, "Error de formato en requerimientos"), null);
+    } catch (Exception e) {
+      this.logger.error("Error crítico en updateInterview: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
     }
   }
 

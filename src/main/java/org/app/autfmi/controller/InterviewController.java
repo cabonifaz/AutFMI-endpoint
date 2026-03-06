@@ -5,6 +5,7 @@ import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
+import org.app.autfmi.model.request.InterviewUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PaginatedResponse;
@@ -83,6 +84,24 @@ public class InterviewController {
     } catch (Exception e) {
       return ResponseEntity.status(500)
           .body(new OperationResult<>(new BaseResponse(3, "Error al obtener el detalle de la entrevista"), null));
+    }
+  }
+
+  @PostMapping("/update")
+  public ResponseEntity<BaseResponse> updateInterview(
+      @RequestBody InterviewUpdateRequest updateRequest,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
+
+      OperationResult<Void> result = this.interviewService.updateInterview(updateRequest, baseRequest);
+      return ResponseEntity.ok(result.getBaseResponse());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          new BaseResponse(3, "Error de autenticación o token inválido"));
     }
   }
 

@@ -4,6 +4,7 @@ import org.app.autfmi.model.dto.InterviewResponseDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
+import org.app.autfmi.model.request.InterviewUpdateRequest;
 import org.app.autfmi.model.response.InterviewDetailResponseDTO;
 import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PaginatedResponse;
@@ -55,6 +56,15 @@ public class InterviewService {
       Integer idEntrevista,
       BaseRequest baseRequest) {
     return this.interviewRepository.getInterviewById(idEntrevista, baseRequest);
+  }
+
+  /**
+   * Update Interview
+   */
+  public OperationResult<Void> updateInterview(
+      InterviewUpdateRequest request,
+      BaseRequest baseRequest) {
+    return this.interviewRepository.updateInterview(request, baseRequest);
   }
 
 }

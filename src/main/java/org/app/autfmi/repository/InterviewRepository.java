@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.app.autfmi.model.dto.InterviewFileDTO;
 import org.app.autfmi.model.dto.InterviewResponseDTO;
+import org.app.autfmi.model.dto.InterviewRqDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.InterviewDetailResponseDTO;
 import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PaginatedResponse;
 import org.slf4j.Logger;
@@ -188,4 +191,100 @@ public class InterviewRepository {
       return new OperationResult<>(new BaseResponse(3, "Error técnico: " + e.getMessage()), null);
     }
   }
+
+  /**
+   * Ejecuta el SP_ENTREVISTA_GET para obtener el detalle de una entrevista.
+   * * @param idEntrevista ID de la entrevista
+   * 
+   * @param baseRequest Datos de auditoría y permisos
+   * @return OperationResult con el detalle de la entrevista
+   */
+  public OperationResult<InterviewDetailResponseDTO> getInterviewById(Integer idEntrevista, BaseRequest baseRequest) {
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTA_SEL");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("ID_ENTREVISTA", idEntrevista);
+
+      this.logger.info("Getting interview detail {} for: {}", idEntrevista, baseRequest.getUsername());
+
+      Map<String, Object> result = simpleJdbcCall.execute(params);
+
+      // RS 1: Mensaje
+      List<Map<String, Object>> rs1 = (List<Map<String, Object>>) result.get("#result-set-1");
+      if (rs1 == null || rs1.isEmpty()) {
+        return new OperationResult<>(new BaseResponse(3, "Sin respuesta del servidor"), null);
+      }
+
+      Map<String, Object> baseRow = rs1.get(0);
+      Integer messageId = (Integer) baseRow.get("ID_TIPO_MENSAJE");
+      BaseResponse baseResponse = new BaseResponse(messageId, (String) baseRow.get("MENSAJE"));
+
+      if (messageId == 2) {
+        // RS 2: Cabecera
+        List<Map<String, Object>> rs2 = (List<Map<String, Object>>) result.get("#result-set-2");
+        Map<String, Object> cabecera = rs2.get(0);
+
+        // RS 3: RQs
+        List<Map<String, Object>> rs3 = (List<Map<String, Object>>) result.get("#result-set-3");
+        List<InterviewRqDTO> rqs = new ArrayList<>();
+        List<String> uniqueClients = new ArrayList<>();
+
+        if (rs3 != null) {
+          for (Map<String, Object> row : rs3) {
+            String c = (String) row.get("CLIENTE");
+            rqs.add(InterviewRqDTO.builder()
+                .id(row.get("ID") != null ? ((Number) row.get("ID")).intValue() : null)
+                .label((String) row.get("LABEL"))
+                .cliente(c)
+                .build());
+
+            if (c != null && !c.trim().isEmpty() && !uniqueClients.contains(c)) {
+              uniqueClients.add(c);
+            }
+          }
+        }
+
+        // RS 4: Archivos
+        // List<Map<String, Object>> rs4 = (List<Map<String, Object>>)
+        // result.get("#result-set-4");
+        List<InterviewFileDTO> files = new ArrayList<>();
+
+        // Mapeo Final
+        var detail = InterviewDetailResponseDTO.builder()
+            .id(cabecera.get("ID") != null ? ((Number) cabecera.get("ID")).intValue() : null)
+            .idTalento(cabecera.get("ID_TALENTO") != null ? ((Number) cabecera.get("ID_TALENTO")).intValue() : null)
+            .talento((String) cabecera.get("TALENTO"))
+            .fecha((String) cabecera.get("FECHA"))
+            .hora((String) cabecera.get("HORA"))
+            .idEstado(cabecera.get("ID_ESTADO") != null ? ((Number) cabecera.get("ID_ESTADO")).intValue() : null)
+            .estado((String) cabecera.get("ESTADO"))
+            .idEtapa(cabecera.get("ID_ETAPA") != null ? ((Number) cabecera.get("ID_ETAPA")).intValue() : null)
+            .etapa((String) cabecera.get("ETAPA"))
+            .enlaceEntrevista((String) cabecera.get("ENLACE_ENTREVISTA"))
+            .calificacion(cabecera.get("CALIFICACION") != null ? ((Number) cabecera.get("CALIFICACION")).intValue() : 0)
+            .notasPersonales((String) cabecera.get("NOTAS_PERSONALES"))
+            .notasExperiencia((String) cabecera.get("NOTAS_EXPERIENCIA"))
+            .notasIdiomas((String) cabecera.get("NOTAS_IDIOMAS"))
+            .notasEducacion((String) cabecera.get("NOTAS_EDUCACION"))
+            .clienteResumen(String.join(", ", uniqueClients))
+            .files(files)
+            .selectedRQs(rqs)
+            .build();
+
+        return new OperationResult<>(baseResponse, detail);
+      }
+
+      return new OperationResult<>(baseResponse, null);
+
+    } catch (Exception e) {
+      this.logger.error("Error en getInterviewById: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error técnico: " + e.getMessage()), null);
+    }
+  }
+
 }

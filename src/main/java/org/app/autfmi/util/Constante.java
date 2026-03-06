@@ -41,6 +41,13 @@ public class Constante {
     public static final String LISTAR_TARIFARIO = "26";
 
     public static final String DOMINIO_CORREO = "@fractalservicios.pe";
+    public static final String GUARDAR_INTERVIEW = "27";
+
+    // Interviews
+    public static final String CREATE_INTERVIEW = "1030";
+    public static final String UPDATE_INTERVIEW = "1031";
+    public static final String VIEW_INTERVIEW = "1032";
+    public static final String LIST_INTERVIEW = "1033";
 
     // TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";

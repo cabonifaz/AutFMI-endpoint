@@ -339,4 +339,50 @@ public class InterviewRepository {
     }
   }
 
+  /**
+   * Ejecuta el SP_ENTREVISTAS_ARCHIVOS_INS para guardar la referencia del
+   * archivo.
+   */
+  public OperationResult<Void> saveInterviewFile(
+      Integer idEntrevista,
+      Integer idTipoArchivo,
+      String nombreArchivo,
+      String rutaArchivo,
+      BaseRequest baseRequest) {
+
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_ARCHIVOS_INS");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_ENTREVISTA", idEntrevista)
+          .addValue("ID_TIPO_ARCHIVO", idTipoArchivo)
+          .addValue("NOMBRE_ARCHIVO", nombreArchivo)
+          .addValue("RUTA_ARCHIVO", rutaArchivo)
+          .addValue("USUCRE", baseRequest.getUsername())
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+
+      Map<String, Object> result = simpleJdbcCall.execute(params);
+      List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+      if (resultSet == null || resultSet.isEmpty()) {
+        this.logger.error("DB response is null or empty");
+        return new OperationResult<>(new BaseResponse(3, "La base de datos no retornó información."), null);
+      }
+
+      Map<String, Object> row = resultSet.get(0);
+      Integer messageId = (Integer) row.get("ID_TIPO_MENSAJE");
+      String message = (String) row.get("MENSAJE");
+
+      this.logger.info("DB response: {}", message);
+      return new OperationResult<>(new BaseResponse(messageId, message), null);
+
+    } catch (Exception e) {
+      this.logger.error("Error saving file in DB: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
+    }
+  }
+
 }

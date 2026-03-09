@@ -254,6 +254,20 @@ public class InterviewRepository {
         // List<Map<String, Object>> rs4 = (List<Map<String, Object>>)
         // result.get("#result-set-4");
         List<InterviewFileDTO> files = new ArrayList<>();
+        List<Map<String, Object>> rs4 = (List<Map<String, Object>>) result.get("#result-set-4");
+
+        if (rs4 != null) {
+          for (Map<String, Object> row : rs4) {
+            files.add(InterviewFileDTO.builder()
+                .id(row.get("ID") != null ? ((Number) row.get("ID")).intValue() : null)
+                .name((String) row.get("NOMBRE_ARCHIVO"))
+                .pathFile((String) row.get("RUTA_ARCHIVO"))
+                .idFileType(
+                    row.get("ID_TIPO_ARCHIVO") != null ? ((Number) row.get("ID_TIPO_ARCHIVO")).intValue() : null)
+                .type((String) row.get("TIPO_ARCHIVO"))
+                .build());
+          }
+        }
 
         // Mapeo Final
         var detail = InterviewDetailResponseDTO.builder()

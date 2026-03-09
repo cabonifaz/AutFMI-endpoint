@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class InterviewFileDTO {
   private Integer id;
   private String name;
-  private String size;
-  private String date;
+  private Integer idFileType;
   private String type;
+  private String pathFile;
 }

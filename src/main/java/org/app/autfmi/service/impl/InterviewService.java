@@ -146,4 +146,25 @@ public class InterviewService {
       return new OperationResult<>(new BaseResponse(3, "Error al subir el archivo: " + e.getMessage()), null);
     }
   }
+
+  /**
+   * Elimina el archivo lógicamente de la BD y físicamente de AWS S3.
+   */
+  public OperationResult<Void> deleteInterviewFile(Integer idArchivo, BaseRequest baseRequest) {
+    // 1. Borramos de la BD y obtenemos la ruta
+    OperationResult<String> dbResult = this.interviewRepository.deleteInterviewFile(idArchivo, baseRequest);
+
+    // 2. Si la BD lo eliminó con éxito y nos devolvió una ruta, lo borramos de S3
+    if (dbResult.getBaseResponse().getIdTipoMensaje() == 2 && dbResult.getData() != null) {
+      String s3Path = dbResult.getData();
+      try {
+        this.logger.info("Procediendo a eliminar archivo físico de S3: {}", s3Path);
+        this.clientS3.delete(s3Path);
+      } catch (Exception e) {
+        this.logger.error("El archivo se borró de la BD pero falló al eliminarse de S3 en la ruta: {}", s3Path, e);
+      }
+    }
+    return new OperationResult<>(dbResult.getBaseResponse(), null);
+  }
+
 }

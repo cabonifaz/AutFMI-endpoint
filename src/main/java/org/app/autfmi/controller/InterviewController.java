@@ -134,4 +134,25 @@ public class InterviewController {
     }
   }
 
+  @PostMapping("/file/remove")
+  public ResponseEntity<BaseResponse> removeInterviewFile(
+      @RequestParam("fileId") Integer fileId,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
+
+      OperationResult<Void> result = this.interviewService.deleteInterviewFile(
+          fileId,
+          baseRequest);
+
+      return ResponseEntity.ok(result.getBaseResponse());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          new BaseResponse(3, "Error de autenticación o token inválido"));
+    }
+  }
 }

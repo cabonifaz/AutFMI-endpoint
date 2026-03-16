@@ -399,4 +399,40 @@ public class InterviewRepository {
     }
   }
 
+  /**
+   * Ejecuta el SP_ENTREVISTAS_ARCHIVOS_DEL para eliminar la referencia en BD.
+   * Retorna la ruta del archivo en S3 para su posterior eliminación física.
+   */
+  public OperationResult<String> deleteInterviewFile(Integer idArchivo, BaseRequest baseRequest) {
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_ARCHIVOS_DEL");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("USUMOD", baseRequest.getUsername())
+          .addValue("ID_ENTREVISTA_ARCHIVO", idArchivo);
+
+      Map<String, Object> result = simpleJdbcCall.execute(params);
+      List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+      if (resultSet == null || resultSet.isEmpty()) {
+        return new OperationResult<>(new BaseResponse(3, "La base de datos no retornó información."), null);
+      }
+
+      Map<String, Object> row = resultSet.get(0);
+      Integer messageId = (Integer) row.get("ID_TIPO_MENSAJE");
+      String message = (String) row.get("MENSAJE");
+      String rutaArchivo = (String) row.get("RUTA_ARCHIVO");
+
+      return new OperationResult<>(new BaseResponse(messageId, message), rutaArchivo);
+
+    } catch (Exception e) {
+      this.logger.error("Error al eliminar archivo en BD: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error técnico: " + e.getMessage()), null);
+    }
+  }
+
 }

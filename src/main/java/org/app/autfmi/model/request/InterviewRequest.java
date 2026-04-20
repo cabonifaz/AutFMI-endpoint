@@ -19,4 +19,5 @@ public class InterviewRequest {
   private Integer estado;
   private Integer etapa;
   private String enlaceEntrevista;
+  private String entrevistadores;
 }

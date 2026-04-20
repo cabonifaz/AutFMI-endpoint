@@ -2,8 +2,10 @@ package org.app.autfmi.model.response;
 
 import java.util.List;
 
+import org.app.autfmi.model.dto.EntrevistadorDTO;
 import org.app.autfmi.model.dto.InterviewFileDTO;
 import org.app.autfmi.model.dto.InterviewRqDTO;
+import org.app.autfmi.model.dto.GrabacionDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,13 +28,20 @@ public class InterviewDetailResponseDTO {
   private String etapa;
   private String enlaceEntrevista;
   private Integer calificacion;
+  private Integer calificacionPersonal;
+  private Integer calificacionExperiencia;
+  private Integer calificacionIdiomas;
+  private Integer calificacionEducacion;
   private String notasPersonales;
   private String notasExperiencia;
   private String notasIdiomas;
   private String notasEducacion;
+  private String motivoCancelacion;
 
   private String clienteResumen;
   private List<InterviewRqDTO> selectedRQs;
   private List<InterviewFileDTO> files;
+  private List<EntrevistadorDTO> entrevistadores;
+  private List<GrabacionDTO> grabaciones;
 
 }

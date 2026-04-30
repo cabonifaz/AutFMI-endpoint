@@ -7,7 +7,8 @@ import java.util.Map;
 import org.app.autfmi.model.dto.EntrevistadorDTO;
 import org.app.autfmi.model.dto.GrabacionDTO;
 import org.app.autfmi.model.dto.InterviewFileDTO;
-import org.app.autfmi.model.dto.InterviewResponseDTO;
+import org.app.autfmi.model.response.InterviewFileResponse;
+import org.app.autfmi.model.response.InterviewResponseDTO;
 import org.app.autfmi.model.dto.InterviewRqDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
@@ -262,7 +263,6 @@ public class InterviewRepository {
             files.add(InterviewFileDTO.builder()
                 .id(row.get("ID") != null ? ((Number) row.get("ID")).intValue() : null)
                 .name((String) row.get("NOMBRE_ARCHIVO"))
-                .pathFile((String) row.get("RUTA_ARCHIVO"))
                 .idFileType(
                     row.get("ID_TIPO_ARCHIVO") != null ? ((Number) row.get("ID_TIPO_ARCHIVO")).intValue() : null)
                 .type((String) row.get("TIPO_ARCHIVO"))
@@ -278,19 +278,19 @@ public class InterviewRepository {
 
         if (rs5 != null) {
           for (Map<String, Object> row : rs5) {
-            entrevistadores.add(EntrevistadorDTO.builder()
-                .fullname((String) row.get("FULLNAME"))
-                .email((String) row.get("EMAIL"))
-                .build());
+            entrevistadores.add(new EntrevistadorDTO(
+                (String) row.get("FULLNAME"),
+                (String) row.get("EMAIL")
+            ));
           }
         }
 
         if (rs6 != null) {
           for (Map<String, Object> row : rs6) {
-            grabaciones.add(GrabacionDTO.builder()
-                .enlace((String) row.get("ENLACE"))
-                .fecha((String) row.get("FECHA"))
-                .build());
+            grabaciones.add(new GrabacionDTO(
+                (String) row.get("ENLACE"),
+                (String) row.get("FECHA")
+            ));
           }
         }
 
@@ -306,11 +306,11 @@ public class InterviewRepository {
             .idEtapa(cabecera.get("ID_ETAPA") != null ? ((Number) cabecera.get("ID_ETAPA")).intValue() : null)
             .etapa((String) cabecera.get("ETAPA"))
             .enlaceEntrevista((String) cabecera.get("ENLACE_ENTREVISTA"))
-            .calificacion(cabecera.get("CALIFICACION") != null ? ((Number) cabecera.get("CALIFICACION")).intValue() : 0)
-            .calificacionPersonal(cabecera.get("CALIFICACION_PERSONAL") != null ? ((Number) cabecera.get("CALIFICACION_PERSONAL")).intValue() : 0)
-            .calificacionExperiencia(cabecera.get("CALIFICACION_EXPERIENCIA") != null ? ((Number) cabecera.get("CALIFICACION_EXPERIENCIA")).intValue() : 0)
-            .calificacionIdiomas(cabecera.get("CALIFICACION_IDIOMAS") != null ? ((Number) cabecera.get("CALIFICACION_IDIOMAS")).intValue() : 0)
-            .calificacionEducacion(cabecera.get("CALIFICACION_EDUCACION") != null ? ((Number) cabecera.get("CALIFICACION_EDUCACION")).intValue() : 0)
+            .calificacion(cabecera.get("CALIFICACION") != null ? ((Integer) cabecera.get("CALIFICACION")).intValue() : 0)
+            .calificacionPersonal(cabecera.get("CALIFICACION_PERSONAL") != null ? ((Integer) cabecera.get("CALIFICACION_PERSONAL")).intValue() : 0)
+            .calificacionExperiencia(cabecera.get("CALIFICACION_EXPERIENCIA") != null ? ((Integer) cabecera.get("CALIFICACION_EXPERIENCIA")).intValue() : 0)
+            .calificacionIdiomas(cabecera.get("CALIFICACION_IDIOMAS") != null ? ((Integer) cabecera.get("CALIFICACION_IDIOMAS")).intValue() : 0)
+            .calificacionEducacion(cabecera.get("CALIFICACION_EDUCACION") != null ? ((Integer) cabecera.get("CALIFICACION_EDUCACION")).intValue() : 0)
             .notasPersonales((String) cabecera.get("NOTAS_PERSONALES"))
             .notasExperiencia((String) cabecera.get("NOTAS_EXPERIENCIA"))
             .notasIdiomas((String) cabecera.get("NOTAS_IDIOMAS"))
@@ -472,6 +472,43 @@ public class InterviewRepository {
       this.logger.error("Error al eliminar archivo en BD: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error técnico: " + e.getMessage()), null);
     }
+  }
+  
+  //Buscar archivo por id
+
+  public InterviewFileResponse getFileById(Integer idFile, BaseRequest baseRequest) {
+
+    SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_ARCHIVO_SEL");
+
+    MapSqlParameterSource params = new MapSqlParameterSource()
+        .addValue("ID_ARCHIVO", idFile)
+        .addValue("ID_ROL", baseRequest.getIdRol())
+        .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+        .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+
+    Map<String, Object> result = jdbcCall.execute(params);
+
+    List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get("#result-set-1");
+
+    List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-2");
+
+    if (resultSet == null || resultSet.isEmpty()) {
+      return null;
+    }
+
+    if (rows == null || rows.isEmpty()) {
+        return null;
+    }
+
+    Map<String, Object> results = resultSet.get(0);
+
+    InterviewFileResponse file = new InterviewFileResponse();
+    file.setIdFile((Integer) results.get("idFile"));
+    file.setFileName((String) results.get("nameFile"));
+    file.setPathFile((String) results.get("pathFile"));
+
+    return file;
   }
 
 }

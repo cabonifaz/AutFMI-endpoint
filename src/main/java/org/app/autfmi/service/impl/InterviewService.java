@@ -1,6 +1,11 @@
 package org.app.autfmi.service.impl;
 
-import org.app.autfmi.model.dto.InterviewResponseDTO;
+import org.app.autfmi.model.response.InterviewFileResponse;
+import org.app.autfmi.model.response.InterviewResponseDTO;
+import org.app.autfmi.model.request.InterviewUploadConfirmRequest;
+import org.app.autfmi.model.request.InterviewUploadUrlRequest;
+import org.app.autfmi.model.request.InterviewDownloadFileRequest;
+import org.app.autfmi.model.response.InterviewDownloadFileResponse;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
@@ -16,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.app.autfmi.model.response.InterviewUploadUrlResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -60,10 +66,11 @@ public class InterviewService {
    * @param baseRequest
    * @return
    */
-  public OperationResult<InterviewDetailResponseDTO> getInterviewById(
-      Integer idEntrevista,
-      BaseRequest baseRequest) {
-    return this.interviewRepository.getInterviewById(idEntrevista, baseRequest);
+  public OperationResult<InterviewDetailResponseDTO> getInterviewById(Integer idEntrevista, BaseRequest baseRequest) {
+
+    OperationResult<InterviewDetailResponseDTO> result = this.interviewRepository.getInterviewById(idEntrevista, baseRequest);
+
+    return result;
   }
 
   /**
@@ -75,7 +82,156 @@ public class InterviewService {
     return this.interviewRepository.updateInterview(request, baseRequest);
   }
 
-  public OperationResult<Void> uploadInterviewFile(
+  public OperationResult<InterviewUploadUrlResponse> generateUploadUrl(
+    InterviewUploadUrlRequest request,
+    BaseRequest baseRequest) {
+
+      try {
+
+        // 1. Validaciones básicas
+        if (request.getFileName() == null || request.getFileName().trim().isEmpty()) {
+          return new OperationResult<>(
+              new BaseResponse(3, "Nombre de archivo inválido"),
+              null);
+        }
+
+        // 2. Extraer extensión
+        String originalFilename = request.getFileName();
+        String extension = "";
+
+        if (originalFilename.contains(".")) {
+          extension =
+              originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+
+        // 3. Limpiar nombre visible
+        String cleanName = originalFilename;
+
+        if (cleanName.length() > 100) {
+          cleanName = cleanName.substring(0, 95) + extension;
+        }
+
+        // 4. Nombre único en S3
+        String generatedFileName =
+            System.currentTimeMillis() + "_"
+                + cleanName.replaceAll("\\s+", "_");
+
+        // 5. Ruta S3
+        String s3Path = new StringBuilder()
+            .append(Constante.RUTA_REPOSITORIO)
+            .append(baseRequest.getIdEmpresa())
+            .append(Constante.RUTA_INTERVIEW.replace(
+                "[ID_INTERVIEW]",
+                request.getIdInterview().toString()))
+            .append(generatedFileName)
+            .toString();
+
+        // 6. URL firmada PUT
+        String uploadUrl =
+            clientS3.generatePresignedUploadUrl(
+                s3Path,
+                request.getContentType(),
+                5);
+
+        // 7. Respuesta
+        InterviewUploadUrlResponse response = new InterviewUploadUrlResponse();
+
+        response.setUrl(uploadUrl);
+        response.setPath(s3Path);
+        response.setFileName(cleanName);
+
+        return new OperationResult<>(
+            new BaseResponse(2, "URL generada correctamente"),
+            response);
+
+      } catch (Exception e) {
+
+        logger.error("Error generating upload URL", e);
+
+        return new OperationResult<>(
+            new BaseResponse(3, "Error generando URL"),
+            null);
+      }
+    }
+
+  public OperationResult<Void> confirmUpload(
+      InterviewUploadConfirmRequest request,
+      BaseRequest baseRequest) {
+
+    try {
+
+      // 1. Validar que exista físicamente en S3
+      boolean exists = clientS3.exists(request.getPath());
+
+      if (!exists) {
+        return new OperationResult<>(
+            new BaseResponse(3, "El archivo no existe en S3"),
+            null);
+      }
+
+      // 2. Guardar en BD
+      OperationResult<Void> dbResult =
+          interviewRepository.saveInterviewFile(
+              request.getIdInterview(),
+              request.getIdFileType(),
+              request.getFileName(),
+              request.getPath(),
+              baseRequest);
+
+      return dbResult;
+
+    } catch (Exception e) {
+
+      logger.error("Error confirmando archivo", e);
+
+      return new OperationResult<>(
+          new BaseResponse(3, "Error confirmando archivo"),
+          null);
+    }
+  }
+
+  public OperationResult<InterviewDownloadFileResponse> generateDownloadUrl(
+        InterviewDownloadFileRequest request,
+        BaseRequest baseRequest) {
+
+    try {
+
+        InterviewFileResponse file =
+            interviewRepository.getFileById(request.getIdFile(), baseRequest);
+
+        if (file == null || file.getPathFile() == null) {
+            return new OperationResult<>(
+                new BaseResponse(3, "Archivo no encontrado"),
+                null
+            );
+          }
+
+        String url = clientS3.generatePresignedUrl(
+            file.getPathFile(),
+            5
+        );
+
+        InterviewDownloadFileResponse response = new InterviewDownloadFileResponse();
+
+        response.setUrl(url);
+        response.setFileName(file.getFileName());
+
+        return new OperationResult<>(
+            new BaseResponse(2, "URL generada correctamente"),
+            response
+        );
+
+    } catch (Exception e) {
+
+        return new OperationResult<>(
+            new BaseResponse(3, "Error generando URL de descarga"),
+            
+            null
+        );
+    }
+  } 
+
+  /*public OperationResult<Void> uploadInterviewFile(
       Integer idInterview,
       Integer idFileType,
       MultipartFile file,
@@ -145,7 +301,7 @@ public class InterviewService {
       }
       return new OperationResult<>(new BaseResponse(3, "Error al subir el archivo: " + e.getMessage()), null);
     }
-  }
+  }*/
 
   /**
    * Elimina el archivo lógicamente de la BD y físicamente de AWS S3.

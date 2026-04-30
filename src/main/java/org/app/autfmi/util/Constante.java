@@ -49,6 +49,7 @@ public class Constante {
     public static final String UPDATE_INTERVIEW = "1031";
     public static final String VIEW_INTERVIEW = "1032";
     public static final String LIST_INTERVIEW = "1033";
+    public static final String UPLOAD_DOWNLOAD_INTERVIEW_FILE = "1034";
 
     // TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";

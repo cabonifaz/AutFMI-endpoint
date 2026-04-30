@@ -10,9 +10,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class InterviewFileDTO {
+  
   private Integer id;
   private String name;
   private Integer idFileType;
   private String type;
-  private String pathFile;
+
 }

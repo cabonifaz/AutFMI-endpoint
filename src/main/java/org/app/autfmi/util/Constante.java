@@ -9,6 +9,7 @@ public class Constante {
     public static final String RUTA_REPOSITORIO = "repositorio/";
     public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";
     public static final String RUTA_FIRMAS = "/firmas/[ID_USUARIO]/";
+    public static final String RUTA_INTERVIEW = "/interviews/[ID_INTERVIEW]/archivos/";
 
     // TIPO REPORTES
 
@@ -41,6 +42,14 @@ public class Constante {
     public static final String LISTAR_TARIFARIO = "26";
 
     public static final String DOMINIO_CORREO = "@fractalservicios.pe";
+    public static final String GUARDAR_INTERVIEW = "27";
+
+    // Interviews
+    public static final String CREATE_INTERVIEW = "1033";
+    public static final String UPDATE_INTERVIEW = "1034";
+    public static final String VIEW_INTERVIEW = "1035";
+    public static final String LIST_INTERVIEW = "1036";
+    public static final String UPLOAD_DOWNLOAD_INTERVIEW_FILE = "1037";
 
     // TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";

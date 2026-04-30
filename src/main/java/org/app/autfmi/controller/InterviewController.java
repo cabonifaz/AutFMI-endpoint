@@ -1,11 +1,14 @@
 package org.app.autfmi.controller;
 
-import org.app.autfmi.model.dto.InterviewResponseDTO;
+import org.app.autfmi.model.response.InterviewResponseDTO;
 import org.app.autfmi.model.dto.UserDTO;
+import org.app.autfmi.model.request.InterviewUploadConfirmRequest;
+import org.app.autfmi.model.request.InterviewUploadUrlRequest;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
 import org.app.autfmi.model.request.InterviewUpdateRequest;
+import org.app.autfmi.model.request.InterviewDownloadFileRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PaginatedResponse;
@@ -13,7 +16,6 @@ import org.app.autfmi.service.impl.InterviewService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -108,7 +109,7 @@ public class InterviewController {
     }
   }
 
-  @PostMapping(value = "/file/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  /*@PostMapping(value = "/file/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   public ResponseEntity<BaseResponse> uploadInterviewFile(
       @RequestParam("idInterview") Integer idInterview,
       @RequestParam("idFileType") Integer idFileType,
@@ -132,6 +133,52 @@ public class InterviewController {
       return ResponseEntity.status(500).body(
           new BaseResponse(3, "Error de autenticación o token inválido"));
     }
+  }*/
+
+  @PostMapping("/file/upload-url")
+  public ResponseEntity<?> generateUploadUrl(
+      @RequestBody InterviewUploadUrlRequest request,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+
+      BaseRequest baseRequest =
+          Common.createBaseRequest(user, Constante.UPLOAD_DOWNLOAD_INTERVIEW_FILE);
+
+      var result = interviewService.generateUploadUrl(request, baseRequest);
+
+      return ResponseEntity.ok(result);
+
+    } catch (Exception e) {
+      return ResponseEntity.status(500)
+          .body(new BaseResponse(3, "Error generando URL de carga"));
+    }
+  }
+
+  @PostMapping("/file/confirm-upload")
+  public ResponseEntity<BaseResponse> confirmUpload(
+      @RequestBody InterviewUploadConfirmRequest request,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+
+      BaseRequest baseRequest =
+          Common.createBaseRequest(user, Constante.UPLOAD_DOWNLOAD_INTERVIEW_FILE);
+
+      OperationResult<Void> result =
+          interviewService.confirmUpload(request, baseRequest);
+
+      return ResponseEntity.ok(result.getBaseResponse());
+
+    } catch (Exception e) {
+      return ResponseEntity.status(500)
+          .body(new BaseResponse(3, "Error confirmando archivo"));
+    }
   }
 
   @PostMapping("/file/remove")
@@ -143,7 +190,7 @@ public class InterviewController {
       String token = JwtHelper.extractToken(httpServletRequest);
       UserDTO user = jwt.decodeToken(token);
 
-      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPLOAD_DOWNLOAD_INTERVIEW_FILE);
 
       OperationResult<Void> result = this.interviewService.deleteInterviewFile(
           fileId,
@@ -154,5 +201,27 @@ public class InterviewController {
       return ResponseEntity.status(500).body(
           new BaseResponse(3, "Error de autenticación o token inválido"));
     }
+  }
+  
+  @PostMapping("/file/download-url")
+  public ResponseEntity<?> downloadUrl(
+      @RequestBody InterviewDownloadFileRequest request,
+      HttpServletRequest httpServletRequest
+  ) {
+      try {
+
+        String token = JwtHelper.extractToken(httpServletRequest);
+        UserDTO user = jwt.decodeToken(token);
+
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPLOAD_DOWNLOAD_INTERVIEW_FILE);
+
+        return ResponseEntity.ok(interviewService.generateDownloadUrl(request, baseRequest));
+
+      } catch (Exception e) {
+
+        return ResponseEntity.status(500)
+            .body(new BaseResponse(3, "Error generando URL de descarga"));
+      }
+      
   }
 }

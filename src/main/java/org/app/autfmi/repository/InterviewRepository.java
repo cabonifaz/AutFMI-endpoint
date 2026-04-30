@@ -4,8 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.app.autfmi.model.dto.EntrevistadorDTO;
+import org.app.autfmi.model.dto.GrabacionDTO;
 import org.app.autfmi.model.dto.InterviewFileDTO;
-import org.app.autfmi.model.dto.InterviewResponseDTO;
+import org.app.autfmi.model.response.InterviewFileResponse;
+import org.app.autfmi.model.response.InterviewResponseDTO;
 import org.app.autfmi.model.dto.InterviewRqDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
@@ -62,6 +65,7 @@ public class InterviewRepository {
           .addValue("ID_ETAPA", request.getEtapa())
           .addValue("ENLACE_ENTREVISTA", request.getEnlaceEntrevista())
           .addValue("LST_ID_RQS", lstIdReqJson)
+          .addValue("LST_ENTREVISTADORES", request.getEntrevistadores())
           .addValue("USUARIO", baseRequest.getUsername())
           .addValue("ID_USUARIO", baseRequest.getIdUsuario())
           .addValue("ID_ROL", baseRequest.getIdRol())
@@ -251,8 +255,6 @@ public class InterviewRepository {
         }
 
         // RS 4: Archivos
-        // List<Map<String, Object>> rs4 = (List<Map<String, Object>>)
-        // result.get("#result-set-4");
         List<InterviewFileDTO> files = new ArrayList<>();
         List<Map<String, Object>> rs4 = (List<Map<String, Object>>) result.get("#result-set-4");
 
@@ -261,11 +263,34 @@ public class InterviewRepository {
             files.add(InterviewFileDTO.builder()
                 .id(row.get("ID") != null ? ((Number) row.get("ID")).intValue() : null)
                 .name((String) row.get("NOMBRE_ARCHIVO"))
-                .pathFile((String) row.get("RUTA_ARCHIVO"))
                 .idFileType(
                     row.get("ID_TIPO_ARCHIVO") != null ? ((Number) row.get("ID_TIPO_ARCHIVO")).intValue() : null)
                 .type((String) row.get("TIPO_ARCHIVO"))
                 .build());
+          }
+        }
+
+        // RS 5: Entrevistadores
+        List<EntrevistadorDTO> entrevistadores = new ArrayList<>();
+        List<GrabacionDTO> grabaciones = new ArrayList<>();
+        List<Map<String, Object>> rs5 = (List<Map<String, Object>>) result.get("#result-set-5");
+        List<Map<String, Object>> rs6 = (List<Map<String, Object>>) result.get("#result-set-6");
+
+        if (rs5 != null) {
+          for (Map<String, Object> row : rs5) {
+            entrevistadores.add(new EntrevistadorDTO(
+                (String) row.get("FULLNAME"),
+                (String) row.get("EMAIL")
+            ));
+          }
+        }
+
+        if (rs6 != null) {
+          for (Map<String, Object> row : rs6) {
+            grabaciones.add(new GrabacionDTO(
+                (String) row.get("ENLACE"),
+                (String) row.get("FECHA")
+            ));
           }
         }
 
@@ -281,14 +306,21 @@ public class InterviewRepository {
             .idEtapa(cabecera.get("ID_ETAPA") != null ? ((Number) cabecera.get("ID_ETAPA")).intValue() : null)
             .etapa((String) cabecera.get("ETAPA"))
             .enlaceEntrevista((String) cabecera.get("ENLACE_ENTREVISTA"))
-            .calificacion(cabecera.get("CALIFICACION") != null ? ((Number) cabecera.get("CALIFICACION")).intValue() : 0)
+            .calificacion(cabecera.get("CALIFICACION") != null ? ((Integer) cabecera.get("CALIFICACION")).intValue() : 0)
+            .calificacionPersonal(cabecera.get("CALIFICACION_PERSONAL") != null ? ((Integer) cabecera.get("CALIFICACION_PERSONAL")).intValue() : 0)
+            .calificacionExperiencia(cabecera.get("CALIFICACION_EXPERIENCIA") != null ? ((Integer) cabecera.get("CALIFICACION_EXPERIENCIA")).intValue() : 0)
+            .calificacionIdiomas(cabecera.get("CALIFICACION_IDIOMAS") != null ? ((Integer) cabecera.get("CALIFICACION_IDIOMAS")).intValue() : 0)
+            .calificacionEducacion(cabecera.get("CALIFICACION_EDUCACION") != null ? ((Integer) cabecera.get("CALIFICACION_EDUCACION")).intValue() : 0)
             .notasPersonales((String) cabecera.get("NOTAS_PERSONALES"))
             .notasExperiencia((String) cabecera.get("NOTAS_EXPERIENCIA"))
             .notasIdiomas((String) cabecera.get("NOTAS_IDIOMAS"))
             .notasEducacion((String) cabecera.get("NOTAS_EDUCACION"))
+            .motivoCancelacion((String) cabecera.get("MOTIVO_CANCELACION"))
             .clienteResumen(String.join(", ", uniqueClients))
             .files(files)
             .selectedRQs(rqs)
+            .entrevistadores(entrevistadores)
+            .grabaciones(grabaciones)
             .build();
 
         return new OperationResult<>(baseResponse, detail);
@@ -325,11 +357,18 @@ public class InterviewRepository {
           .addValue("ID_ETAPA", request.getEtapa())
           .addValue("ENLACE_ENTREVISTA", request.getEnlaceEntrevista())
           .addValue("CALIFICACION", request.getCalificacion())
+          .addValue("CALIFICACION_PERSONAL", request.getCalificacionPersonal())
+          .addValue("CALIFICACION_EXPERIENCIA", request.getCalificacionExperiencia())
+          .addValue("CALIFICACION_IDIOMAS", request.getCalificacionIdiomas())
+          .addValue("CALIFICACION_EDUCACION", request.getCalificacionEducacion())
           .addValue("NOTAS_PERSONALES", request.getNotasPersonales())
           .addValue("NOTAS_EXPERIENCIA", request.getNotasExperiencia())
           .addValue("NOTAS_IDIOMAS", request.getNotasIdiomas())
           .addValue("NOTAS_EDUCACION", request.getNotasEducacion())
-          .addValue("LST_ID_RQS", lstIdReqJson);
+          .addValue("LST_ID_RQS", lstIdReqJson)
+          .addValue("LST_ENTREVISTADORES", request.getEntrevistadores())
+          .addValue("LST_GRABACIONES", request.getGrabaciones())
+          .addValue("MOTIVO_CANCELACION", request.getMotivoCancelacion());
 
       Map<String, Object> result = simpleJdbcCall.execute(params);
       List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -433,6 +472,43 @@ public class InterviewRepository {
       this.logger.error("Error al eliminar archivo en BD: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error técnico: " + e.getMessage()), null);
     }
+  }
+  
+  //Buscar archivo por id
+
+  public InterviewFileResponse getFileById(Integer idFile, BaseRequest baseRequest) {
+
+    SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_ARCHIVO_SEL");
+
+    MapSqlParameterSource params = new MapSqlParameterSource()
+        .addValue("ID_ARCHIVO", idFile)
+        .addValue("ID_ROL", baseRequest.getIdRol())
+        .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+        .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+
+    Map<String, Object> result = jdbcCall.execute(params);
+
+    List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get("#result-set-1");
+
+    List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-2");
+
+    if (resultSet == null || resultSet.isEmpty()) {
+      return null;
+    }
+
+    if (rows == null || rows.isEmpty()) {
+        return null;
+    }
+
+    Map<String, Object> results = resultSet.get(0);
+
+    InterviewFileResponse file = new InterviewFileResponse();
+    file.setIdFile((Integer) results.get("idFile"));
+    file.setFileName((String) results.get("nameFile"));
+    file.setPathFile((String) results.get("pathFile"));
+
+    return file;
   }
 
 }

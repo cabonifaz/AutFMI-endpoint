@@ -11,6 +11,12 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import java.time.Duration;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,11 +29,16 @@ public class ClientS3V2 {
 
   private S3Client s3Client;
   private String bucketName;
+  private S3Presigner presigner;
 
   @PostConstruct
   public void init() {
     String regionName = System.getenv("AWS_REGION");
     this.bucketName = System.getenv("AWS_BUCKET");
+    this.presigner = S3Presigner.builder()
+    .region(Region.of(regionName))
+    .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+    .build();
 
     if (regionName == null || bucketName == null) {
       logger.error("Las variables de entorno AWS_REGION o AWS_BUCKET no están configuradas.");
@@ -167,4 +178,49 @@ public class ClientS3V2 {
       return false;
     }
   }
+
+  //Genera una URL pre-firmada para acceder a un objeto en S3 por un tiempo limitado.
+
+  public String generatePresignedUrl(String path, int minutes) {
+
+    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+      .bucket(bucketName)
+      .key(path)
+      .build();
+
+    GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+      .signatureDuration(Duration.ofMinutes(minutes))
+      .getObjectRequest(getObjectRequest)
+      .build();
+
+    PresignedGetObjectRequest presignedRequest = presigner.presignGetObject(presignRequest);
+
+    return presignedRequest.url().toString();
+  }
+
+  //Genera una URL pre-firmada para subir un archivo al AWS por tiempo limitado.
+
+  public String generatePresignedUploadUrl(
+    String path,
+    String contentType,
+    int minutes
+    ) {
+
+    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+        .bucket(bucketName)
+        .key(path)
+        .contentType(contentType)
+        .build();
+
+    PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+        .signatureDuration(Duration.ofMinutes(minutes))
+        .putObjectRequest(putObjectRequest)
+        .build();
+
+    PresignedPutObjectRequest presignedRequest =
+        presigner.presignPutObject(presignRequest);
+
+    return presignedRequest.url().toString();
+}
+
 }

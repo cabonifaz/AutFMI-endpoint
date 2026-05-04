@@ -124,9 +124,12 @@ public class InterviewRepository {
           .addValue("BUSQUEDA", clean.apply(request.getBusqueda()))
           .addValue("ID_CLIENTE", request.getIdCliente())
           .addValue("ID_ESTADO", request.getIdEstado())
+          .addValue("ID_ETAPA", request.getIdEtapa())//Lo agrego Franco xd
           .addValue("FECHA", clean.apply(request.getFecha()));
 
       this.logger.info("Getting interviews for: {}", baseRequest.getUsername());
+
+
 
       Map<String, Object> result = simpleJdbcCall.execute(params);
       List<Map<String, Object>> rs1 = (List<Map<String, Object>>) result.get("#result-set-1");

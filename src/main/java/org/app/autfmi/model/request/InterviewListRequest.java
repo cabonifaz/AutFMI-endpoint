@@ -14,5 +14,6 @@ public class InterviewListRequest {
   private String busqueda;
   private Integer idCliente;
   private Integer idEstado;
+  private Integer idEtapa;
   private String fecha;
 }

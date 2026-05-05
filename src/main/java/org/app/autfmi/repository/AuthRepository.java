@@ -13,6 +13,7 @@ import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
+@SuppressWarnings("unchecked")
 public class AuthRepository {
     private final JdbcTemplate jdbcTemplate;
 
@@ -58,7 +59,7 @@ public class AuthRepository {
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
 
             if (idTipoMensaje == 2) {
-                return  processUserData(data);
+                return processUserData(data);
             }
         }
         return null;
@@ -84,14 +85,13 @@ public class AuthRepository {
             }
 
             return new UserDTO(
-                    (Integer) userData.get("ID_USUARIO"),   // From result-set-2
+                    (Integer) userData.get("ID_USUARIO"), // From result-set-2
                     (Integer) userData.get("ID_EMPRESA"),
                     (String) userData.get("USUARIO"),
                     (String) userData.get("NOMBRES"),
                     (String) userData.get("APELLIDOS"),
                     idRoles,
-                    nameRoles
-            );
+                    nameRoles);
         }
         return null;
     }

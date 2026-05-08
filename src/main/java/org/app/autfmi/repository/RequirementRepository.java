@@ -501,14 +501,17 @@ public class RequirementRepository {
 		tvp.addColumnMetadata("ID_PERFIL", Types.INTEGER);
 		tvp.addColumnMetadata("CARRERA", Types.VARCHAR);
 		tvp.addColumnMetadata("ID_GRADO_ESTUDIOS", Types.INTEGER);
+		tvp.addColumnMetadata("VACANTE_REGISTRO_ID", Types.VARCHAR);
 		tvp.addColumnMetadata("OPCIONAL", Types.INTEGER);
 
 		for (VacanteCarreraRequest carrera : carreras) {
+			System.out.println(carrera.getTempVacancyId());
 			Integer opcional = carrera.getIsOptional() ? 1 : 0;
 			tvp.addRow(
 					carrera.getIdPerfil(),
 					carrera.getCarrera(),
 					carrera.getIdGrado(),
+					carrera.getTempVacancyId(),
 					opcional);
 		}
 		return tvp;
@@ -907,12 +910,15 @@ public class RequirementRepository {
 		tvpRqVacantes.addColumnMetadata("ID_PERFIL", Types.INTEGER);
 		tvpRqVacantes.addColumnMetadata("CANTIDAD", Types.INTEGER);
 		tvpRqVacantes.addColumnMetadata("TARIFA_FINAL", Types.DECIMAL);
+		tvpRqVacantes.addColumnMetadata("VACANTE_REGISTRO_ID ", Types.VARCHAR);
 
 		for (VacanteRequirement vacanteRequirement : lstVacantes) {
 			tvpRqVacantes.addRow(
 					vacanteRequirement.getIdPerfil(),
 					vacanteRequirement.getCantidad(),
-					vacanteRequirement.getTarifaFinal());
+					vacanteRequirement.getTarifaFinal(),
+					vacanteRequirement.getTempVacancyId()
+				);
 		}
 
 		return tvpRqVacantes;
@@ -1175,14 +1181,16 @@ public class RequirementRepository {
 		tvpRqVacSkill.addColumnMetadata("ID_SKILL", Types.INTEGER);
 		tvpRqVacSkill.addColumnMetadata("ANIOS", Types.INTEGER);
 		tvpRqVacSkill.addColumnMetadata("OPCIONAL", Types.INTEGER);
-
+		tvpRqVacSkill.addColumnMetadata("VACANTE_REGISTRO_ID", Types.VARCHAR);
+		
 		// Recorrer la lista en Java y llenar el TVP
 		for (VacanteSkill skillReq : lstVacanteSkills) {
 			tvpRqVacSkill.addRow(
 					skillReq.getIdPerfil(),
 					skillReq.getIdSkill(),
 					skillReq.getAnios(),
-					skillReq.getIsOptional() ? 1 : 0);
+					skillReq.getIsOptional() ? 1 : 0,
+					skillReq.getTempVacancyId());
 		}
 
 		return tvpRqVacSkill;

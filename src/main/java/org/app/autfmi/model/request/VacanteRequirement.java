@@ -16,4 +16,5 @@ public class VacanteRequirement {
     @JsonProperty()
     private Integer idRequerimientoVacante;
     private Double tarifaFinal;
+    private String tempVacancyId; 
 }

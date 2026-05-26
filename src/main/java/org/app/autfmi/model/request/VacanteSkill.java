@@ -13,4 +13,5 @@ public class VacanteSkill {
     private int idSkill;
     private int anios;
     private Boolean isOptional;
+    private String tempVacancyId; 
 }

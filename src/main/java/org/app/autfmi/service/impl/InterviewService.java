@@ -14,7 +14,11 @@ import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.InterviewDetailResponseDTO;
 import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PaginatedResponse;
+import org.app.autfmi.model.dto.TalentDTO;
+import org.app.autfmi.model.response.TalentResponse;
 import org.app.autfmi.repository.InterviewRepository;
+import org.app.autfmi.repository.TalentRepository;
+import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.ClientS3V2;
 import org.app.autfmi.util.Constante;
 import org.slf4j.Logger;
@@ -29,7 +33,9 @@ import lombok.RequiredArgsConstructor;
 public class InterviewService {
 
   private final InterviewRepository interviewRepository;
+  private final TalentRepository talentRepository;
   private final ClientS3V2 clientS3;
+  private final IMailService mailService;
   private final Logger logger = LoggerFactory.getLogger(InterviewService.class);
 
   /**
@@ -42,7 +48,38 @@ public class InterviewService {
   public OperationResult<Integer> createInterview(
       InterviewRequest request,
       BaseRequest baseRequest) {
-    return this.interviewRepository.createInterview(request, baseRequest);
+
+    OperationResult<Integer> result = this.interviewRepository.createInterview(request, baseRequest);
+
+    if (result.getBaseResponse().getIdTipoMensaje() == 2 && result.getData() != null) {
+      try {
+        OperationResult<InterviewDetailResponseDTO> detail =
+            this.interviewRepository.getInterviewById(result.getData(), baseRequest);
+        if (detail != null && detail.getData() != null) {
+          this.mailService.sendInterviewNotification(detail.getData(), baseRequest, "Nueva Entrevista");
+
+          // Notify the selected talent
+          if (request.getIdTalento() != null) {
+            var talentResponse = this.talentRepository.getTalentById(request.getIdTalento(), baseRequest);
+            if (talentResponse instanceof TalentResponse tr && tr.getTalento() != null) {
+              TalentDTO talent = tr.getTalento();
+              if (talent.getEmail() != null && !talent.getEmail().trim().isEmpty()) {
+                String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno()
+                    + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
+                this.mailService.sendInterviewTalentNotification(
+                    detail.getData(), talent.getEmail().trim(), talentFullName.trim(), baseRequest, "Nueva Entrevista");
+              } else {
+                logger.info("Talent {} has no email registered, skipping talent notification", request.getIdTalento());
+              }
+            }
+          }
+        }
+      } catch (Exception e) {
+        logger.error("Error dispatching interview creation notification: {}", e.getMessage(), e);
+      }
+    }
+
+    return result;
   }
 
   /**
@@ -78,7 +115,39 @@ public class InterviewService {
   public OperationResult<Void> updateInterview(
       InterviewUpdateRequest request,
       BaseRequest baseRequest) {
-    return this.interviewRepository.updateInterview(request, baseRequest);
+
+    OperationResult<Void> result = this.interviewRepository.updateInterview(request, baseRequest);
+
+    if (result.getBaseResponse().getIdTipoMensaje() == 2 && request.getIdEntrevista() != null) {
+      try {
+        OperationResult<InterviewDetailResponseDTO> detail =
+            this.interviewRepository.getInterviewById(request.getIdEntrevista(), baseRequest);
+        if (detail != null && detail.getData() != null) {
+          this.mailService.sendInterviewNotification(detail.getData(), baseRequest, "Actualización de Entrevista");
+
+          // Notify the associated talent
+          Integer talentId = detail.getData().getIdTalento();
+          if (talentId != null) {
+            var talentResponse = this.talentRepository.getTalentById(talentId, baseRequest);
+            if (talentResponse instanceof TalentResponse tr && tr.getTalento() != null) {
+              TalentDTO talent = tr.getTalento();
+              if (talent.getEmail() != null && !talent.getEmail().trim().isEmpty()) {
+                String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno()
+                    + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
+                this.mailService.sendInterviewTalentNotification(
+                    detail.getData(), talent.getEmail().trim(), talentFullName.trim(), baseRequest, "Actualización de Entrevista");
+              } else {
+                logger.info("Talent {} has no email registered, skipping talent notification on update", talentId);
+              }
+            }
+          }
+        }
+      } catch (Exception e) {
+        logger.error("Error dispatching interview update notification: {}", e.getMessage(), e);
+      }
+    }
+
+    return result;
   }
 
   public OperationResult<InterviewUploadUrlResponse> generateUploadUrl(

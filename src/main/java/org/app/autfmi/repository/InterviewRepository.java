@@ -281,9 +281,11 @@ public class InterviewRepository {
 
         if (rs5 != null) {
           for (Map<String, Object> row : rs5) {
+
             entrevistadores.add(new EntrevistadorDTO(
                 (String) row.get("FULLNAME"),
-                (String) row.get("EMAIL")
+                (String) row.get("EMAIL"),
+                "1".equals(row.get("NOTIFICACION"))
             ));
           }
         }

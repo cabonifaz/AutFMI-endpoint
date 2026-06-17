@@ -6,27 +6,21 @@ import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.AuthRepository;
 import org.app.autfmi.service.IAuthService;
 import org.springframework.stereotype.Service;
-import org.app.autfmi.util.JwtHelper;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService implements IAuthService {
 
     private final AuthRepository authRepository;
-    private final JwtHelper jwt;
 
     @Override
     public BaseResponse login(String username, String password) {
-        BaseResponse baseResponse = authRepository.verifyCredentials(username, password);
+        AuthResponse response = authRepository.verifyCredentials(username, password);
 
-        if (baseResponse.getIdTipoMensaje() == 1) {
-            return baseResponse;
+        if (response.getIdTipoMensaje() == 1) {
+            return response;
         }
 
-        var userData = authRepository.getUserByUsername(username);
-        var userDto = authRepository.mapToUserDTO(userData);
-        String token = jwt.generateToken(userDto);
-
-        return new AuthResponse(baseResponse.getIdTipoMensaje(), baseResponse.getMensaje(), token);
+        return response;
     }
 }

@@ -20,4 +20,5 @@ public class InterviewRequest {
   private Integer etapa;
   private String enlaceEntrevista;
   private String entrevistadores;
+  private String perfil;
 }

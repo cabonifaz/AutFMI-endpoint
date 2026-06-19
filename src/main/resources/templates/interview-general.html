@@ -44,17 +44,17 @@
 
     <p style="font-size:14px;line-height:1.65;margin:0 0 24px 0;">Saludos cordiales.</p>
 
-    <table cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;font-family:Arial,Helvetica,sans-serif;">
+    <table width="450" cellpadding="0" cellspacing="0" border="0" style="width:450px;max-width:100%;margin-top:24px;font-family:Arial,Helvetica,sans-serif;table-layout:fixed;">
       <tr>
-        <td style="padding:12px 10px 12px 0;border-right:1px solid #1c75bc;vertical-align:middle;">
+        <td width="182" height="110" style="width:182px;height:110px;padding:0 9px 0 0;border-right:1px solid #1c75bc;vertical-align:middle;">
           <img src="cid:sig-logo" alt="Fractal" width="172" height="50" style="display:block;width:172px;height:50px;" />
         </td>
-        <td style="padding:8px 0 8px 8px;vertical-align:top;white-space:nowrap;">
-          <p style="margin:0 0 2px 0;font-size:11px;font-weight:700;color:#245579;" th:if="${accionUsuarioNombre != null and !#strings.isEmpty(accionUsuarioNombre)}" th:text="${accionUsuarioNombre}">—</p>
+        <td width="163" style="width:163px;padding:5px 0 5px 8px;vertical-align:top;">
+          <p style="margin:0 0 2px 0;font-size:12px;font-weight:700;color:#245579;" th:if="${accionUsuarioNombre != null and !#strings.isEmpty(accionUsuarioNombre)}" th:text="${accionUsuarioNombre}">—</p>
           <p style="margin:0;font-size:12px;font-weight:700;color:#245579;">Reclutamiento y Selección</p>
-          <p style="margin:3px 0 0 0;font-size:11px;color:#4b5563;">Av. Andrés Reyes N° 524 Int. 3 – San Isidro</p>
-          <p style="margin:2px 0 0 0;font-size:11px;color:#4b5563;" th:if="${accionUsuarioTelefono != null and !#strings.isEmpty(accionUsuarioTelefono)}">Telf: +51 <span th:text="${accionUsuarioTelefono}">—</span></p>
-          <p style="margin:3px 0 0 0;font-size:11px;"><a href="http://www.fractal.com.pe" style="color:#0563c1;text-decoration:underline;">www.fractal.com.pe</a></p>
+          <p style="margin:3px 0 0 0;font-size:9px;color:#4b5563;white-space:nowrap;">Av. Andrés Reyes N° 524 Int. 3 – San Isidro</p>
+          <p style="margin:2px 0 0 0;font-size:10px;color:#4b5563;" th:if="${accionUsuarioTelefono != null and !#strings.isEmpty(accionUsuarioTelefono)}">Telf: +51 <span th:text="${accionUsuarioTelefono}">—</span></p>
+          <p style="margin:3px 0 0 0;font-size:10px;"><a href="http://www.fractal.com.pe" style="color:#0563c1;text-decoration:underline;">www.fractal.com.pe</a></p>
           <table cellpadding="0" cellspacing="0" border="0" style="margin-top:3px;">
             <tr>
               <td style="padding-right:4px;"><a href="https://www.linkedin.com/company/somosfractal/" target="_blank"><img src="cid:sig-linkedin" alt="LinkedIn" width="20" height="20" style="display:block;width:20px;height:20px;" /></a></td>
@@ -62,7 +62,7 @@
             </tr>
           </table>
         </td>
-        <td style="padding:0 0 4px 12px;vertical-align:bottom;">
+        <td width="58" style="width:58px;padding:0 0 4px 8px;vertical-align:bottom;">
           <img src="cid:sig-mosaic" alt="Fractal" width="50" height="70" style="display:block;width:50px;height:70px;" />
         </td>
       </tr>

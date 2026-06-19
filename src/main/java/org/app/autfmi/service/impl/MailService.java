@@ -411,7 +411,7 @@ public class MailService implements IMailService {
 
     String templateName;
     String subject;
-    if ("Entrevista con líder técnico Fractal".equalsIgnoreCase(etapa)) {
+    if ("Entrevista tecnica con líder técnico fractal".equalsIgnoreCase(etapa)) {
       templateName = "interview-tecnica-fractal";
       subject = "Entrevista Técnica - FRACTAL SOLUCIONES TI";
     } else if ("Entrevista técnica con cliente".equalsIgnoreCase(etapa)) {

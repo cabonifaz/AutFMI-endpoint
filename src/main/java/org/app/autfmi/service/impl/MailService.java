@@ -401,7 +401,7 @@ public class MailService implements IMailService {
     Map<String, Object> variables = new HashMap<>();
     variables.put("candidateName", SafeValues.safeString(talentFullName));
     variables.put("position", position);
-    variables.put("formattedDate", formatEnglishDate(detail.getFecha()));
+    variables.put("formattedDate", formatSpanishDate(detail.getFecha()));
     variables.put("formattedTime", formatTime12h(detail.getHora()));
     variables.put("allInterviewers", allInterviewers);
     variables.put("clientName", SafeValues.safeString(detail.getClienteResumen()));
@@ -411,7 +411,7 @@ public class MailService implements IMailService {
 
     String templateName;
     String subject;
-    if ("Entrevista con líder técnico Fractal".equalsIgnoreCase(etapa)) {
+    if ("Entrevista tecnica con líder técnico fractal".equalsIgnoreCase(etapa)) {
       templateName = "interview-tecnica-fractal";
       subject = "Entrevista Técnica - FRACTAL SOLUCIONES TI";
     } else if ("Entrevista técnica con cliente".equalsIgnoreCase(etapa)) {
@@ -445,7 +445,7 @@ public class MailService implements IMailService {
     }
   }
 
-  private String formatEnglishDate(String fechaStr) {
+  private String formatSpanishDate(String fechaStr) {
     if (fechaStr == null || fechaStr.trim().isEmpty()) return "";
     try {
       LocalDate date;
@@ -457,7 +457,9 @@ public class MailService implements IMailService {
       } else {
         return fechaStr;
       }
-      return date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.US));
+      String formattedDate = date.format(
+          DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-PE")));
+      return Character.toUpperCase(formattedDate.charAt(0)) + formattedDate.substring(1);
     } catch (Exception e) {
       logger.warn("Could not format date '{}': {}", fechaStr, e.getMessage());
       return fechaStr;

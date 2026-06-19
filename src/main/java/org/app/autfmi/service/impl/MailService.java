@@ -1,11 +1,18 @@
 package org.app.autfmi.service.impl;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import org.app.autfmi.model.dto.EntrevistadorDTO;
+import org.app.autfmi.model.dto.UserContactInfoDTO;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
@@ -343,131 +350,137 @@ public class MailService implements IMailService {
 
   @Async("notificationExecutor")
   @Override
-  public void sendInterviewNotification(
-      InterviewDetailResponseDTO detail,
-      BaseRequest actionUser,
-      String actionType) {
-
-    logger.info("Preparing interview notification emails for action: {}", actionType);
-
-    if (detail == null || detail.getEntrevistadores() == null) {
-      logger.warn("No interview detail or interviewers available, skipping notification");
-      return;
-    }
-
-    List<EntrevistadorDTO> recipients = detail.getEntrevistadores().stream()
-        .filter(e -> e.notificacion()
-            && e.email() != null
-            && !e.email().trim().isEmpty())
-        .toList();
-
-    if (recipients.isEmpty()) {
-      logger.info("No interviewers with notifications enabled, skipping email dispatch");
-      return;
-    }
-
-    String fechaHora = java.time.ZonedDateTime.now(java.time.ZoneId.of("America/Lima"))
-        .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
-            .withLocale(new java.util.Locale("es", "PE")));
-
-    // Build shared action block
-    Map<String, Object> accion = new HashMap<>();
-    accion.put("tipo", actionType);
-    accion.put("usuario", actionUser != null && actionUser.getUsername() != null
-        ? actionUser.getUsername()
-        : "Sistema");
-    accion.put("fechaHora", fechaHora);
-
-    // Build shared interview data block
-    Map<String, Object> entrevista = new HashMap<>();
-    entrevista.put("talento", SafeValues.safeString(detail.getTalento()));
-    entrevista.put("fecha", SafeValues.safeString(detail.getFecha()));
-    entrevista.put("hora", SafeValues.safeString(detail.getHora()));
-    entrevista.put("etapa", SafeValues.safeString(detail.getEtapa()));
-    entrevista.put("estado", SafeValues.safeString(detail.getEstado()));
-    entrevista.put("enlace", SafeValues.safeString(detail.getEnlaceEntrevista()));
-    entrevista.put("cliente", SafeValues.safeString(detail.getClienteResumen()));
-
-    String subject = actionType + " | " + SafeValues.safeString(detail.getTalento());
-
-    for (EntrevistadorDTO interviewer : recipients) {
-      Map<String, Object> variables = new HashMap<>();
-      variables.put("accion", accion);
-      variables.put("entrevista", entrevista);
-      variables.put("destinatario", SafeValues.safeString(interviewer.fullname()));
-      variables.put("mensajeIntroductorio", "Se le notifica sobre los detalles de la entrevista a la que ha sido asignado/a como entrevistador/a.");
-
-      logger.info("Sending interview notification to interviewer: {}", interviewer.email());
-      mailUtils.sendEmailWithHtmlTemplate(
-          interviewer.email(),
-          null,
-          subject,
-          "interview-notification",
-          variables);
-    }
-
-    logger.info("Interview notification dispatch completed. Recipients: {}", recipients.size());
-  }
-
-  @Async("notificationExecutor")
-  @Override
-  public void sendInterviewTalentNotification(
+  public void sendInterviewUnifiedNotification(
       InterviewDetailResponseDTO detail,
       String talentEmail,
       String talentFullName,
       BaseRequest actionUser,
+      UserContactInfoDTO actionUserInfo,
       String actionType) {
 
-    logger.info("Preparing interview notification email for talent: {}", talentEmail);
-
     if (detail == null || talentEmail == null || talentEmail.trim().isEmpty()) {
-      logger.warn("Missing interview detail or talent email, skipping talent notification");
+      logger.warn("Missing interview detail or talent email, skipping unified notification");
       return;
     }
 
-    String fechaHora = java.time.ZonedDateTime.now(java.time.ZoneId.of("America/Lima"))
-        .format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")
-            .withLocale(new java.util.Locale("es", "PE")));
+    // CC: all registered interviewers with a valid email + the acting user
+    List<String> ccList = new ArrayList<>();
+    if (detail.getEntrevistadores() != null) {
+      detail.getEntrevistadores().stream()
+          .filter(e -> e.email() != null && !e.email().trim().isEmpty())
+          .forEach(e -> ccList.add(e.email().trim()));
+    }
+    if (actionUserInfo != null && actionUserInfo.email() != null && !actionUserInfo.email().trim().isEmpty()) {
+      ccList.add(actionUserInfo.email().trim());
+    }
+    List<String> cleanCc = deduplicateEmailList(ccList);
+    cleanCc.removeIf(cc -> cc.equalsIgnoreCase(talentEmail.trim()));
 
-    String tipoAccion = actionType != null ? actionType : "Notificación de Entrevista";
+    String etapa = SafeValues.safeString(detail.getEtapa()).trim();
 
-    Map<String, Object> accion = new HashMap<>();
-    accion.put("tipo", tipoAccion);
-    accion.put("usuario", actionUser != null && actionUser.getUsername() != null
-        ? actionUser.getUsername()
-        : "Sistema");
-    accion.put("fechaHora", fechaHora);
+    // Strip "CODE - " prefix from perfil (e.g. "SOL_B412 - Desarrollador Backend" → "Desarrollador Backend")
+    String perfilRaw = SafeValues.safeString(detail.getPerfil());
+    String position = perfilRaw.contains(" - ")
+        ? perfilRaw.substring(perfilRaw.indexOf(" - ") + 3)
+        : perfilRaw;
 
-    Map<String, Object> entrevista = new HashMap<>();
-    entrevista.put("talento", SafeValues.safeString(detail.getTalento()));
-    entrevista.put("fecha", SafeValues.safeString(detail.getFecha()));
-    entrevista.put("hora", SafeValues.safeString(detail.getHora()));
-    entrevista.put("etapa", SafeValues.safeString(detail.getEtapa()));
-    entrevista.put("estado", SafeValues.safeString(detail.getEstado()));
-    entrevista.put("enlace", SafeValues.safeString(detail.getEnlaceEntrevista()));
-    entrevista.put("cliente", SafeValues.safeString(detail.getClienteResumen()));
+    // All registered interviewer names, comma separated
+    List<String> interviewerNames = new ArrayList<>();
+    if (detail.getEntrevistadores() != null) {
+      detail.getEntrevistadores().stream()
+          .filter(e -> e.fullname() != null && !e.fullname().trim().isEmpty())
+          .forEach(e -> interviewerNames.add(e.fullname().trim()));
+    }
+    String allInterviewers = String.join(", ", interviewerNames);
 
-    String mensajeIntroductorio = "Actualización de Entrevista".equals(tipoAccion)
-        ? "Se le informa que los detalles de su entrevista han sido actualizados. A continuación encontrará la información actualizada."
-        : "Se le informa que tiene una nueva entrevista programada. A continuación encontrará los detalles.";
+    String actionUserName = actionUserInfo != null && actionUserInfo.fullName() != null && !actionUserInfo.fullName().trim().isEmpty()
+        ? actionUserInfo.fullName().trim()
+        : (actionUser != null ? SafeValues.safeString(actionUser.getUsername()) : "Sistema");
+    String actionUserPhone = actionUserInfo != null ? SafeValues.safeString(actionUserInfo.telefono()) : "";
 
     Map<String, Object> variables = new HashMap<>();
-    variables.put("accion", accion);
-    variables.put("entrevista", entrevista);
-    variables.put("destinatario", SafeValues.safeString(talentFullName));
-    variables.put("mensajeIntroductorio", mensajeIntroductorio);
+    variables.put("candidateName", SafeValues.safeString(talentFullName));
+    variables.put("position", position);
+    variables.put("formattedDate", formatEnglishDate(detail.getFecha()));
+    variables.put("formattedTime", formatTime12h(detail.getHora()));
+    variables.put("allInterviewers", allInterviewers);
+    variables.put("clientName", SafeValues.safeString(detail.getClienteResumen()));
+    variables.put("enlace", SafeValues.safeString(detail.getEnlaceEntrevista()));
+    variables.put("accionUsuarioNombre", actionUserName);
+    variables.put("accionUsuarioTelefono", actionUserPhone);
 
-    String subject = tipoAccion + " | " + SafeValues.safeString(detail.getTalento());
+    String templateName;
+    String subject;
+    if ("Entrevista con líder técnico Fractal".equalsIgnoreCase(etapa)) {
+      templateName = "interview-tecnica-fractal";
+      subject = "Entrevista Técnica - FRACTAL SOLUCIONES TI";
+    } else if ("Entrevista técnica con cliente".equalsIgnoreCase(etapa)) {
+      templateName = "interview-tecnica-cliente";
+      subject = "Entrevista Técnica - FRACTAL SOLUCIONES TI";
+    } else {
+      templateName = "interview-general";
+      subject = "¡Queremos conocerte! - FRACTAL SOLUCIONES TI";
+    }
 
-    logger.info("Sending interview notification to talent: {}", talentEmail);
-    mailUtils.sendEmailWithHtmlTemplate(
-        talentEmail,
-        null,
-        subject,
-        "interview-notification",
-        variables);
+    // Inline images: header logo + signature assets
+    Map<String, Resource> inlineResources = new LinkedHashMap<>();
+    addInlineResourceIfPresent(inlineResources, "sig-logo", "assets/fractal-transparente.png");
+    addInlineResourceIfPresent(inlineResources, "sig-mosaic", "assets/cubo-fractal.png");
+    addInlineResourceIfPresent(inlineResources, "sig-linkedin", "assets/linkedin.png");
+    addInlineResourceIfPresent(inlineResources, "sig-youtube", "assets/youtube.png");
 
-    logger.info("Interview talent notification dispatched to: {}", talentEmail);
+    logger.info("Sending interview notification ({}) to: {} | CC: {} recipients", templateName, talentEmail.trim(), cleanCc.size());
+    mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName, variables, inlineResources);
+    logger.info("Interview notification dispatched.");
+  }
+
+  private void addInlineResourceIfPresent(Map<String, Resource> inlineResources, String cid, String classpath) {
+    try {
+      ClassPathResource resource = new ClassPathResource(classpath);
+      if (resource.exists()) {
+        inlineResources.put(cid, resource);
+      }
+    } catch (Exception e) {
+      logger.warn("Resource '{}' not available, sending without it: {}", classpath, e.getMessage());
+    }
+  }
+
+  private String formatEnglishDate(String fechaStr) {
+    if (fechaStr == null || fechaStr.trim().isEmpty()) return "";
+    try {
+      LocalDate date;
+      String trimmed = fechaStr.trim();
+      if (trimmed.length() == 10 && trimmed.charAt(4) == '-') {
+        date = LocalDate.parse(trimmed, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+      } else if (trimmed.contains("/")) {
+        date = LocalDate.parse(trimmed, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+      } else {
+        return fechaStr;
+      }
+      return date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.US));
+    } catch (Exception e) {
+      logger.warn("Could not format date '{}': {}", fechaStr, e.getMessage());
+      return fechaStr;
+    }
+  }
+
+  private String formatTime12h(String horaStr) {
+    if (horaStr == null || horaStr.trim().isEmpty()) return "";
+    try {
+      LocalTime time;
+      String trimmed = horaStr.trim();
+      if (trimmed.length() == 8) {
+        time = LocalTime.parse(trimmed, DateTimeFormatter.ofPattern("HH:mm:ss"));
+      } else if (trimmed.length() == 5) {
+        time = LocalTime.parse(trimmed, DateTimeFormatter.ofPattern("HH:mm"));
+      } else {
+        return horaStr;
+      }
+      return time.format(DateTimeFormatter.ofPattern("h:mm a", Locale.US));
+    } catch (Exception e) {
+      logger.warn("Could not format time '{}': {}", horaStr, e.getMessage());
+      return horaStr;
+    }
   }
 
   @Async("notificationExecutor")

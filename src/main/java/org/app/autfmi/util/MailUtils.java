@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.core.io.Resource;
+
 @Component
 
 public class MailUtils {
@@ -130,6 +132,43 @@ public class MailUtils {
             }
 
             // 4. Enviar el correo
+            mailSender.send(mimeMessage);
+            logger.info("Correo enviado exitosamente a: {}", to);
+
+        } catch (MessagingException e) {
+            logger.error("Error al enviar correo a {}: {}", to, e.getMessage(), e);
+        }
+    }
+
+    public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
+            Map<String, Object> variables, Map<String, Resource> inlineResources) {
+        try {
+            Context context = new Context();
+            context.setVariables(variables);
+            String htmlBody = templateEngine.process(templateName, context);
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+
+            helper.setFrom(emisorCorreo);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlBody, true);
+
+            if (cc != null && !cc.isEmpty()) {
+                helper.setCc(cc.toArray(new String[0]));
+            }
+
+            if (inlineResources != null) {
+                for (Map.Entry<String, Resource> entry : inlineResources.entrySet()) {
+                    try {
+                        helper.addInline(entry.getKey(), entry.getValue());
+                    } catch (Exception e) {
+                        logger.warn("Could not embed inline resource '{}': {}", entry.getKey(), e.getMessage());
+                    }
+                }
+            }
+
             mailSender.send(mimeMessage);
             logger.info("Correo enviado exitosamente a: {}", to);
 

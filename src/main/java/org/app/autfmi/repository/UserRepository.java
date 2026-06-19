@@ -3,6 +3,7 @@ package org.app.autfmi.repository;
 import java.util.List;
 import java.util.Map;
 
+import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.response.BaseResponse;
@@ -77,6 +78,40 @@ public class UserRepository {
     operationResult.setData(userBuilder);
 
     return operationResult;
+  }
+
+  /**
+   * Obtiene nombre completo, correo y teléfono del usuario autenticado
+   * reutilizando el SP_USUARIOS_SEL existente (mismo procedimiento usado en
+   * AuthRepository y en el backend hermano BancoTalentos).
+   */
+  public UserContactInfoDTO getUserContactInfo(BaseRequest baseRequest) {
+
+    var simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_USUARIOS_SEL");
+
+    var params = new MapSqlParameterSource()
+        .addValue("USUARIO", baseRequest.getUsername())
+        .addValue("ID_ROL", baseRequest.getIdRol())
+        .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+        .addValue("ID_USUARIO", baseRequest.getIdUsuario());
+
+    var result = simpleJdbcCall.execute(params);
+    var resultSet = (List<Map<String, Object>>) result.get("#result-set-2");
+
+    if (resultSet == null || resultSet.isEmpty()) {
+      return null;
+    }
+
+    var row = resultSet.get(0);
+    String nombres = (String) row.get("NOMBRES");
+    String apellidos = (String) row.get("APELLIDOS");
+    String fullName = ((nombres != null ? nombres : "") + " " + (apellidos != null ? apellidos : "")).trim();
+
+    return new UserContactInfoDTO(
+        fullName.isEmpty() ? baseRequest.getUsername() : fullName,
+        (String) row.get("EMAIL"),
+        (String) row.get("TELEFONO"));
   }
 
 }

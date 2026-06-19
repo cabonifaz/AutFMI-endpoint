@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrevista Técnica - FRACTAL SOLUCIONES TI</title>
+</head>
+
+<body style="margin:0;padding:24px;background-color:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
+
+  <div style="max-width:640px;margin:0 auto;">
+
+    <p style="font-size:14px;line-height:1.65;margin:0 0 16px 0;">Estimado <span th:text="${candidateName}">candidato</span>,</p>
+
+    <p style="font-size:14px;line-height:1.65;margin:0 0 16px 0;">
+      En FRACTAL estamos contentos de contar con tu participación en este proceso de selección. Agradecemos tu
+      tiempo y disposición con nosotros y queremos invitarte a una entrevista técnica con nuestro cliente.
+    </p>
+
+    <p style="font-size:14px;line-height:1.65;margin:0 0 16px 0;">A continuación, las especificaciones:</p>
+
+    <p style="font-size:14px;line-height:1.8;margin:0 0 16px 0;">
+      Puesto: <span th:text="${position}">—</span><br/>
+      Entrevistador(es): <span th:text="${allInterviewers}">—</span> - Equipo <span th:text="${clientName}">—</span><br/>
+      Fecha: <span th:text="${formattedDate}">—</span><br/>
+      Hora: <span th:text="${formattedTime}">—</span><br/>
+      Enlace de la videollamada: Entrevista técnica - <span th:text="${candidateName}">—</span> | Reunión -
+      <a th:if="${enlace != null and !#strings.isEmpty(enlace)}" th:href="${enlace}" style="color:#1a2e4a;font-weight:700;">Unirse</a><span th:unless="${enlace != null and !#strings.isEmpty(enlace)}">Join</span>
+    </p>
+
+    <p style="font-size:14px;line-height:1.65;margin:0 0 8px 0;">Recomendaciones para la entrevista:</p>
+    <ul style="font-size:14px;line-height:1.65;margin:0 0 16px 0;padding-left:20px;">
+      <li>Verifica tu conexión de internet.</li>
+      <li>Cuenta con un espacio ordenado y libre de ruido.</li>
+      <li>Tu cámara debe estar encendida durante la entrevista.</li>
+      <li>Puedes realizar preguntas para resolver tus dudas.</li>
+    </ul>
+
+    <p style="font-size:14px;line-height:1.65;margin:0 0 16px 0;">¡Te deseamos los mejores éxitos!</p>
+
+    <p style="font-size:14px;line-height:1.65;margin:0 0 24px 0;">Saludos cordiales.</p>
+
+    <table cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+      <tr>
+        <td style="padding-right:16px;border-right:2px solid #1a2e4a;vertical-align:middle;">
+          <img src="cid:sig-logo" alt="Fractal" width="120" style="display:block;width:120px;height:auto;" />
+        </td>
+        <td style="padding-left:16px;vertical-align:top;">
+          <p style="margin:0 0 2px 0;font-size:13px;font-weight:700;color:#1a2e4a;" th:if="${accionUsuarioNombre != null and !#strings.isEmpty(accionUsuarioNombre)}" th:text="${accionUsuarioNombre}">—</p>
+          <p style="margin:0;font-size:14px;font-weight:700;color:#1a2e4a;">Reclutamiento y Selección</p>
+          <p style="margin:4px 0 0 0;font-size:12px;color:#374151;">Av. Andrés Reyes N° 524 Int. 3 – San Isidro</p>
+          <p style="margin:2px 0 0 0;font-size:12px;color:#374151;" th:if="${accionUsuarioTelefono != null and !#strings.isEmpty(accionUsuarioTelefono)}">Telf: +51 <span th:text="${accionUsuarioTelefono}">—</span></p>
+          <p style="margin:4px 0 0 0;font-size:12px;"><a href="http://www.fractal.com.pe" style="color:#1a2e4a;">www.fractal.com.pe</a></p>
+          <table cellpadding="0" cellspacing="0" border="0" style="margin-top:8px;">
+            <tr>
+              <td style="padding-right:6px;"><a href="https://www.linkedin.com/company/somosfractal/" target="_blank"><img src="cid:sig-linkedin" alt="LinkedIn" width="22" height="22" style="display:block;" /></a></td>
+              <td style="padding-right:18px;"><a href="https://www.youtube.com/channel/UC0JVZiMnljLPv1zbQNBPASw" target="_blank"><img src="cid:sig-youtube" alt="YouTube" width="22" height="22" style="display:block;" /></a></td>
+              <td style="padding-left:125px;"><img src="cid:sig-mosaic" alt="Fractal" width="50" height="70" style="display:block;" /></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+  </div>
+
+</body>
+
+</html>

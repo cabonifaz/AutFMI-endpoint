@@ -69,7 +69,8 @@ public class InterviewRepository {
           .addValue("USUARIO", baseRequest.getUsername())
           .addValue("ID_USUARIO", baseRequest.getIdUsuario())
           .addValue("ID_ROL", baseRequest.getIdRol())
-          .addValue("FUNCIONALIDADES", baseRequest.getFuncionalidades());
+          .addValue("FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("PERFIL", request.getPerfil());
 
       // Ejecución
       Map<String, Object> result = simpleJdbcCall.execute(params);
@@ -321,6 +322,7 @@ public class InterviewRepository {
             .notasIdiomas((String) cabecera.get("NOTAS_IDIOMAS"))
             .notasEducacion((String) cabecera.get("NOTAS_EDUCACION"))
             .motivoCancelacion((String) cabecera.get("MOTIVO_CANCELACION"))
+            .perfil((String) cabecera.get("PUESTO"))
             .clienteResumen(String.join(", ", uniqueClients))
             .files(files)
             .selectedRQs(rqs)
@@ -373,7 +375,8 @@ public class InterviewRepository {
           .addValue("LST_ID_RQS", lstIdReqJson)
           .addValue("LST_ENTREVISTADORES", request.getEntrevistadores())
           .addValue("LST_GRABACIONES", request.getGrabaciones())
-          .addValue("MOTIVO_CANCELACION", request.getMotivoCancelacion());
+          .addValue("MOTIVO_CANCELACION", request.getMotivoCancelacion())
+          .addValue("PERFIL", request.getPerfil());
 
       Map<String, Object> result = simpleJdbcCall.execute(params);
       List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");

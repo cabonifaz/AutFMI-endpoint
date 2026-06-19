@@ -31,4 +31,5 @@ public class InterviewUpdateRequest {
   private String entrevistadores;
   private String grabaciones;
   private String motivoCancelacion;
+  private String perfil;
 }

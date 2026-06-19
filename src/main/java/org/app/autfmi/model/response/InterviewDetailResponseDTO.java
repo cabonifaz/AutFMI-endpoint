@@ -37,6 +37,7 @@ public class InterviewDetailResponseDTO {
   private String notasIdiomas;
   private String notasEducacion;
   private String motivoCancelacion;
+  private String perfil;
 
   private String clienteResumen;
   private List<InterviewRqDTO> selectedRQs;

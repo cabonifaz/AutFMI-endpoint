@@ -422,20 +422,27 @@ public class MailService implements IMailService {
       subject = "¡Queremos conocerte! - FRACTAL SOLUCIONES TI";
     }
 
-    // Inline logo
+    // Inline images: header logo + signature assets
     Map<String, Resource> inlineResources = new LinkedHashMap<>();
-    try {
-      ClassPathResource logo = new ClassPathResource("assets/logo-fractal.png");
-      if (logo.exists()) {
-        inlineResources.put("logo-fractal", logo);
-      }
-    } catch (Exception e) {
-      logger.warn("Logo resource not available, sending without it: {}", e.getMessage());
-    }
+    addInlineResourceIfPresent(inlineResources, "sig-logo", "assets/fractal-transparente.png");
+    addInlineResourceIfPresent(inlineResources, "sig-mosaic", "assets/cubo-fractal.png");
+    addInlineResourceIfPresent(inlineResources, "sig-linkedin", "assets/linkedin.png");
+    addInlineResourceIfPresent(inlineResources, "sig-youtube", "assets/youtube.png");
 
     logger.info("Sending interview notification ({}) to: {} | CC: {} recipients", templateName, talentEmail.trim(), cleanCc.size());
     mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName, variables, inlineResources);
     logger.info("Interview notification dispatched.");
+  }
+
+  private void addInlineResourceIfPresent(Map<String, Resource> inlineResources, String cid, String classpath) {
+    try {
+      ClassPathResource resource = new ClassPathResource(classpath);
+      if (resource.exists()) {
+        inlineResources.put(cid, resource);
+      }
+    } catch (Exception e) {
+      logger.warn("Resource '{}' not available, sending without it: {}", classpath, e.getMessage());
+    }
   }
 
   private String formatEnglishDate(String fechaStr) {

@@ -117,26 +117,51 @@ public class InterviewService {
       InterviewUpdateRequest request,
       BaseRequest baseRequest) {
 
+    OperationResult<InterviewDetailResponseDTO> detail = this.interviewRepository.getInterviewById(request.getIdEntrevista(), baseRequest);
+
     OperationResult<Void> result = this.interviewRepository.updateInterview(request, baseRequest);
 
     if (result.getBaseResponse().getIdTipoMensaje() == 2 && request.getIdEntrevista() != null) {
       try {
-        OperationResult<InterviewDetailResponseDTO> detail =
-            this.interviewRepository.getInterviewById(request.getIdEntrevista(), baseRequest);
+        
         if (detail != null && detail.getData() != null) {
+
+          String oldDate = detail.getData().getFecha();
+          String oldTime = detail.getData().getHora();
           Integer talentId = detail.getData().getIdTalento();
+
           if (talentId != null) {
+
             var talentResponse = this.talentRepository.getTalentById(talentId, baseRequest);
+
             if (talentResponse instanceof TalentResponse tr && tr.getTalento() != null) {
+
               TalentDTO talent = tr.getTalento();
+
               if (talent.getEmail() != null && !talent.getEmail().trim().isEmpty()) {
-                String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno()
-                    + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
+
+                String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno() + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
                 UserContactInfoDTO actionUserInfo = this.userRepository.getUserContactInfo(baseRequest);
-                this.mailService.sendInterviewUnifiedNotification(
-                    detail.getData(), talent.getEmail().trim(), talentFullName.trim(), baseRequest, actionUserInfo, "Actualización de Entrevista");
+
+                if (!request.getFecha().equals(oldDate) || !request.getHora().equals(oldTime)) {
+
+                  detail = this.interviewRepository.getInterviewById(request.getIdEntrevista(), baseRequest);
+
+                  this.mailService.sendInterviewUnifiedNotification(
+                    detail.getData(), 
+                    talent.getEmail().trim(), 
+                    talentFullName.trim(), 
+                    baseRequest, 
+                    actionUserInfo, 
+                    "Actualización de Entrevista"
+                  );
+
+                }
+
               } else {
+
                 logger.info("Talent {} has no email registered, skipping interview notification on update", talentId);
+              
               }
             }
           }

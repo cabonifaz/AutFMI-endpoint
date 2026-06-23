@@ -384,14 +384,23 @@ public class MailService implements IMailService {
         ? perfilRaw.substring(perfilRaw.indexOf(" - ") + 3)
         : perfilRaw;
 
+    String allInterviewers = "";
+
     // All registered interviewer names, comma separated
     List<String> interviewerNames = new ArrayList<>();
-    if (detail.getEntrevistadores() != null) {
+    if (detail.getEntrevistadores() != null && !detail.getEntrevistadores().isEmpty()) {
+
       detail.getEntrevistadores().stream()
           .filter(e -> e.fullname() != null && !e.fullname().trim().isEmpty())
           .forEach(e -> interviewerNames.add(e.fullname().trim()));
-    }
-    String allInterviewers = String.join(", ", interviewerNames);
+      
+      allInterviewers = String.join(", ", interviewerNames);
+
+    } else { 
+
+      allInterviewers = "Equipo de seleccion";
+
+    } 
 
     String actionUserName = actionUserInfo != null && actionUserInfo.fullName() != null && !actionUserInfo.fullName().trim().isEmpty()
         ? actionUserInfo.fullName().trim()

@@ -1,11 +1,7 @@
 spring:
   datasource:
     preprod:
-<<<<<<< HEAD
       url: ${DB_URL}
-=======
-      url: jdbc:sqlserver://161.132.217.169:1433;database=bdt_preprod;encrypt=true;trustServerCertificate=true
->>>>>>> staging-aws
       username: ${DB_USERNAME}
       password: ${DB_PASSWORD}
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

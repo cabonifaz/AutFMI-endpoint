@@ -1,7 +1,7 @@
 spring:
   datasource:
     prod:
-      url: jdbc:sqlserver::1433;database=;encrypt=true;trustServerCertificate=true
+      url: ${DB_URL}
       username:
       password:
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

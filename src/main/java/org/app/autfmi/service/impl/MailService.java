@@ -367,12 +367,15 @@ public class MailService implements IMailService {
     List<String> ccList = new ArrayList<>();
     if (detail.getEntrevistadores() != null) {
       detail.getEntrevistadores().stream()
-          .filter(e -> e.email() != null && !e.email().trim().isEmpty())
+          .filter(e -> e.email() != null && !e.email().trim().isEmpty() && e.notificacion())
           .forEach(e -> ccList.add(e.email().trim()));
     }
     if (actionUserInfo != null && actionUserInfo.email() != null && !actionUserInfo.email().trim().isEmpty()) {
       ccList.add(actionUserInfo.email().trim());
     }
+
+    System.out.println(ccList); 
+
     List<String> cleanCc = deduplicateEmailList(ccList);
     cleanCc.removeIf(cc -> cc.equalsIgnoreCase(talentEmail.trim()));
 

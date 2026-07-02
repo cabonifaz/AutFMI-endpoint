@@ -25,8 +25,15 @@ public class RequirementDTO {
     private String fechaVencimiento;
     private Integer idModalidad;
     private String modalidad;
+    private String modalidadFact;
     private List<RequirementVacanteDTO> lstRqVacantes;
     private List<RequirementTalentDTO> lstRqTalento;
     private List<RequirementFileDTO> lstRqArchivo;
     private List<ClientContactItemDTO> lstRqContactos;
+
+    // Duracion de contrato
+    private Integer idDuracionContrato;
+    private BigDecimal duracionContrato;
+
+    private List<RQFacturacionDTO> lstRqFacturacion;
 }

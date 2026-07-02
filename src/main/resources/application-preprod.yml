@@ -1,9 +1,9 @@
 spring:
   datasource:
     preprod:
-      url: jdbc:sqlserver://161.132.217.169:1433;database=bdt_preprod;encrypt=true;trustServerCertificate=true
-      username: autfmiPreprod
-      password: Fractal$Preprod123
+      url: ${DB_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     database-platform: org.hibernate.dialect.SQLServerDialect
@@ -17,8 +17,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 465
-    username: fractalambiente@gmail.com
-    password: zgozhroaqlhohpdt
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:

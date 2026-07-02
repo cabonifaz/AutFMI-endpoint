@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 
 @Component
 public class Common {
@@ -52,4 +53,31 @@ public class Common {
         LocalDate parsedDate = LocalDate.parse(date, inputFormatter);
         return parsedDate.format(outputFormatter);
     }
+
+    public static String getCurrentDateFormatted() {
+        LocalDate currentDate = LocalDate.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+        return currentDate.format(formatter);
+    }
+
+    /**
+     * Returns the actual year
+     */
+    public static int getCurrentYear() {
+        return LocalDate.now().getYear();
+    }
+
+    public static String getMonthText() {
+
+        LocalDate now = LocalDate.now();
+
+        Locale LOCALE_ES = new Locale("es", "ES");
+
+        String month = now.getMonth()
+                .getDisplayName(java.time.format.TextStyle.FULL, LOCALE_ES)
+                .toLowerCase();
+
+        return month;
+    }
+
 }

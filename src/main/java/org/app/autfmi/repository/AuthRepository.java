@@ -2,10 +2,11 @@ package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
-import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.AuthResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
+import org.app.autfmi.util.JwtHelper;
 import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,12 @@ import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
+@SuppressWarnings("unchecked")
 public class AuthRepository {
     private final JdbcTemplate jdbcTemplate;
+    private final JwtHelper jwt;
 
-    public BaseResponse verifyCredentials(String username, String password) {
+    public AuthResponse verifyCredentials(String username, String password) {
 
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_VERIFY_CREDENTIALS");
@@ -33,8 +36,10 @@ public class AuthRepository {
             Map<String, Object> row = resultSet.get(0);
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
             String mensaje = (String) row.get("MENSAJE");
+            UserDTO userDto = mapToUserDTO(result);
+            String token = jwt.generateToken(userDto);
 
-            return new BaseResponse(idTipoMensaje, mensaje);
+            return new AuthResponse(idTipoMensaje, mensaje, token);
         } else {
             return null;
         }
@@ -58,7 +63,7 @@ public class AuthRepository {
             Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
 
             if (idTipoMensaje == 2) {
-                return  processUserData(data);
+                return processUserData(data);
             }
         }
         return null;
@@ -84,14 +89,13 @@ public class AuthRepository {
             }
 
             return new UserDTO(
-                    (Integer) userData.get("ID_USUARIO"),   // From result-set-2
+                    (Integer) userData.get("ID_USUARIO"), // From result-set-2
                     (Integer) userData.get("ID_EMPRESA"),
                     (String) userData.get("USUARIO"),
                     (String) userData.get("NOMBRES"),
                     (String) userData.get("APELLIDOS"),
                     idRoles,
-                    nameRoles
-            );
+                    nameRoles);
         }
         return null;
     }

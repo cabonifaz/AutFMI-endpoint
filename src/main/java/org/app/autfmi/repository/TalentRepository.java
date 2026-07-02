@@ -59,7 +59,7 @@ public class TalentRepository {
     }
 
     public BaseResponse getTalentById(Integer idTalento, BaseRequest baseRequest) {
-        // GET FROM BT_TALENTO
+        // COMES FROM BT_TALENTO TABLE
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_USUARIOS_TALENTOS_SEL");
 
@@ -94,10 +94,9 @@ public class TalentRepository {
     public BaseResponse saveTalent(TalentRequest talent, BaseRequest baseRequest) {
         // UPDATE BT_TALENTO, REQ_TALENTO -> CONFIRMADO 0, INGRESO 0
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-                .withProcedureName("SP_USUARIOS_TALENTOS_INS");
+                .withProcedureName("SP_USUARIOS_TALENTOS_UPD");
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
                 .addValue("ID_TALENTO", talent.getIdTalento())
                 .addValue("NOMBRES", talent.getNombres())
                 .addValue("APELLIDO_PATERNO", talent.getApellidoPaterno())
@@ -108,12 +107,11 @@ public class TalentRepository {
                 .addValue("TIEMPO_CONTRATO", talent.getTiempoContrato())
                 .addValue("ID_TIPO_TIEMPO_CONTRATO", talent.getIdTiempoContrato())
                 .addValue("FCH_INICIO_LABORES", talent.getFechaInicioLabores())
-                .addValue("CARGO", talent.getCargo())
+                .addValue("CARGO", "")
                 .addValue("REMUNERACION", talent.getRemuneracion())
                 .addValue("ID_TIPO_MONEDA", talent.getIdMoneda())
                 .addValue("ID_MODALIDAD", talent.getIdModalidad())
                 .addValue("UBICACION", talent.getUbicacion())
-                .addValue("TIENE_EQUIPO", talent.isTieneEquipo())
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario());

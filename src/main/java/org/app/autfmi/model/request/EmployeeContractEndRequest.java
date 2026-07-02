@@ -15,4 +15,6 @@ public class EmployeeContractEndRequest {
     private Integer idCliente;
     private String cliente;
     private String fchCese;
+    private Integer contractId;
+    private String fchDevolucionEquipo;
 }

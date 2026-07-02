@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,4 +24,13 @@ public class RequirementTalentDTO {
     private String perfil;
     private boolean confirmado;
     private String tooltip;
+    private Integer tieneEquipo;
+    private String ubicacion;
+    private Integer idModalidadContrato;
+    private String fchInicioContrato;
+    private String fchTerminoContrato;
+    private BigDecimal montoBase;
+    private Integer idCvFile;
+    private Integer idCVEs;
+    private Integer idCVEn;
 }

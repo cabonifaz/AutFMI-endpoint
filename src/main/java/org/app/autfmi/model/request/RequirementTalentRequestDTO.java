@@ -3,6 +3,7 @@ package org.app.autfmi.model.request;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.app.autfmi.model.dto.SolicitudEquipoDTO;
 
 import java.math.BigDecimal;
 
@@ -28,6 +29,8 @@ public class RequirementTalentRequestDTO {
     private String cliente;
     @JsonProperty()
     private Integer idArea;
+    @JsonProperty()
+    private String area;
     @JsonProperty()
     private String cargo;
     @JsonProperty()
@@ -59,7 +62,16 @@ public class RequirementTalentRequestDTO {
     @JsonProperty()
     private BigDecimal montoMovilidad;
     @JsonProperty()
+    private BigDecimal montoMensual;
+    @JsonProperty()
     private BigDecimal montoTrimestral;
     @JsonProperty()
     private BigDecimal montoSemestral;
+
+    @JsonProperty()
+    private SolicitudEquipoDTO solicitudEquipo;
+
+    // ID_ESTADO_REGISTRO PARA ACTUALIZACIONES
+    private Integer idEstadoRegistro;
+
 }

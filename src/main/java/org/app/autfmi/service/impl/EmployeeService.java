@@ -3,6 +3,7 @@ package org.app.autfmi.service.impl;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
+
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
 import org.app.autfmi.model.dto.UserDTO;
@@ -10,343 +11,455 @@ import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FilePDFResponse;
-import org.app.autfmi.model.response.SolicitudEquipoResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
+import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
 import org.app.autfmi.util.PDFUtils;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class EmployeeService implements IEmployeeService {
-    private final EmployeeRepository employeeRepository;
-    private final HistoryRepository historyRepository;
-    private final PDFUtils pdfUtils;
-    private final JwtHelper jwt;
 
-    @Override
-    public BaseResponse getEmployee(Integer idTalento) {
-        return employeeRepository.getEmployee(idTalento);
+  @Autowired
+  private final IMailService mailService;
+  private final EmployeeRepository employeeRepository;
+  private final HistoryRepository historyRepository;
+  private final PDFUtils pdfUtils;
+  private final JwtHelper jwt;
+  private final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
+  private final ReportPDFBuilder reportPDFBuilder;
+
+  @Override
+  public BaseResponse getEmployee(Integer idTalento) {
+    return employeeRepository.getEmployee(idTalento);
+  }
+
+  @Override
+  public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) throws MessagingException {
+    this.logger.info("Processing employee entry");
+    UserDTO user = jwt.decodeToken(token);
+    String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
+    BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+    EntryReport report = historyRepository.registerEntry(baseRequest, request);
+
+    if (report == null)
+      throw new IllegalArgumentException("El reporte no puede ser nulo");
+
+    var messageId = report.getResponse().getIdTipoMensaje();
+
+    if (messageId != 2)
+      return report.getResponse();
+
+    // Build PDF files
+
+    var builder = this.reportPDFBuilder
+        .forIngreso(report)
+        .withCreateUser();
+
+    String correoGestor = report.getCorreoGestor();
+
+    if (correoGestor == null)
+      throw new IllegalArgumentException("El correo del gestor no puede ser nulo");
+
+    pdfUtils.enviarCorreoConPDF(
+        builder.build(),
+        correoGestor,
+        new ArrayList<>(),
+        "Ingreso de empleado",
+        "Formulario de nuevo ingreso de empleado.");
+
+    return report.getResponse();
+  }
+
+  /**
+   * Saves employee movement and sends notification email with the movement
+   * report.
+   * 
+   * @param token   JWT token for authentication
+   * @param request EmployeeMovementRequest containing movement details
+   * @return BaseResponse indicating the result of the operation
+   */
+  @Override
+  public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
+
+    OperationResult<Integer> operationResult = historyRepository.registerMovement(baseRequest, request);
+    BaseResponse baseResponse = operationResult.getBaseResponse();
+    Integer operationId = operationResult.getData();
+
+    if (baseResponse.getIdTipoMensaje() != 2)
+      return baseResponse;
+
+    if (baseResponse.getIdTipoMensaje() == 2 && operationId == null)
+      return new BaseResponse(2,
+          "Movimiento confirmado, pero no se pudo generar el reporte por falta de ID de movimiento",
+          "No se obtuvo ID de operación");
+
+    // Obtener reporte de movimiento usando el ID de la operación
+    this.logger.info("Obteniendo reporte de movimiento para ID de operación: {}", operationId);
+    Integer reportType = Constante.TIPO_REPORTE_MOVIMIENTO;
+    Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
+
+    MovementReport report = (MovementReport) historyRepository.getHistoryReport(
+        baseRequest,
+        talentId,
+        reportType,
+        operationId,
+        false);
+
+    this.mailService.sendMovementReportNotification(report);
+
+    return baseResponse;
+  }
+
+  /**
+   * Saves employee contract termination and sends notification email with the
+   * termination report.
+   * 
+   * @param token   JWT token for authentication
+   * @param request EmployeeContractEndRequest containing termination details
+   * @return BaseResponse indicating the result of the operation
+   */
+  @Override
+  public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
+
+    OperationResult<Integer> operationResult = historyRepository.registerContractTermination(baseRequest,
+        request);
+    BaseResponse response = operationResult.getBaseResponse();
+    Integer operationId = operationResult.getData();
+
+    if (response.getIdTipoMensaje() != 2)
+      return response;
+
+    if (response.getIdTipoMensaje() == 2 && operationId == null) {
+      String msg = "Cese confirmado, pero no se pudo generar el reporte por falta de ID de cese";
+      String detail = "No se obtuvo ID de operación";
+      this.logger.error("No se pudo generar  el reporte de cese: {} - {}", msg, detail);
+      return new BaseResponse(2, msg, detail);
     }
 
-    @Override
-    public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) throws MessagingException {
-        UserDTO user = jwt.decodeToken(token);
-        String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
-        BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-        EntryReport report = historyRepository.registerEntry(baseRequest, request);
+    // Obtener reporte de cese usando el ID de la operación
+    this.logger.info("Obteniendo reporte de cese para ID de operación: {}", operationId);
+    Integer reportType = Constante.TIPO_REPORTE_CESE;
+    Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
+    CeseReport report = (CeseReport) historyRepository.getHistoryReport(baseRequest, talentId, reportType,
+        operationId, false);
 
-        if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GT-12 Formulario de Ingreso",
-                    pdfUtils.replaceEntryRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO),report),
-                    null
-            );
+    this.logger.info("Generando y enviando correo con reporte de cese");
+    this.mailService.sendCeseReportNotification(report);
+    return response;
+  }
 
-            SolicitudData data = new SolicitudData();
+  @Override
+  public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws SQLServerException {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
+    OperationResult<Integer> response = employeeRepository.insertSolicitudEquipo(baseRequest,
+        request);
 
-            data.setNombres(report.getNombres());
-            data.setApellidos(report.getApellidos());
-            data.setArea(report.getUnidad());
-            data.setFechaSolicitud(report.getFechaInicioContrato());
+    if (response.getBaseResponse().getIdTipoMensaje() != 2)
+      return response.getBaseResponse();
 
-            data.setNombresCreacion(report.getNombres());
-            data.setApellidosCreacion(report.getApellidos());
-            data.setNombreUsuarioCreacion(report.getUsernameEmpleado());
-            data.setCorreoCreacion(report.getEmailEmpleado());
-            data.setAreaCreacion(report.getUnidad());
-            data.setFirmante(report.getFirmante());
+    if (response.getData() == null)
+      return new BaseResponse(2,
+          "Se completó el registro de la solicitud, pero no se pudo obtener el ID de la solicitud");
 
-            FileDTO fileSolicitud = new FileDTO(
-                    "FT-GS-01 Solicitud de Creación de Usuario",
-                    pdfUtils.replaceSolicitudPDFValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
-                    null
-            );
+    // Obtener detalles de la solicitud para generar el reporte
+    Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
+    Integer operationId = response.getData();
 
-            List<FileDTO> lstfiles = new ArrayList<>();
-            lstfiles.add(fileFormulario);
-            lstfiles.add(fileSolicitud);
+    SolicitudEquipoReport rp = historyRepository.getSolicitudEquipoReport(baseRequest,
+        talentId, operationId, false);
 
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    report.getCorreoGestor(),
-                    "Ingreso de empleado",
-                    "Formulario de nuevo ingreso de empleado."
-            );
-        }
+    // Enviar correo con el reporte generado
+    this.mailService.sendEquipmentRequestNotification(rp);
 
-        return report.getResponse();
+    return response.getBaseResponse();
+  }
+
+  @Override
+  public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento) {
+    this.logger.info("Processing getLastHistory");
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+
+    if (idTipoHistorial == null)
+      throw new IllegalArgumentException("El tipo de historial no puede ser nulo");
+
+    if (idTalento == null)
+      throw new IllegalArgumentException("El ID del talento no puede ser nulo");
+
+    IReport report = historyRepository.getHistoryReport(baseRequest, idTalento,
+        idTipoHistorial, null, true);
+    BaseResponse bs = report.getResponse();
+    FilePDFResponse response = new FilePDFResponse();
+    response.setBaseResponse(bs);
+
+    if (bs.getIdTipoMensaje() != 2)
+      return response;
+
+    PDFUtils pdfUtils = new PDFUtils();
+
+    // Reporte de Ingreso
+    if (report instanceof EntryReport entry) {
+
+      var files = this.reportPDFBuilder
+          .forIngreso(entry)
+          .withFormulario()
+          .withCreateUser()
+          .build();
+
+      List<FilePDFDTO> files64 = files.stream().map(f -> {
+        String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+        return new FilePDFDTO(f.nombreArchivo, base64);
+      }).toList();
+
+      response.setLstArchivos(files64);
+      return response;
+
     }
 
-    @Override
-    public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request) throws MessagingException {
-        UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
-        MovementReport report = historyRepository.registerMovement(baseRequest, request);
+    // Reporte de movimiento
+    else if (report instanceof MovementReport movement) {
 
-        if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            List<FileDTO> lstfiles = new ArrayList<>();
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GT-12 Formulario de Movimiento",
-                    pdfUtils.replaceMovementRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), report),
-                    null
-            );
-            lstfiles.add(fileFormulario);
+      var files = this.reportPDFBuilder
+          .forMovimiento(movement)
+          .withFormulario()
+          .build();
 
-//            FileDTO fileSolicitud = new FileDTO(
-//                    "FT-GS-01 Solicitud de Modificación de Usuario",
-//                    pdfUtils.replaceMovementRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), report),
-//                    null
-//            );
-//            lstfiles.add(fileSolicitud);
+      var files64 = files.stream().map(p -> {
+        String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+        return new FilePDFDTO(p.nombreArchivo, base64);
+      }).toList();
 
+      response.setLstArchivos(files64);
+      return response;
 
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    report.getCorreoGestor(),
-                    "Movimiento de empleado",
-                    "Formulario de movimiento de empleado."
-            );
-        }
-
-        return report.getResponse();
     }
+    // Reporte de cese
+    else if (report instanceof CeseReport cese) {
 
-    @Override
-    public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) throws MessagingException {
-        UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
-        CeseReport report = historyRepository.registerContractTermination(baseRequest, request);
+      var files = this.reportPDFBuilder
+          .forCese(cese)
+          .withFormularioCese()
+          .withDeactivateRequest()
+          .build();
 
-        if (report != null && report.getResponse().getIdTipoMensaje() == 2) {
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GT-12 Formulario de Cese",
-                    pdfUtils.replaceOutRequestValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), report),
-                    null
-            );
+      var files64 = files.stream().map(f -> {
+        var base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+        return new FilePDFDTO(f.nombreArchivo, base64);
+      }).toList();
 
-            SolicitudData data = new SolicitudData();
-            data.setNombres(report.getNombres());
-            data.setApellidos(report.getApellidos());
-            data.setArea(report.getUnidad());
-            data.setFechaSolicitud(report.getFechaHistorial());
-            data.setNombresCese(report.getNombres());
-            data.setApellidosCese(report.getApellidos());
-            data.setUsuarioCese(report.getUsernameEmpleado());
-            data.setCorreoCese(report.getEmailEmpleado());
-            data.setMotivoCese(report.getMotivo());
-            data.setFirmante(report.getFirmante());
+      response.setLstArchivos(files64);
+      return response;
 
-            FileDTO fileSolicitud = new FileDTO(
-                    "FT-GS-01 Solicitud de Desactivación de Usuario",
-                    pdfUtils.replaceSolicitudPDFValues(pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
-                    null
-            );
-
-            List<FileDTO> lstfiles = new ArrayList<>();
-            lstfiles.add(fileFormulario);
-            lstfiles.add(fileSolicitud);
-
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    report.getCorreoGestor(),
-                    "Cese de empleado",
-                    "Formulario de cese del empleado."
-            );
-        }
-
-        return report.getResponse();
+    } else if (report instanceof BaseReport baseReport) {
+      response.setBaseResponse(baseReport.getResponse());
     }
+    response.setLstArchivos(new ArrayList<>());
+    return response;
+  }
 
-    @Override
-    public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws MessagingException, SQLServerException {
-        UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
-        SolicitudEquipoResponse solicitudEquipoResponse = employeeRepository.solicitudEquipo(baseRequest, request);
+  @Override
+  public FilePDFResponse getLastSolicitudEquipo(String token, Integer talentId)
+      throws MessagingException {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
 
-        if (solicitudEquipoResponse != null && solicitudEquipoResponse.getBaseResponse().getIdTipoMensaje() == 2) {
-            List<FileDTO> lstfiles = new ArrayList<>();
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
+    FilePDFResponse response = new FilePDFResponse();
 
-            // map request to report
-            SolicitudEquipoReport report = mapToSolicitudEquipoReport(request, solicitudEquipoResponse);
+    if (talentId == null)
+      throw new IllegalArgumentException("EL ID del talento no puede ser nulo");
 
-            FileDTO fileFormulario = new FileDTO(
-                    "FT-GS-03 Formulario de Requerimiento de Software y Hardware",
-                    pdfUtils.replaceSolicitudEquipoPDFValues(template, report),
-                    null
-            );
+    this.logger.info("Fetching last EquipoSolicitud para talento: {}", talentId);
+    SolicitudEquipoReport report = historyRepository
+        .getSolicitudEquipoReport(
+            baseRequest,
+            talentId,
+            null, true);
 
-            lstfiles.add(fileFormulario);
+    this.logger.info("Report: {}", report);
 
-            pdfUtils.enviarCorreoConPDF(
-                    lstfiles,
-                    solicitudEquipoResponse.getCorreoGestor(),
-                    "Requerimiento de Software y Hardware",
-                    "Formulario Requerimiento de Software y Hardware."
-            );
-        }
+    BaseResponse rs = report.getBaseResponse();
+    response.setBaseResponse(rs);
 
-        return solicitudEquipoResponse.getBaseResponse();
+    if (rs.getIdTipoMensaje() != 2)
+      return response;
+
+    // Mapear la respuesta
+    PDFUtils pdfUtils = new PDFUtils();
+
+    List<FileDTO> files = this.reportPDFBuilder
+        .fEquipoReport(report)
+        .withFormulario()
+        .build();
+
+    List<FilePDFDTO> file64 = files.stream().map(p -> {
+      String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+      return new FilePDFDTO(p.nombreArchivo, base64);
+    }).toList();
+
+    this.logger.info("Files in base64: {}", file64.size());
+
+    response.setLstArchivos(file64);
+
+    return response;
+  }
+
+  @Override
+  public FilePDFResponse getRequestEquipement(String token, Integer idSolicitud, Integer talentId)
+      throws MessagingException {
+    UserDTO user = jwt.decodeToken(token);
+
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+
+    if (idSolicitud == null)
+      throw new IllegalArgumentException("El ID de la solicitud no puede ser nulo");
+
+    if (talentId == null)
+      throw new IllegalArgumentException("El ID del talento no puede ser nulo");
+
+    FilePDFResponse response = new FilePDFResponse();
+
+    this.logger.info("Solicitudes de equipo para talento: {}", idSolicitud, talentId);
+    SolicitudEquipoReport report = historyRepository
+        .getSolicitudEquipoReport(
+            baseRequest,
+            talentId,
+            idSolicitud,
+            false);
+    this.logger.info("Report: {}", report);
+
+    BaseResponse rs = report.getBaseResponse();
+    response.setBaseResponse(rs);
+
+    if (rs.getIdTipoMensaje() != 2)
+      return response;
+
+    // Mapear la respuesta
+    PDFUtils pdfUtils = new PDFUtils();
+
+    List<FileDTO> files = this.reportPDFBuilder
+        .fEquipoReport(report)
+        .withFormulario()
+        .build();
+
+    List<FilePDFDTO> file64 = files.stream().map(p -> {
+      String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+      return new FilePDFDTO(p.nombreArchivo, base64);
+    }).toList();
+
+    this.logger.info("Files in base64: {}", file64.size());
+
+    response.setLstArchivos(file64);
+
+    return response;
+  }
+
+  @Override
+  public BaseResponse findAllEmployees(String token, Integer page, String searchTerm) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
+    return this.employeeRepository.findAllEmployees(baseRequest, page, searchTerm);
+  }
+
+  @Override
+  public BaseResponse getEmployeeFullHistory(String authToken, Integer talentId) {
+    UserDTO user = jwt.decodeToken(authToken);
+    BaseRequest baseRequest = Common.createBaseRequest(user, "");
+    return employeeRepository.getEmployeeFullHistory(baseRequest, talentId);
+  }
+
+  @Override
+  public FilePDFResponse getHistory(String token, Integer movementTypeId, Integer movementId, Integer talentId) {
+    this.logger.info("Processing getLastHistory");
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+
+    if (movementTypeId == null)
+      throw new IllegalArgumentException("El tipo de historial no puede ser nulo");
+
+    if (talentId == null)
+      throw new IllegalArgumentException("El ID del talento no puede ser nulo");
+
+    IReport report = historyRepository.getHistoryReport(baseRequest, talentId,
+        movementTypeId, movementId, false);
+    BaseResponse bs = report.getResponse();
+    FilePDFResponse response = new FilePDFResponse();
+    response.setBaseResponse(bs);
+
+    if (bs.getIdTipoMensaje() != 2)
+      return response;
+
+    PDFUtils pdfUtils = new PDFUtils();
+    var builder = this.reportPDFBuilder;
+
+    if (report instanceof EntryReport entry) {
+
+      List<FileDTO> files = builder
+          .forIngreso(entry)
+          .withFormulario()
+          .withCreateUser()
+          .build();
+
+      List<FilePDFDTO> files64 = files.stream().map(f -> {
+        String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+        return new FilePDFDTO(f.nombreArchivo, base64);
+      }).toList();
+
+      response.setLstArchivos(files64);
+      return response;
+
+    } else if (report instanceof MovementReport movement) {
+
+      List<FileDTO> files = builder.forMovimiento(movement)
+          .withFormulario()
+          .build();
+
+      List<FilePDFDTO> files64 = files.stream().map(p -> {
+        String base64 = pdfUtils.filePDFToBase64(p.byteArchivo);
+        return new FilePDFDTO(p.nombreArchivo, base64);
+      }).toList();
+
+      response.setLstArchivos(files64);
+      return response;
+
+    } else if (report instanceof CeseReport cese) {
+
+      List<FileDTO> files = builder.forCese(cese)
+          .withFormularioCese()
+          .withDeactivateRequest()
+          .build();
+
+      List<FilePDFDTO> files64 = files.stream().map(f -> {
+        String base64 = pdfUtils.filePDFToBase64(f.byteArchivo);
+        return new FilePDFDTO(f.nombreArchivo, base64);
+      }).toList();
+
+      response.setLstArchivos(files64);
+      return response;
+
+    } else if (report instanceof BaseReport baseReport) {
+      response.setBaseResponse(baseReport.getResponse());
     }
+    response.setLstArchivos(new ArrayList<>());
+    return response;
+  }
 
-    private static SolicitudEquipoReport mapToSolicitudEquipoReport(SolicitudEquipoRequest request, SolicitudEquipoResponse solicitudEquipoResponse) {
-        SolicitudEquipoReport report = new SolicitudEquipoReport();
-        // general
-        report.setBaseResponse(solicitudEquipoResponse.getBaseResponse());
-        // datos gestor
-        report.setCorreoGestor(solicitudEquipoResponse.getCorreoGestor());
-        report.setNombreApellidoGestor(solicitudEquipoResponse.getNombres() + ' ' + solicitudEquipoResponse.getApellidos());
-        // datos reporte
-        report.setNombreEmpleado(request.getNombreEmpleado());
-        report.setApellidosEmpleado(request.getApellidoPaternoEmpleado() + ' ' + request.getApellidoMaternoEmpleado());
-        report.setCliente(request.getCliente());
-        report.setArea(request.getArea());
-        report.setPuesto(request.getPuesto());
-        report.setFechaSolicitud(request.getFechaSolicitud());
-        report.setFechaEntrega(request.getFechaEntrega());
-        report.setIdTipoEquipo(request.getIdTipoEquipo());
-        report.setProcesador(request.getProcesador());
-        report.setRam(request.getRam());
-        report.setHd(request.getHd());
-        report.setMarca(request.getMarca());
-        report.setIdAnexo(request.getIdAnexo());
-        report.setCelular(request.getCelular());
-        report.setInternetMovil(request.getInternetMovil());
-        report.setAccesorios(request.getAccesorios());
-        report.setLstSoftware(request.getLstSoftware());
-        return report;
-    }
-
-    @Override
-    public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento) {
-        UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-        IReport report = historyRepository.getLastEmployeeHistoryRegister(baseRequest, idTipoHistorial, idTalento);
-
-        FilePDFResponse response = new FilePDFResponse();
-        List<FilePDFDTO> lstfiles = new ArrayList<>();
-
-        if (report instanceof EntryReport entry) {
-            String formularioFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceEntryRequestValues(
-                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), entry),
-                            "FT-GT-12 Formulario de Ingreso"
-                    )
-            );
-
-            SolicitudData data = new SolicitudData();
-            data.setNombres(entry.getNombres());
-            data.setApellidos(entry.getApellidos());
-            data.setArea(entry.getUnidad());
-            data.setFechaSolicitud(entry.getFechaHistorial());
-            data.setNombresCreacion(entry.getNombres());
-            data.setApellidosCreacion(entry.getApellidos());
-            data.setNombreUsuarioCreacion(entry.getUsernameEmpleado());
-            data.setCorreoCreacion(entry.getEmailEmpleado());
-            data.setAreaCreacion(entry.getUnidad());
-            data.setFirmante(entry.getFirmante());
-
-            String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceSolicitudPDFValues(
-                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
-                            "FT-GS-01 Solicitud de Creación de Usuario"
-                    )
-            );
-
-            lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Ingreso", formularioFileB64));
-            lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Creación de Usuario", solicitudFileB64));
-            response.setBaseResponse(entry.getResponse());
-
-        } else if (report instanceof MovementReport movement) {
-            String formularioFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceMovementRequestValues(
-                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), movement),
-                            "FT-GT-12 Formulario de Movimiento"
-                    )
-            );
-
-            lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Movimiento", formularioFileB64));
-            response.setBaseResponse(movement.getResponse());
-
-        } else if (report instanceof CeseReport cese) {
-            String formularioFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceOutRequestValues(
-                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.FORMULARIO), cese),
-                            "FT-GT-12 Formulario de Cese"
-                    )
-            );
-
-            SolicitudData data = new SolicitudData();
-            data.setNombres(cese.getNombres());
-            data.setApellidos(cese.getApellidos());
-            data.setArea(cese.getUnidad());
-            data.setFechaSolicitud(cese.getFechaHistorial());
-            data.setNombresCese(cese.getNombres());
-            data.setApellidosCese(cese.getApellidos());
-            data.setUsuarioCese(cese.getUsernameEmpleado());
-            data.setCorreoCese(cese.getEmailEmpleado());
-            data.setMotivoCese(cese.getMotivo());
-            data.setFirmante(cese.getFirmante());
-
-            String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF(
-                            pdfUtils.replaceSolicitudPDFValues(
-                                    pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD), data),
-                            "FT-GS-01 Solicitud de Desactivación de Usuario"
-                    )
-            );
-
-            lstfiles.add(new FilePDFDTO("FT-GT-12 Formulario de Cese", formularioFileB64));
-            lstfiles.add(new FilePDFDTO("FT-GS-01 Solicitud de Desactivación de Usuario", solicitudFileB64));
-            response.setBaseResponse(cese.getResponse());
-
-        } else if (report instanceof BaseReport baseReport) {
-            response.setBaseResponse(baseReport.getResponse());
-        }
-
-        response.setLstArchivos(lstfiles);
-        return response;
-    }
-
-    @Override
-    public FilePDFResponse getLastSolicitudEquipo(String token, Integer idSolicitudEquipo) throws MessagingException {
-        UserDTO user = jwt.decodeToken(token);
-        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
-        SolicitudEquipoReport report = historyRepository.getLastSolicitudEquipo(baseRequest, idSolicitudEquipo);
-        
-        FilePDFResponse response = new FilePDFResponse();
-        List<FilePDFDTO> lstfiles = new ArrayList<>();
-
-        if (report != null && report.getBaseResponse().getIdTipoMensaje() == 2) {
-            response.setBaseResponse(report.getBaseResponse());
-            String template = pdfUtils.getHtmlTemplate(PDFUtils.TemplateType.SOLICITUD_EQUIPO);
-            String fileName = "FT-GS-03 Formulario de Requerimiento de Software y Hardware";
-
-            String solicitudFileB64 = pdfUtils.filePDFToBase64(
-                    pdfUtils.crearPDF( pdfUtils.replaceSolicitudEquipoPDFValues(template, report), fileName )
-            );
-
-            lstfiles.add(new FilePDFDTO(fileName, solicitudFileB64));
-
-            response.setLstArchivos(lstfiles);
-        } else {
-            BaseResponse baseResponse = new BaseResponse(3, "Error al obtener solicitud");
-            response.setBaseResponse(baseResponse);
-            response.setLstArchivos(Collections.emptyList());
-        }
-
-        return response;
-    }
 }

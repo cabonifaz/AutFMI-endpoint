@@ -17,7 +17,7 @@ public class TalentRequest {
     private Integer tiempoContrato;
     private Integer idTiempoContrato;
     private String fechaInicioLabores;
-    private String cargo;
+//    private String cargo;
     private Double remuneracion;
     private Integer idMoneda;
     private Integer idModalidad;

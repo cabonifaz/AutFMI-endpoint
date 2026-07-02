@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import java.util.List;
 
+import org.app.autfmi.model.dto.RQFacturacionDTO;
+
 @Data
 @AllArgsConstructor
 public class RequirementRequest {
@@ -26,4 +28,14 @@ public class RequirementRequest {
     private List<VacanteRequirement> lstVacantes;
     @JsonProperty()
     private List<FileRequest> lstArchivos;
+    private String idModalidadFact;
+    private List<VacanteSkill> lstVacanteSkills;
+    private List<VacanteCarreraRequest> lstCarreras;
+
+    // Duracion de contrato
+    private Integer idDuracionContrato;
+    private Double duracionContrato;
+
+    // Facturacion asociada a la modalidad de contrato
+    private List<RQFacturacionDTO> lstFacturacion;
 }

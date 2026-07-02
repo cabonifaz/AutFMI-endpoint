@@ -1,11 +1,9 @@
 package org.app.autfmi.repository;
 
 import lombok.RequiredArgsConstructor;
-import org.app.autfmi.model.dto.RequirementItemDTO;
 import org.app.autfmi.model.dto.TarifarioDTO;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.response.BaseResponse;
-import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.TarifarioListResponse;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -58,16 +56,13 @@ public class TarifarioRepository {
         return null;
     }
 
-
     protected static TarifarioDTO mapToTarifarioItemDTO(Map<String, Object> tarifa) {
         return new TarifarioDTO(
                 (Integer) tarifa.get("ID_PERFIL"),
                 (String) tarifa.get("PERFIL"),
                 (BigDecimal) tarifa.get("TARIFA"),
                 (String) tarifa.get("MONEDA"),
-                (String) tarifa.get("TIPO_TARIFA")
-        );
+                (String) tarifa.get("TIPO_TARIFA"));
     }
-
 
 }

@@ -487,12 +487,57 @@ public class RequirementRepository {
 
 		BaseResponse baseResponse = new BaseResponse(idTipoMensaje, mensaje);
 
-		// Cargar arcchivo de RQ si se creó correctamente
-		if (idTipoMensaje == 2) {
-			guardarArchivos(request.getLstArchivos(), Integer.parseInt(mensaje), baseRequest.getIdEmpresa());
-		}
+		// Los archivos ya NO se suben aquí en base64. Tras crear el RQ, el servicio
+		// genera URLs PUT pre-firmadas y el front sube cada archivo directo a S3.
+		// (El SP inserta las filas de archivo en BD vía el TVP LST_ARCHIVOS.)
 
 		return baseResponse;
+	}
+
+	/**
+	 * Registra en BD un archivo de requerimiento que YA fue subido a S3 mediante una
+	 * URL pre-firmada. No sube el archivo (no usa base64): solo inserta la fila con la
+	 * ruta ({@code path}) recibida como LINK. Reutiliza SP_REQUERIMIENTO_ARCHIVO_INS
+	 * con un TVP de una sola fila.
+	 */
+	public BaseResponse confirmRequirementFile(BaseRequest baseRequest, RqFileConfirmRequest request)
+			throws SQLServerException {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_REQUERIMIENTO_ARCHIVO_INS");
+
+		SQLServerDataTable tvpRqFiles = new SQLServerDataTable();
+		tvpRqFiles.addColumnMetadata("INDICE", Types.INTEGER);
+		tvpRqFiles.addColumnMetadata("LINK", Types.VARCHAR);
+		tvpRqFiles.addColumnMetadata("NOMBRE_ARCHIVO", Types.VARCHAR);
+		tvpRqFiles.addColumnMetadata("ID_TIPO_ARCHIVO", Types.INTEGER);
+		tvpRqFiles.addColumnMetadata("ID_TIPO_ARCHIVO_RQ", Types.INTEGER);
+		tvpRqFiles.addRow(
+				1,
+				request.getPath(),
+				request.getNombreArchivo(),
+				request.getIdTipoArchivo(),
+				request.getIdTipoArchivoRQ());
+
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+				.addValue("LST_ARCHIVOS", tvpRqFiles)
+				.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+				.addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+				.addValue("ID_ROL", baseRequest.getIdRol())
+				.addValue("USUARIO", baseRequest.getUsername())
+				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+		List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+		if (resultSet != null && !resultSet.isEmpty()) {
+			Map<String, Object> row = resultSet.get(0);
+			Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+			String mensaje = (String) row.get("MENSAJE");
+			return new BaseResponse(idTipoMensaje, mensaje);
+		}
+
+		return new BaseResponse(3, "Error al registrar el archivo del requerimiento");
 	}
 
 	private SQLServerDataTable loadTvpLstCarreras(List<VacanteCarreraRequest> carreras) throws SQLServerException {

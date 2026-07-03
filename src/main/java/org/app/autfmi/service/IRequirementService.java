@@ -8,8 +8,12 @@ import org.app.autfmi.model.request.AgentRQRequest;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
+import org.app.autfmi.model.request.RqFileConfirmRequest;
+import org.app.autfmi.model.request.RqFileDownloadRequest;
+import org.app.autfmi.model.request.RqFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.RqPresignedUrlResponse;
 
 import java.util.Date;
 import java.util.List;
@@ -35,6 +39,12 @@ public interface IRequirementService {
         BaseResponse removeRequirementFile(String token, Integer idRqFile);
 
         FileResponse getRequirementFile(String token, Integer idrqFile);
+
+        RqPresignedUrlResponse generateRqUploadUrl(String token, RqFileUploadUrlRequest request);
+
+        BaseResponse confirmRqUpload(String token, RqFileConfirmRequest request) throws SQLServerException;
+
+        RqPresignedUrlResponse generateRqDownloadUrl(String token, RqFileDownloadRequest request);
 
         BaseResponse getTechSkillsForVac(String token, Integer idVacante);
 

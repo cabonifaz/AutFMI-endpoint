@@ -11,15 +11,23 @@ import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.request.AgentRQRequest;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.FileRequest;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
+import org.app.autfmi.model.request.RqFileConfirmRequest;
+import org.app.autfmi.model.request.RqFileDownloadRequest;
+import org.app.autfmi.model.request.RqFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.RqFileUploadUrlDTO;
+import org.app.autfmi.model.response.RqPresignedUrlResponse;
+import org.app.autfmi.model.response.SaveRequirementResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.service.IRequirementService;
+import org.app.autfmi.util.ClientS3V2;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.FileUtils;
@@ -41,6 +49,7 @@ public class RequirementService implements IRequirementService {
     private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
     private final NotificationService notificationService;
     private final IMailService mailService;
+    private final ClientS3V2 clientS3;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
@@ -72,9 +81,11 @@ public class RequirementService implements IRequirementService {
                 return response;
             }
 
+            Integer idRequerimiento = Integer.parseInt(response.getMensaje());
+
             // Obtener el reporte del requerimiento guardado
             RequirementReport report = requirementRepository.getRequirementReport(
-                    Integer.parseInt(response.getMensaje()), baseRequest.getIdUsuario());
+                    idRequerimiento, baseRequest.getIdUsuario());
 
             List<String> toAddresses = new ArrayList<>();
 
@@ -106,8 +117,24 @@ public class RequirementService implements IRequirementService {
             } catch (Exception e) {
                 this.logger.error("Error al enviar notificación de requerimiento: {}", e);
             }
-            response.setMensaje("RQ creado exitosamente");
-            return response;
+            // Generar una URL PUT pre-firmada por cada archivo. El front subirá cada
+            // archivo (que mantiene en memoria) directamente a S3 en el mismo orden.
+            List<RqFileUploadUrlDTO> archivos = new ArrayList<>();
+            if (request.getLstArchivos() != null) {
+                for (FileRequest file : request.getLstArchivos()) {
+                    String fileName = file.getNombreArchivo() + "." + file.getExtensionArchivo();
+                    String path = buildRqFilePath(baseRequest.getIdEmpresa(), idRequerimiento, fileName);
+                    String url = clientS3.generatePresignedUploadUrl(path, file.getContentType(), 5);
+                    archivos.add(new RqFileUploadUrlDTO(url, path, fileName, file.getIdTipoArchivoRQ()));
+                }
+            }
+
+            SaveRequirementResponse saveResponse = new SaveRequirementResponse();
+            saveResponse.setIdTipoMensaje(2);
+            saveResponse.setMensaje("RQ creado exitosamente");
+            saveResponse.setIdRequerimiento(idRequerimiento);
+            saveResponse.setArchivos(archivos);
+            return saveResponse;
         } catch (SQLServerException e) {
             this.logger.error("SQLServerException al guardar requerimiento: {}", e);
             return new BaseResponse(3, "Error al guardar requerimiento", e.getMessage());
@@ -310,6 +337,94 @@ public class RequirementService implements IRequirementService {
         String funcionalidades = Constante.ELIMINAR_ARCHIVOS;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
         return requirementRepository.removeRequirementFile(baseRequest, idRqFile);
+    }
+
+    // ─── Archivos por URL pre-firmada (detalle/actualización de RQ) ─────────────
+
+    @Override
+    public RqPresignedUrlResponse generateRqUploadUrl(String token, RqFileUploadUrlRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.GUARDAR_ARCHIVOS);
+
+        if (request.getIdRequerimiento() == null) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Requerimiento inválido"), null, null, null);
+        }
+        if (request.getFileName() == null || request.getFileName().trim().isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Nombre de archivo inválido"), null, null, null);
+        }
+
+        String originalFilename = request.getFileName();
+        String extension = originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf("."))
+                : "";
+
+        String cleanName = originalFilename;
+        if (cleanName.length() > 100) {
+            cleanName = cleanName.substring(0, 95) + extension;
+        }
+
+        // Nombre único en S3 para no sobrescribir archivos con el mismo nombre.
+        String generatedFileName = System.currentTimeMillis() + "_" + cleanName.replaceAll("\\s+", "_");
+        String path = buildRqFilePath(baseRequest.getIdEmpresa(), request.getIdRequerimiento(), generatedFileName);
+
+        String url = clientS3.generatePresignedUploadUrl(path, request.getContentType(), 5);
+        if (url == null || url.isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Error generando URL"), null, null, null);
+        }
+
+        return new RqPresignedUrlResponse(
+                new BaseResponse(2, "URL generada correctamente"), url, path, cleanName);
+    }
+
+    @Override
+    public BaseResponse confirmRqUpload(String token, RqFileConfirmRequest request) throws SQLServerException {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.GUARDAR_ARCHIVOS);
+
+        if (request.getPath() == null || request.getPath().trim().isEmpty()) {
+            return new BaseResponse(3, "Ruta de archivo inválida");
+        }
+
+        // Verificar que el archivo exista físicamente en S3 antes de registrarlo.
+        if (!clientS3.exists(request.getPath())) {
+            return new BaseResponse(3, "El archivo no existe en S3");
+        }
+
+        return requirementRepository.confirmRequirementFile(baseRequest, request);
+    }
+
+    @Override
+    public RqPresignedUrlResponse generateRqDownloadUrl(String token, RqFileDownloadRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
+
+        // getRqFile devuelve la ruta S3 (LINK) en el campo 'file'.
+        FileResponse fileResponse = requirementRepository.getRqFile(baseRequest, request.getIdArchivo());
+
+        if (fileResponse == null || fileResponse.getBaseResponse() == null
+                || fileResponse.getBaseResponse().getIdTipoMensaje() != 2
+                || fileResponse.getFile() == null || fileResponse.getFile().isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Archivo no encontrado"), null, null, null);
+        }
+
+        String path = fileResponse.getFile();
+        String url = clientS3.generatePresignedUrl(path, 5);
+        if (url == null || url.isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Error generando URL de descarga"), null, null, null);
+        }
+
+        String fileName = path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
+        return new RqPresignedUrlResponse(new BaseResponse(2, "URL generada correctamente"), url, null, fileName);
+    }
+
+    /**
+     * Construye la ruta (key) S3 de un archivo de requerimiento, idéntica a la que
+     * el SP almacena en la columna LINK: repositorio/{idEmpresa}/{idRq}/archivos/{archivo}.
+     */
+    private String buildRqFilePath(Integer idEmpresa, Integer idRequerimiento, String fileName) {
+        return Constante.RUTA_REPOSITORIO + idEmpresa
+                + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idRequerimiento.toString())
+                + fileName;
     }
 
     @Override

@@ -11,8 +11,12 @@ import org.app.autfmi.model.request.AgentRQRequest;
 import org.app.autfmi.model.request.RequirementFileRequest;
 import org.app.autfmi.model.request.RequirementRequest;
 import org.app.autfmi.model.request.RequirementTalentRequest;
+import org.app.autfmi.model.request.RqFileConfirmRequest;
+import org.app.autfmi.model.request.RqFileDownloadRequest;
+import org.app.autfmi.model.request.RqFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.RqPresignedUrlResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.service.impl.RequirementService;
 import org.app.autfmi.util.JwtHelper;
@@ -203,6 +207,48 @@ public class RequirementController {
         } catch (Exception e) {
             fileResponse.setBaseResponse(new BaseResponse(3, e.getMessage()));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(fileResponse);
+        }
+    }
+
+    @PostMapping("/file/upload-url")
+    public ResponseEntity<RqPresignedUrlResponse> generateUploadUrl(
+            @RequestBody RqFileUploadUrlRequest request,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            RqPresignedUrlResponse response = requirementService.generateRqUploadUrl(token, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new RqPresignedUrlResponse(new BaseResponse(3, e.getMessage()), null, null, null));
+        }
+    }
+
+    @PostMapping("/file/confirm-upload")
+    public ResponseEntity<BaseResponse> confirmUpload(
+            @RequestBody RqFileConfirmRequest request,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.confirmRqUpload(token, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BaseResponse(3, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/file/download-url")
+    public ResponseEntity<RqPresignedUrlResponse> generateDownloadUrl(
+            @RequestBody RqFileDownloadRequest request,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            RqPresignedUrlResponse response = requirementService.generateRqDownloadUrl(token, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new RqPresignedUrlResponse(new BaseResponse(3, e.getMessage()), null, null, null));
         }
     }
 

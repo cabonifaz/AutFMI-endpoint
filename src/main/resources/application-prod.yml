@@ -2,8 +2,8 @@ spring:
   datasource:
     prod:
       url: ${DB_URL}
-      username:
-      password:
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   jpa:
     database-platform: org.hibernate.dialect.SQLServerDialect

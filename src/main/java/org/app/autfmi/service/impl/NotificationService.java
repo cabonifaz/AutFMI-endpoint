@@ -38,7 +38,8 @@ public class NotificationService {
       List<PostulantDTO> postulantes,
       List<RequirementTalentsResult.ReporteIngreso> entryReportsIds,
       List<RequirementTalentsResult.ReporteSolicitudEquipo> solicitudesEquipo,
-      BaseRequest baseRequest) {
+      BaseRequest baseRequest
+    ) {
 
     try {
 
@@ -61,10 +62,11 @@ public class NotificationService {
       /* 1. Notificar sobre talentos confirmados */
       if (postulantes != null && !postulantes.isEmpty()) {
         this.mailUtils.sendRequirementPostulantMail(
-            gestorRq,
-            "Ingreso de nuevo talento",
-            postulantes,
-            ccList);
+          gestorRq,
+          "Ingreso de nuevo talento",
+          postulantes,
+          ccList
+        );
         this.logger.info("Notificación de talentos confirmados enviada");
       }
 

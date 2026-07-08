@@ -291,6 +291,11 @@ public class RequirementService implements IRequirementService {
             // Validación básica antes de delegar
             if (gestorRq == null || gestorRq.getCorreo() == null) {
                 this.logger.error("No se encontró el correo del gestor del requerimiento");
+                // El guardado sí ocurrió (idTipoMensaje == 2), pero la notificación no pudo
+                // enviarse. Lo señalamos en detalleMensaje sin degradar el estado de éxito,
+                // para que el frontend pueda advertirlo.
+                baseResponse.setDetalleMensaje(
+                        "No se pudo notificar por correo al usuario que ejecutó la acción: correo no disponible");
                 return baseResponse;
             }
 

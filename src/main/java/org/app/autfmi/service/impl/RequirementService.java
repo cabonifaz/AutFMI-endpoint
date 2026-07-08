@@ -257,6 +257,8 @@ public class RequirementService implements IRequirementService {
         }
     }
 
+    // -------------------------------- Envio de correos al guardar talentos confirmados --------------------------------
+
     @Override
     public BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request)
             throws SQLServerException {
@@ -299,12 +301,13 @@ public class RequirementService implements IRequirementService {
 
             // Llamada asíncrona
             notificationService.sendRequirementNotifications(
-                    gestorRq,
-                    ccList != null ? ccList : Collections.emptyList(),
-                    postulantes,
-                    entryReportsIds,
-                    solicitudesEquipo,
-                    asyncBaseRequest);
+                gestorRq,
+                ccList != null ? ccList : Collections.emptyList(),
+                postulantes,
+                entryReportsIds,
+                solicitudesEquipo,
+                asyncBaseRequest
+            );
 
             this.logger.info("Notificaciones delegadas al servicio asíncrono");
 
@@ -314,6 +317,8 @@ public class RequirementService implements IRequirementService {
 
         return response.getBaseResponse();
     }
+
+    // ---------------------------------------------------------------------------------------------------------
 
     @Override
     public BaseResponse getRequirementTalentData(String token, Integer idTalento, Integer idRequerimiento) {

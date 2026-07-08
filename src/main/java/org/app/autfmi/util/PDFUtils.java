@@ -43,37 +43,42 @@ public class PDFUtils {
             @NonNull String text)
             throws MessagingException {
 
+        String dest = to != null ? to.trim() : null;
+
+        if (!EmailUtils.isValidEmail(dest)) {
+            this.logger.error("Correo cancelado porque no hay un destinatario adecuado ('{}')", to);
+            return;
+        }
+
+        // Filtramos correos nulos, vacíos, con formato inválido, duplicados
+        // y al propio destinatario principal.
+        List<String> cleanCc = EmailUtils.sanitizeRecipients(copyTo, dest);
+        this.logger.info("Cleaned CC: {}", cleanCc.size());
+
+        try {
+            construirYEnviar(dest, cleanCc, subject, text, lstfiles);
+            this.logger.info("Correo con PDF enviado a: {} (cc: {})", dest, cleanCc.size());
+        } catch (Exception e) {
+            // Un CC inválido a nivel SMTP no debe impedir que el destinatario principal lo reciba.
+            this.logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",
+                    e.getMessage());
+            construirYEnviar(dest, List.of(), subject, text, lstfiles);
+            this.logger.info("Correo con PDF enviado a: {} (sin CC tras reintento)", dest);
+        }
+    }
+
+    private void construirYEnviar(String to, List<String> cc, String subject, String text, List<FileDTO> lstfiles)
+            throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         helper.setFrom(emisorCorreo != null ? emisorCorreo : "");
-
-        String dest = to;
-
-        if (dest == null || dest.trim().isBlank()) {
-            this.logger.error("Correo cancelado porque no hay un destinatario adecuado");
-            return;
-        }
-
-        helper.setTo(dest);
+        helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(text);
 
-        if (copyTo != null) {
-            // Filtramos correos nulos, vacíos o que sean solo espacios
-            // También eliminamos al destinatario principal de la lista de CC
-            String[] cleanCc = copyTo.stream()
-                    .filter(email -> email != null && !email.trim().isEmpty())
-                    .map(String::trim)
-                    .filter(email -> !email.equalsIgnoreCase(to.trim()))
-                    .toArray(String[]::new);
-
-            this.logger.info("Cleaned CC: {}", cleanCc.length);
-
-            if (cleanCc.length > 0) {
-                // setCc solo se ejecuta si hay direcciones válidas
-                helper.setCc(cleanCc);
-            }
+        if (cc != null && !cc.isEmpty()) {
+            helper.setCc(cc.toArray(new String[0]));
         }
 
         for (FileDTO objfile : lstfiles) {

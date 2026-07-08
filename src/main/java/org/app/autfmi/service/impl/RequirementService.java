@@ -257,6 +257,8 @@ public class RequirementService implements IRequirementService {
         }
     }
 
+    // -------------------------------- Envio de correos al guardar talentos confirmados --------------------------------
+
     @Override
     public BaseResponse saveRequirementTalents(String token, RequirementTalentRequest request)
             throws SQLServerException {
@@ -289,6 +291,11 @@ public class RequirementService implements IRequirementService {
             // Validación básica antes de delegar
             if (gestorRq == null || gestorRq.getCorreo() == null) {
                 this.logger.error("No se encontró el correo del gestor del requerimiento");
+                // El guardado sí ocurrió (idTipoMensaje == 2), pero la notificación no pudo
+                // enviarse. Lo señalamos en detalleMensaje sin degradar el estado de éxito,
+                // para que el frontend pueda advertirlo.
+                baseResponse.setDetalleMensaje(
+                        "No se pudo notificar por correo al usuario que ejecutó la acción: correo no disponible");
                 return baseResponse;
             }
 
@@ -299,12 +306,13 @@ public class RequirementService implements IRequirementService {
 
             // Llamada asíncrona
             notificationService.sendRequirementNotifications(
-                    gestorRq,
-                    ccList != null ? ccList : Collections.emptyList(),
-                    postulantes,
-                    entryReportsIds,
-                    solicitudesEquipo,
-                    asyncBaseRequest);
+                gestorRq,
+                ccList != null ? ccList : Collections.emptyList(),
+                postulantes,
+                entryReportsIds,
+                solicitudesEquipo,
+                asyncBaseRequest
+            );
 
             this.logger.info("Notificaciones delegadas al servicio asíncrono");
 
@@ -314,6 +322,8 @@ public class RequirementService implements IRequirementService {
 
         return response.getBaseResponse();
     }
+
+    // ---------------------------------------------------------------------------------------------------------
 
     @Override
     public BaseResponse getRequirementTalentData(String token, Integer idTalento, Integer idRequerimiento) {

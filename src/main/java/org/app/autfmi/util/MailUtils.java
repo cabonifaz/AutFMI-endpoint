@@ -64,26 +64,53 @@ public class MailUtils {
             }
 
             String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, listaTalentosRQ);
+            String asuntoCorreo = asunto + " | " + gestor.getCodigoRQ() + " | " + gestor.getCliente();
 
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-            helper.setFrom(emisorCorreo);
-            helper.setTo(gestor.getCorreo());
-
-            if (lstEmails != null && !lstEmails.isEmpty()) {
-                helper.setCc(lstEmails.toArray(new String[0]));
+            // El destinatario principal es el usuario que ejecutó la acción; sin un
+            // correo válido no tiene sentido continuar.
+            String to = gestor.getCorreo() != null ? gestor.getCorreo().trim() : null;
+            if (!EmailUtils.isValidEmail(to)) {
+                logger.error("Correo cancelado: el usuario destino no tiene un correo válido ('{}')", to);
+                return;
             }
 
-            helper.setSubject(asunto + " | " + gestor.getCodigoRQ() + " | " + gestor.getCliente());
-            helper.setText(mensajeCorreo, true);
+            // Descartamos CC nulos/vacíos, con formato inválido, duplicados y el propio TO.
+            List<String> cleanCc = EmailUtils.sanitizeRecipients(lstEmails, to);
 
-            mailSender.send(message);
-            logger.info("Email sent to: {}", gestor.getCorreo());
+            try {
+                enviarMensajeHtml(to, cleanCc, asuntoCorreo, mensajeCorreo);
+                logger.info("Email sent to: {} (cc: {})", to, cleanCc.size());
+            } catch (Exception e) {
+                // Un CC inválido a nivel SMTP no debe impedir que el actuador reciba su correo.
+                logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",
+                        e.getMessage());
+                enviarMensajeHtml(to, List.of(), asuntoCorreo, mensajeCorreo);
+                logger.info("Email sent to: {} (sin CC tras reintento)", to);
+            }
         } catch (Exception e) {
             logger.error("Email not sent to: {}", gestor.getCorreo());
             logger.error("Error al enviar correo: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * Construye y envía un mensaje HTML simple. Se aísla en su propio método para
+     * poder reintentar el envío (por ejemplo, sin CC) reconstruyendo el mensaje.
+     */
+    private void enviarMensajeHtml(String to, List<String> cc, String subject, String htmlBody)
+            throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setFrom(emisorCorreo);
+        helper.setTo(to);
+        if (cc != null && !cc.isEmpty()) {
+            helper.setCc(cc.toArray(new String[0]));
+        }
+        helper.setSubject(subject);
+        helper.setText(htmlBody, true);
+
+        mailSender.send(message);
     }
 
     private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos) {
@@ -118,22 +145,24 @@ public class MailUtils {
             // 2. Procesar la plantilla para obtener el cuerpo del correo en HTML
             String htmlBody = templateEngine.process(templateName, context);
 
-            // 3. Crear y configurar el mensaje de correo
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-
-            helper.setFrom(emisorCorreo);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlBody, true);
-
-            if (cc != null && !cc.isEmpty()) {
-                helper.setCc(cc.toArray(new String[0]));
+            // 3. Validar destinatario principal y depurar la lista de CC
+            String destino = to != null ? to.trim() : null;
+            if (!EmailUtils.isValidEmail(destino)) {
+                logger.error("Correo cancelado: destinatario principal inválido ('{}')", to);
+                return;
             }
+            List<String> cleanCc = EmailUtils.sanitizeRecipients(cc, destino);
 
-            // 4. Enviar el correo
-            mailSender.send(mimeMessage);
-            logger.info("Correo enviado exitosamente a: {}", to);
+            // 4. Enviar el correo; un CC inválido no debe bloquear el envío al TO
+            try {
+                enviarMensajeHtml(destino, cleanCc, subject, htmlBody);
+                logger.info("Correo enviado exitosamente a: {} (cc: {})", destino, cleanCc.size());
+            } catch (MessagingException e) {
+                logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",
+                        e.getMessage());
+                enviarMensajeHtml(destino, List.of(), subject, htmlBody);
+                logger.info("Correo enviado exitosamente a: {} (sin CC tras reintento)", destino);
+            }
 
         } catch (MessagingException e) {
             logger.error("Error al enviar correo a {}: {}", to, e.getMessage(), e);
@@ -147,16 +176,23 @@ public class MailUtils {
             context.setVariables(variables);
             String htmlBody = templateEngine.process(templateName, context);
 
+            String destino = to != null ? to.trim() : null;
+            if (!EmailUtils.isValidEmail(destino)) {
+                logger.error("Correo cancelado: destinatario principal inválido ('{}')", to);
+                return;
+            }
+            List<String> cleanCc = EmailUtils.sanitizeRecipients(cc, destino);
+
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
             helper.setFrom(emisorCorreo);
-            helper.setTo(to);
+            helper.setTo(destino);
             helper.setSubject(subject);
             helper.setText(htmlBody, true);
 
-            if (cc != null && !cc.isEmpty()) {
-                helper.setCc(cc.toArray(new String[0]));
+            if (!cleanCc.isEmpty()) {
+                helper.setCc(cleanCc.toArray(new String[0]));
             }
 
             if (inlineResources != null) {

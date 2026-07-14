@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RequirementTalentDTO {
+    private Integer idRequerimientoTalento;
     private Integer idTalento;
     private String nombresTalento;
     private String apellidosTalento;

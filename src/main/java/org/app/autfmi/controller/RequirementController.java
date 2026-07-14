@@ -14,8 +14,12 @@ import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.request.RqFileConfirmRequest;
 import org.app.autfmi.model.request.RqFileDownloadRequest;
 import org.app.autfmi.model.request.RqFileUploadUrlRequest;
+import org.app.autfmi.model.request.RtFileConfirmRequest;
+import org.app.autfmi.model.request.RtFileDownloadRequest;
+import org.app.autfmi.model.request.RtFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.PostulantFileListResponse;
 import org.app.autfmi.model.response.RqPresignedUrlResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.service.impl.RequirementService;
@@ -249,6 +253,78 @@ public class RequirementController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new RqPresignedUrlResponse(new BaseResponse(3, e.getMessage()), null, null, null));
+        }
+    }
+
+    // ─── Archivos de postulante (REQUERIMIENTO_TALENTO) por URL pre-firmada ──────
+
+    @PostMapping("/postulant/file/upload-url")
+    public ResponseEntity<RqPresignedUrlResponse> generatePostulantUploadUrl(
+            @RequestBody RtFileUploadUrlRequest request,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            RqPresignedUrlResponse response = requirementService.generatePostulantUploadUrl(token, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new RqPresignedUrlResponse(new BaseResponse(3, e.getMessage()), null, null, null));
+        }
+    }
+
+    @PostMapping("/postulant/file/confirm-upload")
+    public ResponseEntity<BaseResponse> confirmPostulantUpload(
+            @RequestBody RtFileConfirmRequest request,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.confirmPostulantUpload(token, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BaseResponse(3, e.getMessage()));
+        }
+    }
+
+    @GetMapping("/postulant/file/list")
+    public ResponseEntity<PostulantFileListResponse> listPostulantFiles(
+            @RequestParam Integer idRequerimientoTalento,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            PostulantFileListResponse response = requirementService.listPostulantFiles(token, idRequerimientoTalento);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new PostulantFileListResponse(3, e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/postulant/file/download-url")
+    public ResponseEntity<RqPresignedUrlResponse> generatePostulantDownloadUrl(
+            @RequestBody RtFileDownloadRequest request,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            RqPresignedUrlResponse response = requirementService.generatePostulantDownloadUrl(token, request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new RqPresignedUrlResponse(new BaseResponse(3, e.getMessage()), null, null, null));
+        }
+    }
+
+    @DeleteMapping("/postulant/file/remove")
+    public ResponseEntity<BaseResponse> removePostulantFile(
+            @RequestParam Integer idArchivo,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = requirementService.removePostulantFile(token, idArchivo);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new BaseResponse(3, e.getMessage()));
         }
     }
 

@@ -13,6 +13,7 @@ import org.app.autfmi.model.report.RequirementReportMapper;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.PostulantFileListResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
 import org.app.autfmi.model.response.TalentRequirementDataResponse;
@@ -128,6 +129,7 @@ public class RequirementRepository {
 					if (resultSet3 != null && !resultSet3.isEmpty()) {
 						for (Map<String, Object> rqTalentRow : resultSet3) {
 							RequirementTalentDTO itemRqTalento = new RequirementTalentDTO(
+									(Integer) rqTalentRow.get("ID_REQUERIMIENTO_TALENTO"),
 									(Integer) rqTalentRow.get("ID_TALENTO"),
 									(String) rqTalentRow.get("NOMBRES_TALENTO"),
 									(String) rqTalentRow.get("APELLIDOS_TALENTO"),
@@ -855,6 +857,111 @@ public class RequirementRepository {
 			return new BaseResponse(idTipoMensaje, mensaje);
 		}
 		return null;
+	}
+
+	// ─── Archivos de postulante (REQUERIMIENTO_TALENTO) por URL pre-firmada ──────
+
+	/**
+	 * Registra en BD un archivo de postulante ya subido a S3. Reutiliza el patrón de
+	 * {@code confirmRequirementFile}: no sube el archivo, solo inserta la fila con la
+	 * ruta ({@code path}) recibida como RUTA_ARCHIVO vía SP_BT_REQUERIMIENTO_TALENTO_ARCHIVO_INS.
+	 */
+	public BaseResponse confirmPostulantFile(BaseRequest baseRequest, RtFileConfirmRequest request) {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_BT_REQUERIMIENTO_TALENTO_ARCHIVO_INS");
+
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+				.addValue("ID_REQUERIMIENTO_TALENTO", request.getIdRequerimientoTalento())
+				.addValue("NOMBRE_ARCHIVO", request.getNombreArchivo())
+				.addValue("ID_TIPO_ARCHIVO", request.getIdTipoArchivo())
+				.addValue("RUTA_ARCHIVO", request.getPath())
+				.addValue("ID_ROL", baseRequest.getIdRol())
+				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+				.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+				.addValue("USERNAME", baseRequest.getUsername());
+
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+		List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+		if (resultSet != null && !resultSet.isEmpty()) {
+			Map<String, Object> row = resultSet.get(0);
+			Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+			String mensaje = (String) row.get("MENSAJE");
+			return new BaseResponse(idTipoMensaje, mensaje);
+		}
+
+		return new BaseResponse(3, "Error al registrar el archivo del postulante");
+	}
+
+	/**
+	 * Lista los archivos activos de un postulante vía SP_BT_REQUERIMIENTO_TALENTO_ARCHIVO_LST.
+	 */
+	public PostulantFileListResponse listPostulantFiles(BaseRequest baseRequest, Integer idRequerimientoTalento) {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_BT_REQUERIMIENTO_TALENTO_ARCHIVO_LST");
+
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO_TALENTO", idRequerimientoTalento)
+				.addValue("ID_ROL", baseRequest.getIdRol())
+				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+				.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+				.addValue("USUARIO", baseRequest.getUsername());
+
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+		List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+		if (resultSet != null && !resultSet.isEmpty()) {
+			Map<String, Object> row = resultSet.get(0);
+			Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+			String mensaje = (String) row.get("MENSAJE");
+
+			List<PostulantFileDTO> archivos = new ArrayList<>();
+			if (idTipoMensaje == 2) {
+				List<Map<String, Object>> resultSet2 = (List<Map<String, Object>>) result.get("#result-set-2");
+				if (resultSet2 != null) {
+					for (Map<String, Object> fileRow : resultSet2) {
+						archivos.add(new PostulantFileDTO(
+								(Integer) fileRow.get("ID_REQUERIMIENTO_TALENTO_ARCHIVO"),
+								(Integer) fileRow.get("ID_REQUERIMIENTO"),
+								(Integer) fileRow.get("ID_REQUERIMIENTO_TALENTO"),
+								(String) fileRow.get("NOMBRE_ARCHIVO"),
+								(Integer) fileRow.get("ID_TIPO_ARCHIVO"),
+								(String) fileRow.get("RUTA_ARCHIVO")));
+					}
+				}
+			}
+			return new PostulantFileListResponse(idTipoMensaje, mensaje, archivos);
+		}
+
+		return new PostulantFileListResponse(3, "Error al listar los archivos del postulante", new ArrayList<>());
+	}
+
+	/**
+	 * Eliminación lógica de un archivo de postulante vía SP_BT_REQUERIMIENTO_TALENTO_ARCHIVO_DEL.
+	 */
+	public BaseResponse removePostulantFile(BaseRequest baseRequest, Integer idArchivo) {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_BT_REQUERIMIENTO_TALENTO_ARCHIVO_DEL");
+
+		MapSqlParameterSource params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO_TALENTO_ARCHIVO", idArchivo)
+				.addValue("ID_ROL", baseRequest.getIdRol())
+				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+				.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+				.addValue("USERNAME", baseRequest.getUsername());
+
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+		List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+		if (resultSet != null && !resultSet.isEmpty()) {
+			Map<String, Object> row = resultSet.get(0);
+			Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+			String mensaje = (String) row.get("MENSAJE");
+			return new BaseResponse(idTipoMensaje, mensaje);
+		}
+
+		return new BaseResponse(3, "Error al eliminar el archivo del postulante");
 	}
 
 	private RequirementItemDTO mapToRequirementItemDTO(Map<String, Object> requirement) {

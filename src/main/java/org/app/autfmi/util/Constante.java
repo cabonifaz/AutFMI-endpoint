@@ -1,5 +1,7 @@
 package org.app.autfmi.util;
 
+import java.util.Set;
+
 public class Constante {
 
     // ID_MAESTROS
@@ -8,6 +10,12 @@ public class Constante {
     // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";
     public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";
+    public static final String RUTA_RT_ARCHIVOS = "/postulantes/[ID_REQUERIMIENTO_TALENTO]/archivos/";
+
+    // VALIDACIÓN DE ARCHIVOS DE POSTULANTE
+    public static final Set<String> EXT_ARCHIVO_POSTULANTE = Set.of(
+            "pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg", "webp", "zip");
+    public static final long MAX_TAMANIO_ARCHIVO_POSTULANTE = 10L * 1024 * 1024; // 10 MB
     public static final String RUTA_FIRMAS = "/firmas/[ID_USUARIO]/";
     public static final String RUTA_INTERVIEW = "/interviews/[ID_INTERVIEW]/archivos/";
 

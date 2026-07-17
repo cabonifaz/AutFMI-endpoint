@@ -18,8 +18,14 @@ import org.app.autfmi.model.request.RequirementTalentRequest;
 import org.app.autfmi.model.request.RqFileConfirmRequest;
 import org.app.autfmi.model.request.RqFileDownloadRequest;
 import org.app.autfmi.model.request.RqFileUploadUrlRequest;
+import org.app.autfmi.model.request.RtFileConfirmRequest;
+import org.app.autfmi.model.request.RtFileDownloadRequest;
+import org.app.autfmi.model.request.RtFileUploadUrlRequest;
+import org.app.autfmi.model.dto.PostulantFileDTO;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.PostulantFileListResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import org.app.autfmi.model.response.RqFileUploadUrlDTO;
 import org.app.autfmi.model.response.RqPresignedUrlResponse;
 import org.app.autfmi.model.response.SaveRequirementResponse;
@@ -435,6 +441,156 @@ public class RequirementService implements IRequirementService {
         return Constante.RUTA_REPOSITORIO + idEmpresa
                 + Constante.RUTA_RQ_ARCHIVOS.replace("[ID_REQUERIMIENTO]", idRequerimiento.toString())
                 + fileName;
+    }
+
+    // ─── Archivos de postulante (REQUERIMIENTO_TALENTO) por URL pre-firmada ──────
+
+    public RqPresignedUrlResponse generatePostulantUploadUrl(String token, RtFileUploadUrlRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.GUARDAR_ARCHIVOS);
+
+        if (request.getIdRequerimientoTalento() == null) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Postulante inválido"), null, null, null);
+        }
+        if (request.getFileName() == null || request.getFileName().trim().isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Nombre de archivo inválido"), null, null, null);
+        }
+
+        // Extensión permitida (whitelist).
+        String extension = extractExtension(request.getFileName());
+        if (!Constante.EXT_ARCHIVO_POSTULANTE.contains(extension)) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Tipo de archivo no permitido"), null, null, null);
+        }
+
+        // Nombre saneado (solo caracteres seguros) y único en S3.
+        String cleanName = sanitizeFileName(request.getFileName(), extension);
+        String generatedFileName = System.currentTimeMillis() + "_" + cleanName;
+        String path = buildPostulantFilePath(baseRequest.getIdEmpresa(), request.getIdRequerimientoTalento(),
+                generatedFileName);
+
+        String url = clientS3.generatePresignedUploadUrl(path, request.getContentType(), 5);
+        if (url == null || url.isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Error generando URL"), null, null, null);
+        }
+
+        return new RqPresignedUrlResponse(
+                new BaseResponse(2, "URL generada correctamente"), url, path, cleanName);
+    }
+
+    public BaseResponse confirmPostulantUpload(String token, RtFileConfirmRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.GUARDAR_ARCHIVOS);
+
+        if (request.getPath() == null || request.getPath().trim().isEmpty()) {
+            return new BaseResponse(3, "Ruta de archivo inválida");
+        }
+        // El tipo de documento se valida contra el maestro 46 (PARAMETROS) en la BD.
+        if (request.getIdTipoArchivo() == null) {
+            return new BaseResponse(3, "Tipo de documento inválido");
+        }
+        // Extensión permitida (whitelist).
+        if (!Constante.EXT_ARCHIVO_POSTULANTE.contains(extractExtension(request.getPath()))) {
+            return new BaseResponse(3, "Tipo de archivo no permitido");
+        }
+
+        // Verificar existencia y tamaño real del objeto en S3 (un solo HEAD).
+        HeadObjectResponse head = clientS3.headObject(request.getPath());
+        if (head == null) {
+            return new BaseResponse(3, "El archivo no existe en S3");
+        }
+        if (head.contentLength() != null
+                && head.contentLength() > Constante.MAX_TAMANIO_ARCHIVO_POSTULANTE) {
+            clientS3.delete(request.getPath()); // limpiar el objeto que excede el límite
+            return new BaseResponse(3, "El archivo supera el tamaño máximo permitido (10 MB)");
+        }
+
+        return requirementRepository.confirmPostulantFile(baseRequest, request);
+    }
+
+    public PostulantFileListResponse listPostulantFiles(String token, Integer idRequerimientoTalento) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_ARCHIVOS);
+        return requirementRepository.listPostulantFiles(baseRequest, idRequerimientoTalento);
+    }
+
+    public RqPresignedUrlResponse generatePostulantDownloadUrl(String token, RtFileDownloadRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_ARCHIVOS);
+
+        // La ruta se resuelve desde el listado del postulante (no se confía en el cliente).
+        PostulantFileListResponse listResponse = requirementRepository.listPostulantFiles(baseRequest,
+                request.getIdRequerimientoTalento());
+
+        String path = null;
+        if (listResponse != null && listResponse.getArchivos() != null) {
+            for (PostulantFileDTO file : listResponse.getArchivos()) {
+                if (file.getIdRequerimientoTalentoArchivo() != null
+                        && file.getIdRequerimientoTalentoArchivo().equals(request.getIdArchivo())) {
+                    path = file.getRutaArchivo();
+                    break;
+                }
+            }
+        }
+
+        if (path == null || path.isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Archivo no encontrado"), null, null, null);
+        }
+
+        String fileName = path.contains("/") ? path.substring(path.lastIndexOf("/") + 1) : path;
+        // Fuerza la descarga como adjunto (evita render en línea de contenido peligroso).
+        String url = clientS3.generatePresignedDownloadUrl(path, fileName, 5);
+        if (url == null || url.isEmpty()) {
+            return new RqPresignedUrlResponse(new BaseResponse(3, "Error generando URL de descarga"), null, null, null);
+        }
+
+        return new RqPresignedUrlResponse(new BaseResponse(2, "URL generada correctamente"), url, null, fileName);
+    }
+
+    public BaseResponse removePostulantFile(String token, Integer idArchivo) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.ELIMINAR_ARCHIVOS);
+        return requirementRepository.removePostulantFile(baseRequest, idArchivo);
+    }
+
+    /**
+     * Ruta (key) S3 de un archivo de postulante:
+     * repositorio/{idEmpresa}/postulantes/{idRequerimientoTalento}/archivos/{archivo}.
+     */
+    private String buildPostulantFilePath(Integer idEmpresa, Integer idRequerimientoTalento, String fileName) {
+        return Constante.RUTA_REPOSITORIO + idEmpresa
+                + Constante.RUTA_RT_ARCHIVOS.replace("[ID_REQUERIMIENTO_TALENTO]", idRequerimientoTalento.toString())
+                + fileName;
+    }
+
+    /** Extensión en minúsculas (sin punto) del nombre/ruta, o "" si no tiene. */
+    private String extractExtension(String name) {
+        if (name == null) {
+            return "";
+        }
+        int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+        String base = slash >= 0 ? name.substring(slash + 1) : name;
+        int dot = base.lastIndexOf('.');
+        return dot >= 0 ? base.substring(dot + 1).toLowerCase() : "";
+    }
+
+    /**
+     * Sanea el nombre de archivo: descarta cualquier ruta, restringe a caracteres
+     * seguros [A-Za-z0-9._-], limita la longitud y conserva la extensión.
+     */
+    private String sanitizeFileName(String originalFilename, String extension) {
+        int slash = Math.max(originalFilename.lastIndexOf('/'), originalFilename.lastIndexOf('\\'));
+        String base = slash >= 0 ? originalFilename.substring(slash + 1) : originalFilename;
+        int dot = base.lastIndexOf('.');
+        String namePart = dot >= 0 ? base.substring(0, dot) : base;
+
+        namePart = namePart.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (namePart.isEmpty()) {
+            namePart = "archivo";
+        }
+        if (namePart.length() > 80) {
+            namePart = namePart.substring(0, 80);
+        }
+        return extension.isEmpty() ? namePart : namePart + "." + extension;
     }
 
     @Override

@@ -179,6 +179,44 @@ public class ClientS3V2 {
     }
   }
 
+  /**
+   * Obtiene la metadata (HEAD) de un objeto en S3, o null si no existe.
+   * Permite verificar existencia y leer tamaño/tipo en una sola llamada.
+   */
+  public HeadObjectResponse headObject(String path) {
+    try {
+      HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+          .bucket(bucketName)
+          .key(path)
+          .build();
+      return s3Client.headObject(headObjectRequest);
+    } catch (NoSuchKeyException e) {
+      return null;
+    } catch (S3Exception e) {
+      logger.error("Error al obtener metadata en S3: {}", e.awsErrorDetails().errorMessage());
+      return null;
+    }
+  }
+
+  /**
+   * URL GET pre-firmada que fuerza la descarga como adjunto (Content-Disposition:
+   * attachment), evitando que el navegador renderice el contenido en línea.
+   */
+  public String generatePresignedDownloadUrl(String path, String fileName, int minutes) {
+    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+        .bucket(bucketName)
+        .key(path)
+        .responseContentDisposition("attachment; filename=\"" + fileName + "\"")
+        .build();
+
+    GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+        .signatureDuration(Duration.ofMinutes(minutes))
+        .getObjectRequest(getObjectRequest)
+        .build();
+
+    return presigner.presignGetObject(presignRequest).url().toString();
+  }
+
   //Genera una URL pre-firmada para acceder a un objeto en S3 por un tiempo limitado.
 
   public String generatePresignedUrl(String path, int minutes) {

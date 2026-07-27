@@ -28,8 +28,10 @@
       Puesto: <span th:text="${position}">—</span><br/>
       Fecha: <span th:text="${formattedDate}">—</span><br/>
       Hora: <span th:text="${formattedTime}">—</span><br/>
-      Enlace a la videollamada: Entrevista - <span th:text="${candidateName}">—</span> | Reunión -
-      <a th:if="${enlace != null and !#strings.isEmpty(enlace)}" th:href="${enlace}" style="color:#1a2e4a;font-weight:700;">Unirse</a><span th:unless="${enlace != null and !#strings.isEmpty(enlace)}">Join</span>
+      <span th:unless="${esPresencial}">Enlace a la videollamada: Entrevista - <span th:text="${candidateName}">—</span> | Reunión -
+      <a th:if="${enlace != null and !#strings.isEmpty(enlace)}" th:href="${enlace}" style="color:#1a2e4a;font-weight:700;">Unirse</a><span th:unless="${enlace != null and !#strings.isEmpty(enlace)}">Join</span></span>
+      <span th:if="${esPresencial}">Dirección: <span th:text="${direccion}">—</span> -
+      <a th:if="${ubicacion != null and !#strings.isEmpty(ubicacion)}" th:href="${ubicacion}" style="color:#1a2e4a;font-weight:700;">Ubicación</a><span th:unless="${ubicacion != null and !#strings.isEmpty(ubicacion)}">Ubicación</span></span>
     </p>
 
     <p style="font-size:14px;line-height:1.65;margin:0 0 8px 0;">Recomendaciones:</p>

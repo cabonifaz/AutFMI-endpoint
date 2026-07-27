@@ -23,5 +23,6 @@ public class RequirementItemDTO {
     private String fechaVencimiento;
     private String modalidad;
     private Integer idAlerta;
+    private String ubicacion;
     private List<RequirementPerfilItemDTO> lstPerfiles;
 }

@@ -21,4 +21,7 @@ public class InterviewRequest {
   private String enlaceEntrevista;
   private String entrevistadores;
   private String perfil;
+  private String ubicacion;
+  private String direccion;
+  private Integer idTipoEntrevista;
 }

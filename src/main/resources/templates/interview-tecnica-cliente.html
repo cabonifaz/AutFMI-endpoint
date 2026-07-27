@@ -30,13 +30,15 @@
       <a th:if="${ubicacion != null and !#strings.isEmpty(ubicacion)}" th:href="${ubicacion}" style="color:#1a2e4a;font-weight:700;">Ubicación</a><span th:unless="${ubicacion != null and !#strings.isEmpty(ubicacion)}">Ubicación</span></span>
     </p>
 
-    <p style="font-size:14px;line-height:1.65;margin:0 0 8px 0;">Recomendaciones para la entrevista:</p>
-    <ul style="font-size:14px;line-height:1.65;margin:0 0 16px 0;padding-left:20px;">
-      <li>Verifica tu conexión de internet.</li>
-      <li>Cuenta con un espacio ordenado y libre de ruido.</li>
-      <li>Tu cámara debe estar encendida durante la entrevista.</li>
-      <li>Puedes realizar preguntas para resolver tus dudas.</li>
-    </ul>
+    <th:block th:unless="${esPresencial}">
+      <p style="font-size:14px;line-height:1.65;margin:0 0 8px 0;">Recomendaciones para la entrevista:</p>
+      <ul style="font-size:14px;line-height:1.65;margin:0 0 16px 0;padding-left:20px;">
+        <li>Verifica tu conexión de internet.</li>
+        <li>Cuenta con un espacio ordenado y libre de ruido.</li>
+        <li>Tu cámara debe estar encendida durante la entrevista.</li>
+        <li>Puedes realizar preguntas para resolver tus dudas.</li>
+      </ul>
+    </th:block>
 
     <p style="font-size:14px;line-height:1.65;margin:0 0 16px 0;">¡Te deseamos los mejores éxitos!</p>
 

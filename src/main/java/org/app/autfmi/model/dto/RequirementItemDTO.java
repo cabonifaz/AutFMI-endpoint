@@ -24,5 +24,6 @@ public class RequirementItemDTO {
     private String modalidad;
     private Integer idAlerta;
     private String ubicacion;
+    private String direccion;
     private List<RequirementPerfilItemDTO> lstPerfiles;
 }

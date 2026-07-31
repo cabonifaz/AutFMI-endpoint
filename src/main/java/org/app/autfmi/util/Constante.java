@@ -6,6 +6,11 @@ public class Constante {
 
     // ID_MAESTROS
     public static final String NOTIFICACION_RQ_EMAILS = "42";
+    public static final String TIPO_ENTREVISTA = "47";
+
+    // TIPO DE ENTREVISTA (valores string1 del maestro 47)
+    public static final String TIPO_ENTREVISTA_PRESENCIAL = "PRESENCIAL";
+    public static final String TIPO_ENTREVISTA_VIRTUAL = "VIRTUAL";
 
     // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";

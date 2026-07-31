@@ -32,4 +32,7 @@ public class InterviewUpdateRequest {
   private String grabaciones;
   private String motivoCancelacion;
   private String perfil;
+  private String ubicacion;
+  private String direccion;
+  private Integer idTipoEntrevista;
 }

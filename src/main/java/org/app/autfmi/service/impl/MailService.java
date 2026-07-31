@@ -14,6 +14,9 @@ import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.model.dto.ParametrosDTO;
+import org.app.autfmi.service.IParametrosService;
+import org.app.autfmi.util.Constante;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
@@ -45,6 +48,9 @@ public class MailService implements IMailService {
 
   @Autowired
   private final ReportPDFBuilder reportPDFBuilder;
+
+  @Autowired
+  private IParametrosService parametrosService;
 
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
@@ -418,6 +424,17 @@ public class MailService implements IMailService {
     variables.put("allInterviewers", allInterviewers);
     variables.put("clientName", SafeValues.safeString(detail.getClienteResumen()));
     variables.put("enlace", SafeValues.safeString(detail.getEnlaceEntrevista()));
+
+    // Tipo de entrevista: la fuente de verdad es ID_TIPO_ENTREVISTA (maestro 47),
+    // NO la presencia/ausencia de enlace, ubicación o dirección.
+    // PRESENCIAL → dirección + ubicación (Google Maps); en cualquier otro caso
+    // (VIRTUAL o no resoluble/legacy) se mantiene el enlace de la videollamada.
+    String tipoEntrevista = resolveTipoEntrevista(detail.getIdTipoEntrevista());
+    boolean esPresencial = Constante.TIPO_ENTREVISTA_PRESENCIAL.equalsIgnoreCase(tipoEntrevista);
+    variables.put("esPresencial", esPresencial);
+    variables.put("ubicacion", SafeValues.safeString(detail.getUbicacion()));
+    variables.put("direccion", SafeValues.safeString(detail.getDireccion()));
+
     variables.put("accionUsuarioNombre", actionUserName);
     variables.put("accionUsuarioTelefono", actionUserPhone);
 
@@ -444,6 +461,35 @@ public class MailService implements IMailService {
     logger.info("Sending interview notification ({}) to: {} | CC: {} recipients", templateName, talentEmail.trim(), cleanCc.size());
     mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName, variables, inlineResources);
     logger.info("Interview notification dispatched.");
+  }
+
+  /**
+   * Resuelve el texto del tipo de entrevista (p. ej. "PRESENCIAL" / "VIRTUAL") a
+   * partir de ID_TIPO_ENTREVISTA, reutilizando el mecanismo centralizado de
+   * parámetros (maestro 47). No hardcodea los IDs de los parámetros.
+   *
+   * @param idTipoEntrevista num1 del tipo de entrevista (o null).
+   * @return el string1 del parámetro correspondiente, o "" si no se resuelve.
+   */
+  private String resolveTipoEntrevista(Integer idTipoEntrevista) {
+    if (idTipoEntrevista == null) {
+      return "";
+    }
+    try {
+      var response = parametrosService.listParametros(Constante.TIPO_ENTREVISTA);
+      if (response == null || response.getListParametros() == null) {
+        return "";
+      }
+      return response.getListParametros().stream()
+          .filter(p -> idTipoEntrevista.equals(p.getNum1()))
+          .map(ParametrosDTO::getString1)
+          .filter(s -> s != null)
+          .findFirst()
+          .orElse("");
+    } catch (Exception e) {
+      logger.warn("No se pudo resolver el tipo de entrevista (id={}): {}", idTipoEntrevista, e.getMessage());
+      return "";
+    }
   }
 
   private void addInlineResourceIfPresent(Map<String, Resource> inlineResources, String cid, String classpath) {

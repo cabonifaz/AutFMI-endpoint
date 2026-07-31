@@ -995,6 +995,8 @@ public class RequirementRepository {
 				(String) requirement.get("FECHA_VENCIMIENTO"),
 				(String) requirement.get("MODALIDAD"),
 				(Integer) requirement.get("ID_ALERTA"),
+				(String) requirement.get("UBICACION"),
+				(String) requirement.get("DIRECCION_EXACTA"),
 				perfiles);
 	}
 

@@ -39,7 +39,7 @@ public class InterviewController {
   private final InterviewService interviewService;
 
   @PostMapping("/create")
-  public ResponseEntity<BaseResponse> createInterview(
+  public ResponseEntity<?> createInterview(
       @RequestBody InterviewRequest interviewRequest,
       HttpServletRequest httpServletRequest) {
 
@@ -47,10 +47,12 @@ public class InterviewController {
       String token = JwtHelper.extractToken(httpServletRequest);
       UserDTO user = jwt.decodeToken(token);
       BaseRequest baseRequest = Common.createBaseRequest(user, Constante.CREATE_INTERVIEW);
+      // Se devuelve el OperationResult completo (incluye el id creado) para que el
+      // frontend pueda generar y subir el ICS de la entrevista.
       OperationResult<Integer> result = this.interviewService.createInterview(interviewRequest, baseRequest);
-      return ResponseEntity.ok(result.getBaseResponse());
+      return ResponseEntity.ok(result);
     } catch (Exception e) {
-      return ResponseEntity.ok(new BaseResponse(3, "Error al obtener el token"));
+      return ResponseEntity.ok(new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
     }
   }
 

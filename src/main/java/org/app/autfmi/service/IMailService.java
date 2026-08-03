@@ -24,4 +24,13 @@ public interface IMailService {
 	void sendInterviewUnifiedNotification(InterviewDetailResponseDTO detail, String talentEmail, String talentFullName,
 			BaseRequest actionUser, UserContactInfoDTO actionUserInfo, String actionType);
 
+	/**
+	 * Igual que {@link #sendInterviewUnifiedNotification}, pero adjunta el ICS de la
+	 * entrevista. El adjunto es opcional: si {@code icsAttachment} es null/vacío, el
+	 * correo se envía igualmente sin adjunto.
+	 */
+	void sendInterviewUnifiedNotification(InterviewDetailResponseDTO detail, String talentEmail, String talentFullName,
+			BaseRequest actionUser, UserContactInfoDTO actionUserInfo, String actionType,
+			byte[] icsAttachment, String icsFileName);
+
 }

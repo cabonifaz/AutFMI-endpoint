@@ -30,6 +30,9 @@ import org.app.autfmi.model.response.InterviewUploadUrlResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class InterviewService {
@@ -51,36 +54,9 @@ public class InterviewService {
   public OperationResult<Integer> createInterview(
       InterviewRequest request,
       BaseRequest baseRequest) {
-
-    OperationResult<Integer> result = this.interviewRepository.createInterview(request, baseRequest);
-
-    if (result.getBaseResponse().getIdTipoMensaje() == 2 && result.getData() != null) {
-      try {
-        OperationResult<InterviewDetailResponseDTO> detail =
-            this.interviewRepository.getInterviewById(result.getData(), baseRequest);
-        if (detail != null && detail.getData() != null) {
-          if (request.getIdTalento() != null) {
-            var talentResponse = this.talentRepository.getTalentById(request.getIdTalento(), baseRequest);
-            if (talentResponse instanceof TalentResponse tr && tr.getTalento() != null) {
-              TalentDTO talent = tr.getTalento();
-              if (talent.getEmail() != null && !talent.getEmail().trim().isEmpty()) {
-                String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno()
-                    + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
-                UserContactInfoDTO actionUserInfo = this.userRepository.getUserContactInfo(baseRequest);
-                this.mailService.sendInterviewUnifiedNotification(
-                    detail.getData(), talent.getEmail().trim(), talentFullName.trim(), baseRequest, actionUserInfo, "Nueva Entrevista");
-              } else {
-                logger.info("Talent {} has no email registered, skipping interview notification", request.getIdTalento());
-              }
-            }
-          }
-        }
-      } catch (Exception e) {
-        logger.error("Error dispatching interview creation notification: {}", e.getMessage(), e);
-      }
-    }
-
-    return result;
+    // El correo (con el ICS adjunto) se envía cuando el frontend confirma el ICS,
+    // no aquí: al crear todavía no existe el ICS de la entrevista.
+    return this.interviewRepository.createInterview(request, baseRequest);
   }
 
   /**
@@ -116,62 +92,9 @@ public class InterviewService {
   public OperationResult<Void> updateInterview(
       InterviewUpdateRequest request,
       BaseRequest baseRequest) {
-
-    OperationResult<InterviewDetailResponseDTO> detail = this.interviewRepository.getInterviewById(request.getIdEntrevista(), baseRequest);
-
-    OperationResult<Void> result = this.interviewRepository.updateInterview(request, baseRequest);
-
-    if (result.getBaseResponse().getIdTipoMensaje() == 2 && request.getIdEntrevista() != null) {
-      try {
-        
-        if (detail != null && detail.getData() != null) {
-
-          String oldDate = detail.getData().getFecha();
-          String oldTime = detail.getData().getHora();
-          Integer talentId = detail.getData().getIdTalento();
-
-          if (talentId != null) {
-
-            var talentResponse = this.talentRepository.getTalentById(talentId, baseRequest);
-
-            if (talentResponse instanceof TalentResponse tr && tr.getTalento() != null) {
-
-              TalentDTO talent = tr.getTalento();
-
-              if (talent.getEmail() != null && !talent.getEmail().trim().isEmpty()) {
-
-                String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno() + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
-                UserContactInfoDTO actionUserInfo = this.userRepository.getUserContactInfo(baseRequest);
-
-                if (!request.getFecha().equals(oldDate) || !request.getHora().equals(oldTime)) {
-
-                  detail = this.interviewRepository.getInterviewById(request.getIdEntrevista(), baseRequest);
-
-                  this.mailService.sendInterviewUnifiedNotification(
-                    detail.getData(), 
-                    talent.getEmail().trim(), 
-                    talentFullName.trim(), 
-                    baseRequest, 
-                    actionUserInfo, 
-                    "Actualización de Entrevista"
-                  );
-
-                }
-
-              } else {
-
-                logger.info("Talent {} has no email registered, skipping interview notification on update", talentId);
-              
-              }
-            }
-          }
-        }
-      } catch (Exception e) {
-        logger.error("Error dispatching interview update notification: {}", e.getMessage(), e);
-      }
-    }
-
-    return result;
+    // El correo de actualización (con el ICS adjunto) se envía cuando el frontend
+    // confirma el ICS regenerado, no aquí.
+    return this.interviewRepository.updateInterview(request, baseRequest);
   }
 
   public OperationResult<InterviewUploadUrlResponse> generateUploadUrl(
@@ -261,6 +184,15 @@ public class InterviewService {
             null);
       }
 
+      boolean isIcs = request.getIdFileType() != null
+          && request.getIdFileType() == Constante.TIPO_ARCHIVO_ENTREVISTA_ICS;
+
+      // El ICS es único por entrevista: se capturan los ICS activos previos antes
+      // de guardar el nuevo para reemplazarlos (lógico en BD + físico en S3).
+      List<Integer> previousIcsIds = isIcs
+          ? findActiveIcsFileIds(request.getIdInterview(), baseRequest)
+          : new ArrayList<>();
+
       // 2. Guardar en BD
       OperationResult<Void> dbResult =
           interviewRepository.saveInterviewFile(
@@ -269,6 +201,19 @@ public class InterviewService {
               request.getFileName(),
               request.getPath(),
               baseRequest);
+
+      if (dbResult.getBaseResponse().getIdTipoMensaje() != 2) {
+        return dbResult;
+      }
+
+      if (isIcs) {
+        for (Integer oldId : previousIcsIds) {
+          this.deleteInterviewFile(oldId, baseRequest);
+        }
+        if (Boolean.TRUE.equals(request.getNotify())) {
+          dispatchIcsInterviewEmail(request, baseRequest);
+        }
+      }
 
       return dbResult;
 
@@ -279,6 +224,70 @@ public class InterviewService {
       return new OperationResult<>(
           new BaseResponse(3, "Error confirmando archivo"),
           null);
+    }
+  }
+
+  /** Ids de los ICS activos de la entrevista (para reemplazarlos al subir uno nuevo). */
+  private List<Integer> findActiveIcsFileIds(Integer idInterview, BaseRequest baseRequest) {
+    List<Integer> ids = new ArrayList<>();
+    OperationResult<InterviewDetailResponseDTO> detail =
+        this.interviewRepository.getInterviewById(idInterview, baseRequest);
+    if (detail != null && detail.getData() != null && detail.getData().getFiles() != null) {
+      detail.getData().getFiles().stream()
+          .filter(f -> f.getIdFileType() != null
+              && f.getIdFileType() == Constante.TIPO_ARCHIVO_ENTREVISTA_ICS
+              && f.getId() != null)
+          .forEach(f -> ids.add(f.getId()));
+    }
+    return ids;
+  }
+
+  /**
+   * Envía el correo de creación/actualización de la entrevista adjuntando el ICS
+   * recién registrado. El adjunto es opcional (si no se puede leer de S3, el correo
+   * se envía igualmente sin él). Nunca lanza: el correo no debe romper el registro.
+   */
+  private void dispatchIcsInterviewEmail(InterviewUploadConfirmRequest request, BaseRequest baseRequest) {
+    try {
+      OperationResult<InterviewDetailResponseDTO> detail =
+          this.interviewRepository.getInterviewById(request.getIdInterview(), baseRequest);
+      if (detail == null || detail.getData() == null || detail.getData().getIdTalento() == null) {
+        return;
+      }
+
+      var talentResponse = this.talentRepository.getTalentById(detail.getData().getIdTalento(), baseRequest);
+      if (!(talentResponse instanceof TalentResponse tr) || tr.getTalento() == null) {
+        return;
+      }
+      TalentDTO talent = tr.getTalento();
+      if (talent.getEmail() == null || talent.getEmail().trim().isEmpty()) {
+        logger.info("Talent {} has no email registered, skipping interview notification",
+            detail.getData().getIdTalento());
+        return;
+      }
+
+      String talentFullName = talent.getNombres() + " " + talent.getApellidoPaterno()
+          + (talent.getApellidoMaterno() != null ? " " + talent.getApellidoMaterno() : "");
+      UserContactInfoDTO actionUserInfo = this.userRepository.getUserContactInfo(baseRequest);
+
+      byte[] icsBytes = null;
+      try {
+        icsBytes = clientS3.download(request.getPath());
+      } catch (Exception e) {
+        logger.warn("No se pudo leer el ICS de S3 para adjuntarlo; se envía el correo sin adjunto: {}",
+            e.getMessage());
+      }
+
+      String actionType = request.getNotificationType() != null
+          ? request.getNotificationType()
+          : "Nueva Entrevista";
+
+      this.mailService.sendInterviewUnifiedNotification(
+          detail.getData(), talent.getEmail().trim(), talentFullName.trim(),
+          baseRequest, actionUserInfo, actionType, icsBytes, request.getFileName());
+
+    } catch (Exception e) {
+      logger.error("Error dispatching interview ICS notification: {}", e.getMessage(), e);
     }
   }
 

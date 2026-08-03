@@ -171,6 +171,16 @@ public class MailUtils {
 
     public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables, Map<String, Resource> inlineResources) {
+        sendEmailWithHtmlTemplate(to, cc, subject, templateName, variables, inlineResources, null, null);
+    }
+
+    /**
+     * Variante que además adjunta un archivo (p. ej. el ICS de la entrevista). El
+     * adjunto es opcional: si {@code attachmentBytes} es null/vacío, se envía sin él.
+     */
+    public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
+            Map<String, Object> variables, Map<String, Resource> inlineResources,
+            String attachmentName, byte[] attachmentBytes) {
         try {
             Context context = new Context();
             context.setVariables(variables);
@@ -202,6 +212,15 @@ public class MailUtils {
                     } catch (Exception e) {
                         logger.warn("Could not embed inline resource '{}': {}", entry.getKey(), e.getMessage());
                     }
+                }
+            }
+
+            if (attachmentBytes != null && attachmentBytes.length > 0 && attachmentName != null) {
+                try {
+                    helper.addAttachment(attachmentName,
+                            new org.springframework.core.io.ByteArrayResource(attachmentBytes));
+                } catch (Exception e) {
+                    logger.warn("Could not attach '{}': {}", attachmentName, e.getMessage());
                 }
             }
 

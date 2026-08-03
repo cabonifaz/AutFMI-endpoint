@@ -354,7 +354,6 @@ public class MailService implements IMailService {
     }
   }
 
-  @Async("notificationExecutor")
   @Override
   public void sendInterviewUnifiedNotification(
       InterviewDetailResponseDTO detail,
@@ -363,6 +362,21 @@ public class MailService implements IMailService {
       BaseRequest actionUser,
       UserContactInfoDTO actionUserInfo,
       String actionType) {
+    sendInterviewUnifiedNotification(detail, talentEmail, talentFullName, actionUser, actionUserInfo, actionType,
+        null, null);
+  }
+
+  @Async("notificationExecutor")
+  @Override
+  public void sendInterviewUnifiedNotification(
+      InterviewDetailResponseDTO detail,
+      String talentEmail,
+      String talentFullName,
+      BaseRequest actionUser,
+      UserContactInfoDTO actionUserInfo,
+      String actionType,
+      byte[] icsAttachment,
+      String icsFileName) {
 
     if (detail == null || talentEmail == null || talentEmail.trim().isEmpty()) {
       logger.warn("Missing interview detail or talent email, skipping unified notification");
@@ -458,8 +472,11 @@ public class MailService implements IMailService {
     addInlineResourceIfPresent(inlineResources, "sig-linkedin", "assets/linkedin.png");
     addInlineResourceIfPresent(inlineResources, "sig-youtube", "assets/youtube.png");
 
-    logger.info("Sending interview notification ({}) to: {} | CC: {} recipients", templateName, talentEmail.trim(), cleanCc.size());
-    mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName, variables, inlineResources);
+    logger.info("Sending interview notification ({}) to: {} | CC: {} recipients | ICS: {}",
+        templateName, talentEmail.trim(), cleanCc.size(),
+        (icsAttachment != null && icsAttachment.length > 0));
+    mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName, variables,
+        inlineResources, icsFileName, icsAttachment);
     logger.info("Interview notification dispatched.");
   }
 

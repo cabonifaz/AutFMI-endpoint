@@ -12,6 +12,9 @@ public class Constante {
     public static final String TIPO_ENTREVISTA_PRESENCIAL = "PRESENCIAL";
     public static final String TIPO_ENTREVISTA_VIRTUAL = "VIRTUAL";
 
+    // TIPO DE ARCHIVO DE ENTREVISTA (maestro 45). El ICS es generado por el sistema.
+    public static final int TIPO_ARCHIVO_ENTREVISTA_ICS = 4;
+
     // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";
     public static final String RUTA_RQ_ARCHIVOS = "/[ID_REQUERIMIENTO]/archivos/";

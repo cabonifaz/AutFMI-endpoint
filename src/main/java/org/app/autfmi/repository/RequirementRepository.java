@@ -152,7 +152,8 @@ public class RequirementRepository {
 									(BigDecimal) rqTalentRow.get("MONTO_BASE"),
 									(Integer) rqTalentRow.get("ID_CV_FILE"),
 									(Integer) rqTalentRow.get("ID_CV_FILE_ES"),
-									(Integer) rqTalentRow.get("ID_CV_FILE_EN"));
+									(Integer) rqTalentRow.get("ID_CV_FILE_EN"),
+									(Integer) rqTalentRow.get("INGRESO"));
 
 							lstRqTalents.add(itemRqTalento);
 						}
@@ -634,7 +635,8 @@ public class RequirementRepository {
 				.addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
 				.addValue("ID_ROL", baseRequest.getIdRol())
 				.addValue("USUARIO", baseRequest.getUsername())
-				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+				.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+				.addValue("FINALIZAR", Boolean.TRUE.equals(request.getFinalizar()) ? 1 : 0);
 
 		this.logger.info("Executing stored procedure SP_REQUERIMIENTO_TALENTO_INS");
 		Map<String, Object> result = simpleJdbcCall.execute(params);

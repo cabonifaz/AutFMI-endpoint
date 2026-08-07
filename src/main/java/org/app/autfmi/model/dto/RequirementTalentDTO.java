@@ -34,4 +34,5 @@ public class RequirementTalentDTO {
     private Integer idCvFile;
     private Integer idCVEs;
     private Integer idCVEn;
+    private Integer ingreso;
 }

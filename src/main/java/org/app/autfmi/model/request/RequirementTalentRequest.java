@@ -10,5 +10,6 @@ import java.util.List;
 public class RequirementTalentRequest {
     private Integer idRequerimiento;
     private Boolean flagCorreo;
+    private Boolean finalizar;
     private List<RequirementTalentRequestDTO> lstTalentos;
 }

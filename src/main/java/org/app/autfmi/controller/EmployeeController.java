@@ -113,6 +113,41 @@ public class EmployeeController {
         }
     }
 
+    /** Deshacer el último cese de un talento (reactiva su contrato). */
+    @PutMapping("/cese/undo")
+    public ResponseEntity<BaseResponse> undoCese(
+            @RequestParam Integer idHistorial,
+            @RequestParam Integer idTalento,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return new ResponseEntity<>(employeeService.undoCese(token, idHistorial, idTalento), HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error in undoCese: ", e);
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /** Deshacer (baja lógica) una solicitud de equipo. */
+    @DeleteMapping("/solicitud/equipo")
+    public ResponseEntity<BaseResponse> deleteEquipmentRequest(
+            @RequestParam Integer idSolicitud,
+            @RequestParam Integer idTalento,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return new ResponseEntity<>(employeeService.deleteEquipmentRequest(token, idSolicitud, idTalento),
+                    HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error in deleteEquipmentRequest: ", e);
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping("/lastHistory")
     public ResponseEntity<FilePDFResponse> getLastHistory(
             @RequestParam Integer idTipoHistorial,

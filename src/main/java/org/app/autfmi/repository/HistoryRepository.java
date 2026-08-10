@@ -171,6 +171,35 @@ public class HistoryRepository {
         return new OperationResult<>(baseResponse, operationId);
     }
 
+    /** Deshace el último cese de un talento. SP_TALENTO_EMPLEADO_CESE_UNDO. */
+    public BaseResponse undoContractTermination(BaseRequest baseRequest, Integer idHistorial, Integer idTalento) {
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_TALENTO_EMPLEADO_CESE_UNDO",
+                params -> params
+                        .addValue("ID_HISTORIAL", idHistorial)
+                        .addValue("ID_TALENTO", idTalento));
+        return mapMessageResponse(result, "SP_TALENTO_EMPLEADO_CESE_UNDO");
+    }
+
+    /** Deshace (baja lógica) una solicitud de equipo. SP_EQUIPO_SOLICITUD_DEL. */
+    public BaseResponse deleteEquipmentRequest(BaseRequest baseRequest, Integer idSolicitud, Integer idTalento) {
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_EQUIPO_SOLICITUD_DEL",
+                params -> params
+                        .addValue("ID_EQUIPO_SOLICITUD", idSolicitud)
+                        .addValue("ID_TALENTO", idTalento));
+        return mapMessageResponse(result, "SP_EQUIPO_SOLICITUD_DEL");
+    }
+
+    private BaseResponse mapMessageResponse(Map<String, Object> result, String sp) {
+        List<Map<String, Object>> rs = (List<Map<String, Object>>) result.get("#result-set-1");
+        if (rs == null || rs.isEmpty()) {
+            this.logger.error("No message returned from stored procedure {}", sp);
+            return new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
+        }
+        Integer messageId = (Integer) rs.get(0).get("ID_TIPO_MENSAJE");
+        String messageText = (String) rs.get(0).get("MENSAJE");
+        return new BaseResponse(messageId, messageText);
+    }
+
     public IReport getHistoryReport(
             BaseRequest baseRequest,
             Integer talentId,

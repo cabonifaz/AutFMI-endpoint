@@ -194,6 +194,34 @@ public class EmployeeService implements IEmployeeService {
   }
 
   @Override
+  public BaseResponse undoCese(String token, Integer idHistorial, Integer idTalento) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.DESHACER_MOVIMIENTO);
+    return historyRepository.undoContractTermination(baseRequest, idHistorial, idTalento);
+  }
+
+  @Override
+  public BaseResponse deleteEquipmentRequest(String token, Integer idSolicitud, Integer idTalento) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.DESHACER_MOVIMIENTO);
+    return historyRepository.deleteEquipmentRequest(baseRequest, idSolicitud, idTalento);
+  }
+
+  @Override
+  public BaseResponse undoMovimiento(String token, Integer idHistorial, Integer idTalento) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.DESHACER_MOVIMIENTO);
+    return historyRepository.undoMovimiento(baseRequest, idHistorial, idTalento);
+  }
+
+  @Override
+  public BaseResponse undoIngreso(String token, Integer idHistorial, Integer idTalento) {
+    UserDTO user = jwt.decodeToken(token);
+    BaseRequest baseRequest = Common.createBaseRequest(user, Constante.DESHACER_MOVIMIENTO);
+    return historyRepository.undoIngreso(baseRequest, idHistorial, idTalento);
+  }
+
+  @Override
   public FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento) {
     this.logger.info("Processing getLastHistory");
     UserDTO user = jwt.decodeToken(token);

@@ -148,6 +148,40 @@ public class EmployeeController {
         }
     }
 
+    /** Deshacer el último movimiento de un talento. */
+    @PutMapping("/movimiento/undo")
+    public ResponseEntity<BaseResponse> undoMovimiento(
+            @RequestParam Integer idHistorial,
+            @RequestParam Integer idTalento,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return new ResponseEntity<>(employeeService.undoMovimiento(token, idHistorial, idTalento), HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error in undoMovimiento: ", e);
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /** Deshacer el último ingreso de un talento (reabre el cupo del RQ). */
+    @PutMapping("/ingreso/undo")
+    public ResponseEntity<BaseResponse> undoIngreso(
+            @RequestParam Integer idHistorial,
+            @RequestParam Integer idTalento,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return new ResponseEntity<>(employeeService.undoIngreso(token, idHistorial, idTalento), HttpStatus.OK);
+        } catch (Exception e) {
+            this.logger.error("Error in undoIngreso: ", e);
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     @GetMapping("/lastHistory")
     public ResponseEntity<FilePDFResponse> getLastHistory(
             @RequestParam Integer idTipoHistorial,

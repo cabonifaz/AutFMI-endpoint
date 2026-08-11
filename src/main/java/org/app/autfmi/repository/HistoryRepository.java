@@ -189,6 +189,24 @@ public class HistoryRepository {
         return mapMessageResponse(result, "SP_EQUIPO_SOLICITUD_DEL");
     }
 
+    /** Deshace el último movimiento de un talento. SP_TALENTO_EMPLEADO_MOVIMIENTO_UNDO. */
+    public BaseResponse undoMovimiento(BaseRequest baseRequest, Integer idHistorial, Integer idTalento) {
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_TALENTO_EMPLEADO_MOVIMIENTO_UNDO",
+                params -> params
+                        .addValue("ID_HISTORIAL", idHistorial)
+                        .addValue("ID_TALENTO", idTalento));
+        return mapMessageResponse(result, "SP_TALENTO_EMPLEADO_MOVIMIENTO_UNDO");
+    }
+
+    /** Deshace el último ingreso de un talento (reabre el cupo). SP_TALENTO_EMPLEADO_INGRESO_UNDO. */
+    public BaseResponse undoIngreso(BaseRequest baseRequest, Integer idHistorial, Integer idTalento) {
+        Map<String, Object> result = executeProcedure(baseRequest, "SP_TALENTO_EMPLEADO_INGRESO_UNDO",
+                params -> params
+                        .addValue("ID_HISTORIAL", idHistorial)
+                        .addValue("ID_TALENTO", idTalento));
+        return mapMessageResponse(result, "SP_TALENTO_EMPLEADO_INGRESO_UNDO");
+    }
+
     private BaseResponse mapMessageResponse(Map<String, Object> result, String sp) {
         List<Map<String, Object>> rs = (List<Map<String, Object>>) result.get("#result-set-1");
         if (rs == null || rs.isEmpty()) {

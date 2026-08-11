@@ -67,6 +67,9 @@ public class Constante {
     public static final String LIST_INTERVIEW = "1033";
     public static final String UPLOAD_DOWNLOAD_INTERVIEW_FILE = "1034";
 
+    // Deshacer el último movimiento (Cese / Solicitud de equipo). Solo SUPERADMIN.
+    public static final String DESHACER_MOVIMIENTO = "2048";
+
     // TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";
 

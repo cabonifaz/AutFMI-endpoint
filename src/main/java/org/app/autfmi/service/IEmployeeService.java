@@ -23,6 +23,14 @@ public interface IEmployeeService {
     BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request)
             throws MessagingException, SQLServerException;
 
+    BaseResponse undoCese(String token, Integer idHistorial, Integer idTalento);
+
+    BaseResponse deleteEquipmentRequest(String token, Integer idSolicitud, Integer idTalento);
+
+    BaseResponse undoMovimiento(String token, Integer idHistorial, Integer idTalento);
+
+    BaseResponse undoIngreso(String token, Integer idHistorial, Integer idTalento);
+
     FilePDFResponse getLastHistory(String token, Integer idTipoHistorial, Integer idTalento);
 
     FilePDFResponse getLastSolicitudEquipo(String token, Integer idSolicitudEquipo) throws MessagingException;

@@ -377,31 +377,40 @@ public class MailService implements IMailService {
     }
   }
 
+  /** Asunto de un formulario: "Solicitud de &lt;accion&gt;: &lt;Cliente&gt; - &lt;NombreTalento&gt;". */
+  private String buildFormularioSubject(String accion, String cliente, String nombre) {
+    return "Solicitud de " + accion + ": " + SafeValues.safeString(cliente) + " - " + SafeValues.safeString(nombre);
+  }
+
+  /** Cuerpo estándar de los correos de formulario. */
+  private String buildFormularioBody(String accion) {
+    return "Estimados,\n\nFavor atender la solicitud de " + accion + ".\nSlds";
+  }
+
   /**
    * Envía los correos del ingreso: (1) Formulario de Ingreso al maestro 52 y
-   * (2) Solicitud de Creación de Usuario al maestro 51. En ambos, CC = usuario
-   * generador + maestro 35. Son dos correos separados porque van a destinatarios
-   * distintos.
+   * (2) Solicitud de Creación de Usuario al maestro 51.
    */
   @Async("notificationExecutor")
   @Override
   public void sendEntryReportNotification(EntryReport report) {
     String fullname = report.getNombres() + " " + report.getApellidos();
+    String cliente = report.getCliente();
     String gestores = report.getGestoresCliente();
 
     // Correo 1: Formulario de Ingreso -> maestro 52 (talento)
     sendFormularioEmail(
         this.reportPDFBuilder.forIngreso(report).withFormulario().build(),
         Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(), gestores,
-        "Formulario de Ingreso - " + fullname,
-        "Formulario de ingreso del empleado: " + fullname);
+        buildFormularioSubject("ingreso", cliente, fullname),
+        buildFormularioBody("ingreso"));
 
     // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte)
     sendFormularioEmail(
         this.reportPDFBuilder.forIngreso(report).withCreateUser().build(),
         Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), gestores,
-        "Solicitud de Creación de Usuario - " + fullname,
-        "Solicitud de creación de usuario para: " + fullname);
+        buildFormularioSubject("creación de usuario", cliente, fullname),
+        buildFormularioBody("creación de usuario"));
   }
 
   @Async("notificationExecutor")
@@ -419,8 +428,8 @@ public class MailService implements IMailService {
     // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
     sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
         report.getGestoresCliente(),
-        "Cese de Empleado - " + fullname,
-        "Formulario de cese del empleado.");
+        buildFormularioSubject("cese", report.getCliente(), fullname),
+        buildFormularioBody("cese"));
   }
 
   @Override
@@ -435,8 +444,8 @@ public class MailService implements IMailService {
     // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
     sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
         report.getGestoresCliente(),
-        "Movimiento de Empleado - " + fullname,
-        "Formulario de movimiento para el empleado: " + fullname);
+        buildFormularioSubject("movimiento", report.getCliente(), fullname),
+        buildFormularioBody("movimiento"));
   }
 
   @Override
@@ -658,7 +667,7 @@ public class MailService implements IMailService {
     // TO: maestro 51 (soporte). CC: generador + selección(35) + gestores del cliente.
     sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(),
         report.getGestoresCliente(),
-        "Requerimiento de Software y Hardware - " + employee,
-        "Solicitud de equipo para: " + employee);
+        buildFormularioSubject("equipo", report.getCliente(), employee),
+        buildFormularioBody("equipo"));
   }
 }

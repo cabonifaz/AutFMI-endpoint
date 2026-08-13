@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.app.autfmi.model.report.CeseReport;
+import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
@@ -16,6 +17,13 @@ public interface IMailService {
 			List<String> ccAddresses, String action);
 
 	void sendCeseReportNotification(CeseReport report);
+
+	/**
+	 * Envía los correos del ingreso: Formulario de Ingreso (maestro 52) y Solicitud
+	 * de Creación de Usuario (maestro 51), como dos correos separados, con copia al
+	 * usuario generador y al maestro 35.
+	 */
+	void sendEntryReportNotification(EntryReport report);
 
 	void sendMovementReportNotification(MovementReport report);
 

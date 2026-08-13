@@ -63,23 +63,9 @@ public class EmployeeService implements IEmployeeService {
     if (messageId != 2)
       return report.getResponse();
 
-    // Build PDF files
-
-    var builder = this.reportPDFBuilder
-        .forIngreso(report)
-        .withCreateUser();
-
-    String correoGestor = report.getCorreoGestor();
-
-    if (correoGestor == null)
-      throw new IllegalArgumentException("El correo del gestor no puede ser nulo");
-
-    pdfUtils.enviarCorreoConPDF(
-        builder.build(),
-        correoGestor,
-        new ArrayList<>(),
-        "Ingreso de empleado",
-        "Formulario de nuevo ingreso de empleado.");
+    // Envía 2 correos: Formulario de Ingreso (maestro 52) y Solicitud de Creación
+    // de Usuario (maestro 51), con copia al usuario generador y al maestro 35.
+    this.mailService.sendEntryReportNotification(report);
 
     return report.getResponse();
   }

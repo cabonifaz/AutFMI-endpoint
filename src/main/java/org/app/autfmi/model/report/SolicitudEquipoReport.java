@@ -35,4 +35,6 @@ public class SolicitudEquipoReport {
     private String firmaGestor;
     private String dniTalento;
     private String celularTalento;
+    /** Correos de los gestores del cliente, separados por coma (para CC). */
+    private String gestoresCliente;
 }

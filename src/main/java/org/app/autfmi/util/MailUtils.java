@@ -2,7 +2,9 @@ package org.app.autfmi.util;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.util.ByteArrayDataSource;
 
+import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.PostulantDTO;
 import org.slf4j.LoggerFactory;
@@ -40,7 +42,7 @@ public class MailUtils {
 
     @Async("notificationExecutor")
     public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes,
-            List<String> lstEmails) {
+            List<String> lstEmails, List<FileDTO> attachments) {
         try {
             // lista de talentos al RQ
             List<String> listaTalentosRQ = new ArrayList<>();
@@ -78,13 +80,13 @@ public class MailUtils {
             List<String> cleanCc = EmailUtils.sanitizeRecipients(lstEmails, to);
 
             try {
-                enviarMensajeHtml(to, cleanCc, asuntoCorreo, mensajeCorreo);
-                logger.info("Email sent to: {} (cc: {})", to, cleanCc.size());
+                enviarMensajeHtml(to, cleanCc, asuntoCorreo, mensajeCorreo, attachments);
+                logger.info("Email sent to: {} (cc {}: {})", to, cleanCc.size(), cleanCc);
             } catch (Exception e) {
                 // Un CC inválido a nivel SMTP no debe impedir que el actuador reciba su correo.
                 logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",
                         e.getMessage());
-                enviarMensajeHtml(to, List.of(), asuntoCorreo, mensajeCorreo);
+                enviarMensajeHtml(to, List.of(), asuntoCorreo, mensajeCorreo, attachments);
                 logger.info("Email sent to: {} (sin CC tras reintento)", to);
             }
         } catch (Exception e) {
@@ -97,7 +99,8 @@ public class MailUtils {
      * Construye y envía un mensaje HTML simple. Se aísla en su propio método para
      * poder reintentar el envío (por ejemplo, sin CC) reconstruyendo el mensaje.
      */
-    private void enviarMensajeHtml(String to, List<String> cc, String subject, String htmlBody)
+    private void enviarMensajeHtml(String to, List<String> cc, String subject, String htmlBody,
+            List<FileDTO> attachments)
             throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -109,6 +112,15 @@ public class MailUtils {
         }
         helper.setSubject(subject);
         helper.setText(htmlBody, true);
+
+        if (attachments != null) {
+            for (FileDTO objfile : attachments) {
+                if (objfile != null && objfile.getByteArchivo() != null) {
+                    ByteArrayDataSource dataSource = new ByteArrayDataSource(objfile.getByteArchivo(), "application/pdf");
+                    helper.addAttachment(objfile.getNombreArchivo() + ".pdf", dataSource);
+                }
+            }
+        }
 
         mailSender.send(message);
     }
@@ -155,12 +167,12 @@ public class MailUtils {
 
             // 4. Enviar el correo; un CC inválido no debe bloquear el envío al TO
             try {
-                enviarMensajeHtml(destino, cleanCc, subject, htmlBody);
+                enviarMensajeHtml(destino, cleanCc, subject, htmlBody, null);
                 logger.info("Correo enviado exitosamente a: {} (cc: {})", destino, cleanCc.size());
             } catch (MessagingException e) {
                 logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",
                         e.getMessage());
-                enviarMensajeHtml(destino, List.of(), subject, htmlBody);
+                enviarMensajeHtml(destino, List.of(), subject, htmlBody, null);
                 logger.info("Correo enviado exitosamente a: {} (sin CC tras reintento)", destino);
             }
 

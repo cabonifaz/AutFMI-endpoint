@@ -33,4 +33,6 @@ public class EntryReport implements IReport {
     private String usernameEmpleado;
     private String emailEmpleado;
     private String cliente;
+    /** Correos de los gestores del cliente, separados por coma (para CC). */
+    private String gestoresCliente;
 }

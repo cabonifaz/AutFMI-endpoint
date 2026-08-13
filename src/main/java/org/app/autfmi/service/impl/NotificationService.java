@@ -51,7 +51,8 @@ public class NotificationService {
 
       var gestorRqEmail = gestorRq.getCorreo();
 
-      String subjectBase = gestorRq.getCodigoRQ() + " | " + gestorRq.getCliente();
+      String cliente = gestorRq.getCliente();
+      String codigoRQ = gestorRq.getCodigoRQ();
 
       if (gestorRqEmail == null) {
         this.logger.error("No se encontro el correo del gestor del requerimiento");
@@ -111,8 +112,8 @@ public class NotificationService {
       /* 2. Solicitud de Creación de Usuario -> maestro 51 (bundle de todos los talentos). */
       if (!usuarioFiles.isEmpty()) {
         sendBundleToMaestro(usuarioFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
-            "Solicitud de Creación de Usuario | " + subjectBase,
-            "Solicitud de creación de usuario(s).");
+            "Solicitud de creación de usuario: " + cliente + " - " + codigoRQ,
+            "Estimados,\n\nFavor atender la solicitud de creación de usuario.\nSlds");
       }
 
       /* 3. Solicitudes de equipo -> maestro 51 (bundle de todos los talentos). */
@@ -126,8 +127,8 @@ public class NotificationService {
         });
         if (!equipoFiles.isEmpty()) {
           sendBundleToMaestro(equipoFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
-              "Solicitud de Equipo | " + subjectBase,
-              "Formulario de solicitud de equipo.");
+              "Solicitud de equipo: " + cliente + " - " + codigoRQ,
+              "Estimados,\n\nFavor atender la solicitud de equipo.\nSlds");
         }
       }
 

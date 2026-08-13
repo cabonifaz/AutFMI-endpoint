@@ -297,7 +297,8 @@ public class HistoryRepository {
                 (String) report.get("USERNAME_EMPLEADO"),
                 (String) report.get("EMAIL_EMPLEADO"),
                 (String) report.get("FCH_DEVOLUCION_EQUIPO"),
-                (String) report.get("GESTORES_CC"));
+                (String) report.get("GESTORES_CC"),
+                (String) report.get("CLIENTE"));
     }
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {

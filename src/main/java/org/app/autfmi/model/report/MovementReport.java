@@ -25,4 +25,5 @@ public class MovementReport implements IReport {
     private String firma;
     private String usernameEmpleado;
     private String emailEmpleado;
+    private String cliente;
 }

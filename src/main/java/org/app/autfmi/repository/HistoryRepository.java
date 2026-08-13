@@ -126,7 +126,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO"));
+                (String) report.get("EMAIL_EMPLEADO"),
+                (String) report.get("CLIENTE"));
     }
 
     /**
@@ -353,7 +354,14 @@ public class HistoryRepository {
                 List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-3");
                 Map<String, Object> reportRow = report.get(0);
 
-                return mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
+                EntryReport entryReport = mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
+                // El result-set del INS no expone CLIENTE; se toma del request, que es
+                // el mismo valor que se persiste en HISTORIAL.CLIENTE. Necesario para
+                // que el formulario muestre "Cliente" cuando el area es Outsourcing.
+                if (entryReport.getCliente() == null || entryReport.getCliente().isBlank()) {
+                    entryReport.setCliente(request.getCliente());
+                }
+                return entryReport;
             }
         }
         return null;
@@ -383,7 +391,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMANTE"),
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
-                (String) report.get("EMAIL_EMPLEADO"));
+                (String) report.get("EMAIL_EMPLEADO"),
+                (String) report.get("CLIENTE"));
     }
 
     public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {

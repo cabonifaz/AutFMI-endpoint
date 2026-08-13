@@ -5,6 +5,7 @@ import java.util.List;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.util.Common;
+import org.app.autfmi.util.Constante;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
@@ -27,6 +28,15 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     // Datos del Colaborador
     context.setVariable("nombreColaborador", report.getNombres() + " " + report.getApellidos());
     context.setVariable("unidad", report.getUnidad());
+
+    // Si el area (Equipo) es Outsourcing, el formulario muestra "Cliente: <cliente>"
+    // en lugar de la fila "Equipo".
+    boolean esOutsourcing = report.getUnidad() != null && Constante.AREA_OUTSOURCING.equalsIgnoreCase(report.getUnidad().trim());
+
+    System.out.println("esOutsourcing: " + esOutsourcing);
+
+    context.setVariable("esOutsourcing", esOutsourcing);
+    context.setVariable("cliente", report.getCliente());
 
     // Estructura salarial
 

@@ -202,8 +202,8 @@
       </td>
     </tr>
     <tr>
-      <td class="label">Equipo</td>
-      <td class="value" th:text="${unidad}">
+      <td class="label" th:text="${esOutsourcing} ? 'Cliente' : 'Equipo'">Equipo</td>
+      <td class="value" th:text="${esOutsourcing} ? ${cliente} : ${unidad}">
         Marketing, Comercial y Comunicaciones
       </td>
     </tr>

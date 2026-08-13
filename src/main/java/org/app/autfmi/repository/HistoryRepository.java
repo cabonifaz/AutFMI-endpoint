@@ -127,7 +127,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
                 (String) report.get("EMAIL_EMPLEADO"),
-                (String) report.get("CLIENTE"));
+                (String) report.get("CLIENTE"),
+                (String) report.get("GESTORES_CC"));
     }
 
     /**
@@ -295,7 +296,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
                 (String) report.get("EMAIL_EMPLEADO"),
-                (String) report.get("FCH_DEVOLUCION_EQUIPO"));
+                (String) report.get("FCH_DEVOLUCION_EQUIPO"),
+                (String) report.get("GESTORES_CC"));
     }
 
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
@@ -392,7 +394,8 @@ public class HistoryRepository {
                 (String) report.get("FIRMA"),
                 (String) report.get("USERNAME_EMPLEADO"),
                 (String) report.get("EMAIL_EMPLEADO"),
-                (String) report.get("CLIENTE"));
+                (String) report.get("CLIENTE"),
+                (String) report.get("GESTORES_CC"));
     }
 
     public IReport getLastEmployeeHistoryRegister(BaseRequest baseRequest, Integer idTipoHistorial, Integer idTalento) {
@@ -499,6 +502,7 @@ public class HistoryRepository {
         report.setNombreApellidoGestor(fullname);
         report.setCorreoGestor(mail);
         report.setFirmaGestor(firma);
+        report.setGestoresCliente((String) solicitanteDb.get("GESTORES_CC"));
 
         List<Map<String, Object>> solicitudList = (List<Map<String, Object>>) rs.get("#result-set-3");
 

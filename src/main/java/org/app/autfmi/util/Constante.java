@@ -33,6 +33,10 @@ public class Constante {
     public static final int TIPO_REPORTE_INGRESO = 1;
     public static final int TIPO_REPORTE_MOVIMIENTO = 2;
 
+    // AREAS (nombre de PARAMETROS maestro 7). Cuando el area del movimiento es
+    // Outsourcing, el formulario muestra "Cliente" en lugar de "Equipo".
+    public static final String AREA_OUTSOURCING = "Outsourcing";
+
     // FUNCIONALIDADES
     public static final String LISTAR_TALENTOS = "1";
     public static final String MOSTRAR_DATOS_TALENTO = "2";

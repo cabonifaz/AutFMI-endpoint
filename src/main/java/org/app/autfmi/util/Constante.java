@@ -37,6 +37,13 @@ public class Constante {
     // Outsourcing, el formulario muestra "Cliente" en lugar de "Equipo".
     public static final String AREA_OUTSOURCING = "Outsourcing";
 
+    // CORREOS DESTINO DE FORMULARIOS (string1 del PARAMETROS del maestro indicado).
+    // TO por formulario: Ingreso/Movimiento/Cese -> 52; Creacion de Usuario/Equipo -> 51.
+    // Selección (maestro 35) va siempre en copia (CC) junto al usuario generador.
+    public static final String MAESTRO_CORREO_SOPORTE = "51";
+    public static final String MAESTRO_CORREO_TALENTO = "52";
+    public static final String MAESTRO_CORREO_SELECCION = "35";
+
     // FUNCIONALIDADES
     public static final String LISTAR_TALENTOS = "1";
     public static final String MOSTRAR_DATOS_TALENTO = "2";

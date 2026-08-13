@@ -53,11 +53,11 @@ public class PDFUtils {
         // Filtramos correos nulos, vacíos, con formato inválido, duplicados
         // y al propio destinatario principal.
         List<String> cleanCc = EmailUtils.sanitizeRecipients(copyTo, dest);
-        this.logger.info("Cleaned CC: {}", cleanCc.size());
+        this.logger.info("CC final ({}): {}", cleanCc.size(), cleanCc);
 
         try {
             construirYEnviar(dest, cleanCc, subject, text, lstfiles);
-            this.logger.info("Correo con PDF enviado a: {} (cc: {})", dest, cleanCc.size());
+            this.logger.info("Correo con PDF enviado a: {} (cc {}: {})", dest, cleanCc.size(), cleanCc);
         } catch (Exception e) {
             // Un CC inválido a nivel SMTP no debe impedir que el destinatario principal lo reciba.
             this.logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",

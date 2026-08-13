@@ -21,4 +21,6 @@ public class CeseReport implements IReport {
     private String usernameEmpleado;
     private String emailEmpleado;
     private String fchDevolucionEquipo;
+    /** Correos de los gestores del cliente, separados por coma (para CC). */
+    private String gestoresCliente;
 }

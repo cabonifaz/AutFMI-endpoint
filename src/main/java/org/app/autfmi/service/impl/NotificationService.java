@@ -63,36 +63,22 @@ public class NotificationService {
         ccList = Collections.emptyList();
       }
 
-      // CC de los formularios: ccList del RQ + usuario generador (gestor del RQ) +
-      // maestro 35 (selección). La deduplicación/limpieza final la hace enviarCorreoConPDF.
-      List<String> formCc = new ArrayList<>(ccList);
+      // CC base de los correos de AsignarTalento: ccList del RQ (gestores del cliente
+      // + selección, ya SIN el gestor creador) + usuario generador (gestor del RQ) +
+      // selección(35) por robustez. La limpieza/dedup final la hace enviarCorreoConPDF.
+      List<String> baseCc = new ArrayList<>(ccList);
       if (!gestorRqEmail.trim().isEmpty()) {
-        formCc.add(gestorRqEmail.trim());
+        baseCc.add(gestorRqEmail.trim());
       }
-      String seleccion = resolveMaestroEmail(Constante.MAESTRO_CORREO_SELECCION);
-      if (!seleccion.isEmpty()) {
-        formCc.add(seleccion);
-      }
+      baseCc.addAll(resolveMaestroEmails(Constante.MAESTRO_CORREO_SELECCION));
 
-      /* 1. Notificar sobre talentos confirmados */
-      if (postulantes != null && !postulantes.isEmpty()) {
-        this.mailUtils.sendRequirementPostulantMail(
-          gestorRq,
-          "Ingreso de nuevo talento",
-          postulantes,
-          ccList
-        );
-        this.logger.info("Notificación de talentos confirmados enviada");
-      }
-
-      /* 2. Formularios de ingreso: se SEPARAN por tipo/destino.
-       *    Formulario de Ingreso -> maestro 52; Creación de Usuario -> maestro 51.
-       *    Cada tipo se agrupa (bundle) en su propio correo con todos los talentos. */
+      // Generar los PDFs de ingreso (Formulario de Ingreso) y creación de usuario
+      // por cada talento. El de ingreso se adjunta al correo "Ingreso de nuevo
+      // talento"; el de creación de usuario va en su propio correo al maestro 51.
+      List<FileDTO> ingresoFiles = new ArrayList<>();
+      List<FileDTO> usuarioFiles = new ArrayList<>();
       if (entryReportsIds != null) {
         this.logger.info("Generando formularios de ingreso y creación de usuario");
-        List<FileDTO> ingresoFiles = new ArrayList<>();
-        List<FileDTO> usuarioFiles = new ArrayList<>();
-
         entryReportsIds.forEach((report) -> {
           var idTalento = report.getIdTalento();
           if (idTalento == null) {
@@ -100,39 +86,33 @@ public class NotificationService {
             return;
           }
           var entryReport = (EntryReport) this.historyRepository.getHistoryReport(
-              baseRequest,
-              idTalento,
-              report.getIdTipoHistorial(),
-              report.getIdHistorial(),
-              false);
-
+              baseRequest, idTalento, report.getIdTipoHistorial(), report.getIdHistorial(), false);
           ingresoFiles.addAll(this.reportPDFBuilder.forIngreso(entryReport).withFormulario().build());
           usuarioFiles.addAll(this.reportPDFBuilder.forIngreso(entryReport).withCreateUser().build());
         });
+      }
 
-        // Correo A: Formulario de Ingreso -> maestro 52
-        if (!ingresoFiles.isEmpty()) {
-          String to = resolveFormularioTo(Constante.MAESTRO_CORREO_TALENTO, gestorRqEmail);
-          this.logger.info("Enviando Formularios de Ingreso -> TO: {} | CC: {}", to, formCc);
-          pdfUtils.enviarCorreoConPDF(
-              ingresoFiles,
-              to,
-              formCc,
-              "Formulario de Ingreso | " + subjectBase,
-              "Formulario de ingreso de empleado(s).");
-        }
+      /* 1. Correo "Ingreso de nuevo talento": tabla de talentos + Formulario de
+       *    Ingreso ADJUNTO. TO = gestorRq; CC = base + Talento(52). Se envía si hay
+       *    postulantes O si hay formularios de ingreso que adjuntar. */
+      boolean hayPostulantes = postulantes != null && !postulantes.isEmpty();
+      if (hayPostulantes || !ingresoFiles.isEmpty()) {
+        List<String> ccIngreso = new ArrayList<>(baseCc);
+        ccIngreso.addAll(resolveMaestroEmails(Constante.MAESTRO_CORREO_TALENTO));
+        this.mailUtils.sendRequirementPostulantMail(
+            gestorRq,
+            "Ingreso de nuevo talento",
+            postulantes != null ? postulantes : Collections.emptyList(),
+            ccIngreso,
+            ingresoFiles);
+        this.logger.info("Correo 'Ingreso de nuevo talento' enviado (adjuntos de ingreso: {})", ingresoFiles.size());
+      }
 
-        // Correo B: Solicitud de Creación de Usuario -> maestro 51
-        if (!usuarioFiles.isEmpty()) {
-          String to = resolveFormularioTo(Constante.MAESTRO_CORREO_SOPORTE, gestorRqEmail);
-          this.logger.info("Enviando Solicitudes de Creación de Usuario -> TO: {} | CC: {}", to, formCc);
-          pdfUtils.enviarCorreoConPDF(
-              usuarioFiles,
-              to,
-              formCc,
-              "Solicitud de Creación de Usuario | " + subjectBase,
-              "Solicitud de creación de usuario(s).");
-        }
+      /* 2. Solicitud de Creación de Usuario -> maestro 51 (bundle de todos los talentos). */
+      if (!usuarioFiles.isEmpty()) {
+        sendBundleToMaestro(usuarioFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
+            "Solicitud de Creación de Usuario | " + subjectBase,
+            "Solicitud de creación de usuario(s).");
       }
 
       /* 3. Solicitudes de equipo -> maestro 51 (bundle de todos los talentos). */
@@ -141,20 +121,11 @@ public class NotificationService {
         this.logger.info("Generando formularios de solicitudes de equipo");
         solicitudesEquipo.forEach((solicitud) -> {
           var reporte = this.historyRepository.getSolicitudEquipoReport(
-              baseRequest,
-              solicitud.getIdTalento(),
-              solicitud.getIdSolicitudEquipo(),
-              false);
+              baseRequest, solicitud.getIdTalento(), solicitud.getIdSolicitudEquipo(), false);
           equipoFiles.addAll(this.reportPDFBuilder.fEquipoReport(reporte).withFormulario().build());
         });
-
         if (!equipoFiles.isEmpty()) {
-          String to = resolveFormularioTo(Constante.MAESTRO_CORREO_SOPORTE, gestorRqEmail);
-          this.logger.info("Enviando Solicitudes de Equipo -> TO: {} | CC: {}", to, formCc);
-          pdfUtils.enviarCorreoConPDF(
-              equipoFiles,
-              to,
-              formCc,
+          sendBundleToMaestro(equipoFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
               "Solicitud de Equipo | " + subjectBase,
               "Formulario de solicitud de equipo.");
         }
@@ -167,39 +138,53 @@ public class NotificationService {
   }
 
   /**
-   * Resuelve el correo destino de un formulario desde el string1 del PARAMETROS
-   * del maestro indicado. Se asume una fila por maestro: se toma el primer
-   * string1 no vacío. Devuelve "" si no se resuelve.
+   * Resuelve TODOS los correos (string1) del PARAMETROS del maestro indicado. Un
+   * maestro puede tener varias filas (varios correos); se devuelven todos.
    */
-  private String resolveMaestroEmail(String maestro) {
+  private List<String> resolveMaestroEmails(String maestro) {
+    List<String> emails = new ArrayList<>();
     try {
       var response = parametrosService.listParametros(maestro);
       if (response == null || response.getListParametros() == null) {
-        return "";
+        return emails;
       }
-      return response.getListParametros().stream()
-          .map(ParametrosDTO::getString1)
-          .filter(s -> s != null && !s.trim().isEmpty())
-          .map(String::trim)
-          .findFirst()
-          .orElse("");
+      for (ParametrosDTO p : response.getListParametros()) {
+        String s = p.getString1();
+        if (s != null && !s.trim().isEmpty()) {
+          emails.add(s.trim());
+        }
+      }
     } catch (Exception e) {
-      logger.warn("No se pudo resolver el correo del maestro {}: {}", maestro, e.getMessage());
-      return "";
+      logger.warn("No se pudo resolver los correos del maestro {}: {}", maestro, e.getMessage());
     }
+    return emails;
   }
 
   /**
-   * TO de un formulario: el correo del maestro; si no se resuelve, cae al correo
-   * del generador (gestor del RQ) para no perder el envío.
+   * Envía un bundle de PDFs a un maestro: TO = primer correo del maestro (si tiene
+   * varios, el resto van a CC); si el maestro no resuelve, cae al generador. CC =
+   * baseCc + correos extra del maestro.
    */
-  private String resolveFormularioTo(String maestro, String fallback) {
-    String email = resolveMaestroEmail(maestro);
-    if (!email.isEmpty()) {
-      return email;
+  private void sendBundleToMaestro(List<FileDTO> files, String maestro, List<String> baseCc,
+      String gestorRqEmail, String subject, String message) {
+    List<String> toEmails = resolveMaestroEmails(maestro);
+    String to = !toEmails.isEmpty()
+        ? toEmails.get(0)
+        : (gestorRqEmail != null ? gestorRqEmail.trim() : "");
+    if (to == null || to.isEmpty()) {
+      logger.error("Correo '{}' no enviado: sin destinatario (maestro {} ni gestorRq).", subject, maestro);
+      return;
     }
-    logger.warn("Maestro {} sin correo configurado; se usa el correo del generador como destinatario", maestro);
-    return fallback != null ? fallback.trim() : "";
+    List<String> cc = new ArrayList<>(baseCc);
+    if (toEmails.size() > 1) {
+      cc.addAll(toEmails.subList(1, toEmails.size()));
+    }
+    try {
+      logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
+      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message);
+    } catch (Exception e) {
+      logger.error("Error enviando '{}': ", subject, e);
+    }
   }
 
 }

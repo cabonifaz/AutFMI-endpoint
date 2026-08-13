@@ -296,55 +296,85 @@ public class MailService implements IMailService {
   }
 
   /**
-   * Resuelve el correo destino de un formulario desde el string1 del PARAMETROS
-   * del maestro indicado. Se asume una fila por maestro: se toma el primer
-   * string1 no vacío. Devuelve "" si no se resuelve.
+   * Resuelve TODOS los correos (string1) del PARAMETROS del maestro indicado. Un
+   * maestro puede tener varias filas (varios correos); se devuelven todos.
    */
-  private String resolveMaestroEmail(String maestro) {
+  private List<String> resolveMaestroEmails(String maestro) {
+    List<String> emails = new ArrayList<>();
     try {
       var response = parametrosService.listParametros(maestro);
       if (response == null || response.getListParametros() == null) {
-        return "";
+        return emails;
       }
-      return response.getListParametros().stream()
-          .map(ParametrosDTO::getString1)
-          .filter(s -> s != null && !s.trim().isEmpty())
-          .map(String::trim)
-          .findFirst()
-          .orElse("");
+      for (ParametrosDTO p : response.getListParametros()) {
+        String s = p.getString1();
+        if (s != null && !s.trim().isEmpty()) {
+          emails.add(s.trim());
+        }
+      }
     } catch (Exception e) {
-      logger.warn("No se pudo resolver el correo del maestro {}: {}", maestro, e.getMessage());
-      return "";
+      logger.warn("No se pudo resolver los correos del maestro {}: {}", maestro, e.getMessage());
     }
+    return emails;
+  }
+
+  /** Separa una lista de correos separados por coma en una lista limpia. */
+  private List<String> splitEmails(String csv) {
+    List<String> list = new ArrayList<>();
+    if (csv == null || csv.trim().isEmpty()) {
+      return list;
+    }
+    for (String e : csv.split(",")) {
+      if (e != null && !e.trim().isEmpty()) {
+        list.add(e.trim());
+      }
+    }
+    return list;
   }
 
   /**
-   * TO de un formulario: el correo del maestro indicado; si no se resuelve, cae al
-   * usuario generador (correoGestor) para no perder el envío.
+   * CC de los formularios individuales: usuario generador (correoGestor) +
+   * selección (maestro 35, todos sus correos) + gestores del cliente (csv del
+   * reporte) + correos extra del maestro TO (cuando el maestro tiene más de uno).
    */
-  private String resolveFormularioTo(String maestro, String correoGestor) {
-    String email = resolveMaestroEmail(maestro);
-    if (!email.isEmpty()) {
-      return email;
-    }
-    logger.warn("Maestro {} sin correo configurado; se usa el correo del generador como destinatario", maestro);
-    return correoGestor != null ? correoGestor.trim() : "";
-  }
-
-  /**
-   * CC de los formularios: el usuario generador (correoGestor) + el correo del
-   * maestro 35 (selección). Se limpian nulos, inválidos y duplicados.
-   */
-  private List<String> buildFormularioCcList(String correoGestor) {
+  private List<String> buildFormularioCcList(String correoGestor, String gestoresCsv, List<String> extraToEmails) {
     List<String> cc = new ArrayList<>();
     if (correoGestor != null && !correoGestor.trim().isEmpty()) {
       cc.add(correoGestor.trim());
     }
-    String seleccion = resolveMaestroEmail(Constante.MAESTRO_CORREO_SELECCION);
-    if (!seleccion.isEmpty()) {
-      cc.add(seleccion);
+    cc.addAll(resolveMaestroEmails(Constante.MAESTRO_CORREO_SELECCION));
+    cc.addAll(splitEmails(gestoresCsv));
+    if (extraToEmails != null) {
+      cc.addAll(extraToEmails);
     }
     return deduplicateEmailList(cc);
+  }
+
+  /**
+   * Envía un formulario individual: TO = primer correo del maestro (si tiene
+   * varios, el resto van a CC); si el maestro no resuelve, cae al generador. CC =
+   * generador + selección(35) + gestores del cliente + correos extra del maestro.
+   */
+  private void sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
+      String gestoresCsv, String subject, String message) {
+    List<String> toEmails = resolveMaestroEmails(maestro);
+    String to = !toEmails.isEmpty()
+        ? toEmails.get(0)
+        : (correoGestor != null ? correoGestor.trim() : "");
+    if (to == null || to.isEmpty()) {
+      logger.error("Correo '{}' no enviado: sin destinatario (maestro {} ni correoGestor).", subject, maestro);
+      return;
+    }
+    List<String> extraTo = toEmails.size() > 1
+        ? new ArrayList<>(toEmails.subList(1, toEmails.size()))
+        : new ArrayList<>();
+    List<String> cc = buildFormularioCcList(correoGestor, gestoresCsv, extraTo);
+    try {
+      logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
+      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message);
+    } catch (Exception e) {
+      logger.error("Error enviando '{}': ", subject, e);
+    }
   }
 
   /**
@@ -357,39 +387,28 @@ public class MailService implements IMailService {
   @Override
   public void sendEntryReportNotification(EntryReport report) {
     String fullname = report.getNombres() + " " + report.getApellidos();
-    List<String> cc = buildFormularioCcList(report.getCorreoGestor());
+    String gestores = report.getGestoresCliente();
 
     // Correo 1: Formulario de Ingreso -> maestro 52 (talento)
-    try {
-      List<FileDTO> ingresoFiles = this.reportPDFBuilder.forIngreso(report).withFormulario().build();
-      String toIngreso = resolveFormularioTo(Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor());
-      logger.info("Enviando Formulario de Ingreso -> TO: {} | CC: {}", toIngreso, cc);
-      pdfUtils.enviarCorreoConPDF(ingresoFiles, toIngreso, cc,
-          "Formulario de Ingreso - " + fullname,
-          "Formulario de ingreso del empleado: " + fullname);
-    } catch (Exception e) {
-      logger.error("Error enviando el Formulario de Ingreso: ", e);
-    }
+    sendFormularioEmail(
+        this.reportPDFBuilder.forIngreso(report).withFormulario().build(),
+        Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(), gestores,
+        "Formulario de Ingreso - " + fullname,
+        "Formulario de ingreso del empleado: " + fullname);
 
     // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte)
-    try {
-      List<FileDTO> userFiles = this.reportPDFBuilder.forIngreso(report).withCreateUser().build();
-      String toUsuario = resolveFormularioTo(Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor());
-      logger.info("Enviando Solicitud de Creación de Usuario -> TO: {} | CC: {}", toUsuario, cc);
-      pdfUtils.enviarCorreoConPDF(userFiles, toUsuario, cc,
-          "Solicitud de Creación de Usuario - " + fullname,
-          "Solicitud de creación de usuario para: " + fullname);
-    } catch (Exception e) {
-      logger.error("Error enviando la Solicitud de Creación de Usuario: ", e);
-    }
+    sendFormularioEmail(
+        this.reportPDFBuilder.forIngreso(report).withCreateUser().build(),
+        Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), gestores,
+        "Solicitud de Creación de Usuario - " + fullname,
+        "Solicitud de creación de usuario para: " + fullname);
   }
 
   @Async("notificationExecutor")
   @Override
   public void sendCeseReportNotification(CeseReport report) {
     logger.info("Preparing to send cese report notification email...");
-
-    String subject = "Cese de Empleado - " + report.getNombres() + " " + report.getApellidos();
+    String fullname = report.getNombres() + " " + report.getApellidos();
 
     List<FileDTO> attachments = this.reportPDFBuilder
         .forCese(report)
@@ -397,58 +416,27 @@ public class MailService implements IMailService {
         .withDeactivateRequest()
         .build();
 
-    // TO: maestro 52 (talento). CC: usuario generador (correoGestor) + maestro 35.
-    String dest = resolveFormularioTo(Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor());
-    List<String> cc = buildFormularioCcList(report.getCorreoGestor());
-
-    if (dest == null || dest.isEmpty()) {
-      logger.error("Cese report email not sent: sin destinatario (maestro 52 ni correoGestor).");
-      return;
-    }
-
-    try {
-      logger.info("Enviando Formulario de Cese -> TO: {} | CC: {}", dest, cc);
-      pdfUtils.enviarCorreoConPDF(attachments, dest, cc, subject,
-          "Formulario de cese del empleado.");
-      logger.info("Cese report email sent successfully to {}", dest);
-    } catch (Exception e) {
-      logger.error("Error sending cese report email: ", e);
-    }
+    // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
+    sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
+        report.getGestoresCliente(),
+        "Cese de Empleado - " + fullname,
+        "Formulario de cese del empleado.");
   }
 
   @Override
   public void sendMovementReportNotification(MovementReport report) {
-
     String fullname = report.getNombres() + " " + report.getApellidos();
-    String subject = "Movimiento de Empleado - " + fullname;
 
     List<FileDTO> attachments = this.reportPDFBuilder
         .forMovimiento(report)
         .withFormulario()
         .build();
 
-    // TO: maestro 52 (talento). CC: usuario generador (correoGestor) + maestro 35.
-    String dest = resolveFormularioTo(Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor());
-    List<String> cc = buildFormularioCcList(report.getCorreoGestor());
-
-    if (dest == null || dest.isEmpty()) {
-      logger.error("Movement report email not sent: sin destinatario (maestro 52 ni correoGestor).");
-      return;
-    }
-
-    try {
-      String message = "Formulario de movimiento para el empleado: " + fullname;
-      logger.info("Enviando Formulario de Movimiento -> TO: {} | CC: {}", dest, cc);
-      pdfUtils.enviarCorreoConPDF(
-          attachments,
-          dest,
-          cc,
-          subject,
-          message);
-      logger.info("Movement report email sent successfully to {}", dest);
-    } catch (Exception e) {
-      logger.error("Error sending movement report email: ", e);
-    }
+    // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
+    sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
+        report.getGestoresCliente(),
+        "Movimiento de Empleado - " + fullname,
+        "Formulario de movimiento para el empleado: " + fullname);
   }
 
   @Override
@@ -660,33 +648,17 @@ public class MailService implements IMailService {
   @Async("notificationExecutor")
   @Override
   public void sendEquipmentRequestNotification(SolicitudEquipoReport report) {
-
     String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
-    String subject = "Requerimiento de Software y Hardware - " + employee;
-    String message = "Solicitud de equipo para: " + employee;
 
     List<FileDTO> attachments = this.reportPDFBuilder
         .fEquipoReport(report)
         .withFormulario()
         .build();
 
-    // TO: maestro 51 (soporte). CC: usuario generador (correoGestor) + maestro 35.
-    String dest = resolveFormularioTo(Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor());
-    List<String> cc = buildFormularioCcList(report.getCorreoGestor());
-
-    if (dest == null || dest.isEmpty()) {
-      logger.error("Equipment request email not sent: sin destinatario (maestro 51 ni correoGestor).");
-      return;
-    }
-
-    try {
-      logger.info("Enviando Formulario de Solicitud de Equipo -> TO: {} | CC: {}", dest, cc);
-      pdfUtils.enviarCorreoConPDF(attachments, dest, cc, subject,
-          message);
-      logger.info("Mail sent to: {}", dest);
-    } catch (Exception e) {
-      logger.error("Error sending report mail: {}", e);
-    }
-
+    // TO: maestro 51 (soporte). CC: generador + selección(35) + gestores del cliente.
+    sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(),
+        report.getGestoresCliente(),
+        "Requerimiento de Software y Hardware - " + employee,
+        "Solicitud de equipo para: " + employee);
   }
 }

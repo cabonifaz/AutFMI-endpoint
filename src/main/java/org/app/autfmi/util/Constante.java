@@ -81,6 +81,13 @@ public class Constante {
     // Deshacer el último movimiento (Cese / Solicitud de equipo). Solo SUPERADMIN.
     public static final String DESHACER_MOVIMIENTO = "2048";
 
+    // Módulo Selección (estadísticas de entrevistas/ingresos). AJUSTAR: reemplazar
+    // por el id real de la funcionalidad creada en BD para /dashboard/seleccion.
+    public static final String SELECCION_ESTADISTICAS = "2049";
+    // Búsqueda de usuarios de selección (desglose por-usuario). Solo Admin (rol 1):
+    // se otorga esta funcionalidad únicamente a ese rol.
+    public static final String SELECCION_USUARIOS = "2050";
+
     // TRAZABILIDAD
     public static final String TXT_SEPARADOR = "=========================================";
 

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.app.autfmi.model.dto.InicioOutsourcingDTO;
 import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -652,6 +653,64 @@ public class MailService implements IMailService {
       logger.warn("Could not format time '{}': {}", horaStr, e.getMessage());
       return horaStr;
     }
+  }
+
+  /**
+   * Notificación de próximo inicio de labores de un talento en outsourcing.
+   * TO = contactos del requerimiento; CC = gestores del cliente + Selección(35).
+   * Es SÍNCRONO a propósito: el job solo marca el contrato si el correo se envió.
+   *
+   * @return {@code true} si el correo se envió (procede marcar el contrato).
+   */
+  @Override
+  public boolean sendInicioOutsourcingNotification(InicioOutsourcingDTO dto) {
+    List<String> contactosCliente = splitEmails(dto.getCorreosCliente());
+    List<String> gestores = splitEmails(dto.getCorreosGestores());             // gestores del cliente
+    List<String> seleccion = resolveMaestroEmails(Constante.MAESTRO_CORREO_SELECCION); // Selección (35)
+
+    // Destinatario TO: contactos del RQ; si no hay, fallback a gestores del cliente;
+    // si tampoco hay gestores, a Selección. Solo se omite si no hay absolutamente nadie.
+    List<String> destinatarios = !contactosCliente.isEmpty() ? contactosCliente
+        : (!gestores.isEmpty() ? gestores : seleccion);
+    if (destinatarios.isEmpty()) {
+      logger.warn("Notif. inicio contrato {}: sin destinatarios (ni contactos RQ, ni gestores, ni Selección); "
+          + "se omite y reintentará.", dto.getIdContrato());
+      return false;
+    }
+
+    // TO = primer destinatario; el resto va a CC junto con gestores + Selección.
+    String to = destinatarios.get(0);
+    List<String> cc = new ArrayList<>();
+    if (destinatarios.size() > 1) {
+      cc.addAll(destinatarios.subList(1, destinatarios.size()));
+    }
+    cc.addAll(gestores);
+    cc.addAll(seleccion);
+    List<String> cleanCc = deduplicateEmailList(cc);
+    // evita que el TO se repita en CC cuando el fallback lo tomó de gestores/Selección
+    cleanCc.removeIf(mail -> mail.equalsIgnoreCase(to));
+
+    boolean esDiaInicio = "D0".equalsIgnoreCase(dto.getTipoHito());
+    String nombreCompleto = (SafeValues.safeString(dto.getNombres()) + " "
+        + SafeValues.safeString(dto.getApellidos())).trim();
+
+    Map<String, Object> variables = new HashMap<>();
+    variables.put("esDiaInicio", esDiaInicio);
+    variables.put("nombreCompleto", nombreCompleto);
+    variables.put("dni", SafeValues.safeString(dto.getDni()));
+    variables.put("celular", SafeValues.safeString(dto.getCelular()));
+    variables.put("correo", SafeValues.safeString(dto.getEmail()));
+    variables.put("cargo", SafeValues.safeString(dto.getCargo()));
+    variables.put("modalidad", SafeValues.safeString(dto.getModalidad()));
+    variables.put("cliente", SafeValues.safeString(dto.getCliente()));
+    variables.put("fchInicio", SafeValues.safeString(dto.getFchInicio()));
+
+    String subject = (esDiaInicio ? "Inicio de labores hoy: " : "Próximo inicio de labores: ")
+        + SafeValues.safeString(dto.getCliente()) + " - " + nombreCompleto;
+
+    logger.info("Enviando notif. inicio ({}) contrato {} -> TO: {} | CC: {}",
+        dto.getTipoHito(), dto.getIdContrato(), to, cleanCc.size());
+    return mailUtils.sendTemplateEmailSync(to, cleanCc, subject, "inicio-outsourcing", variables);
   }
 
   @Async("notificationExecutor")

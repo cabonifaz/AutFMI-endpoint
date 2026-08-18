@@ -2,6 +2,7 @@ package org.app.autfmi.service;
 
 import java.util.List;
 
+import org.app.autfmi.model.dto.InicioOutsourcingDTO;
 import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
@@ -28,6 +29,16 @@ public interface IMailService {
 	void sendMovementReportNotification(MovementReport report);
 
 	void sendEquipmentRequestNotification(SolicitudEquipoReport report);
+
+	/**
+	 * Notificación de próximo inicio de labores de un talento en outsourcing
+	 * (faltando 2 días y el día de inicio). TO = contactos del requerimiento;
+	 * CC = gestores del cliente + Selección (maestro 35). Es síncrono: el job
+	 * solo marca el contrato como notificado si el correo se envió.
+	 *
+	 * @return {@code true} si el correo se envió (procede marcar el contrato).
+	 */
+	boolean sendInicioOutsourcingNotification(InicioOutsourcingDTO dto);
 
 	void sendInterviewUnifiedNotification(InterviewDetailResponseDTO detail, String talentEmail, String talentFullName,
 			BaseRequest actionUser, UserContactInfoDTO actionUserInfo, String actionType);

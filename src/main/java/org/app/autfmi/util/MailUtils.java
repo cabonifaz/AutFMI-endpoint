@@ -187,6 +187,43 @@ public class MailUtils {
     }
 
     /**
+     * Variante SÍNCRONA que devuelve si el correo se envió. Se usa desde procesos
+     * batch (p. ej. el job de notificación de inicio de labores) donde hay que
+     * confirmar el envío antes de marcar el registro como notificado. Un CC
+     * inválido a nivel SMTP no bloquea el envío: se reintenta solo al TO.
+     *
+     * @return {@code true} si el correo llegó a enviarse (con o sin CC);
+     *         {@code false} si el destinatario es inválido o el envío falló.
+     */
+    public boolean sendTemplateEmailSync(String to, List<String> cc, String subject, String templateName,
+            Map<String, Object> variables) {
+        String destino = to != null ? to.trim() : null;
+        if (!EmailUtils.isValidEmail(destino)) {
+            logger.error("Correo '{}' cancelado: destinatario principal inválido ('{}')", subject, to);
+            return false;
+        }
+        try {
+            Context context = new Context();
+            context.setVariables(variables);
+            String htmlBody = templateEngine.process(templateName, context);
+            List<String> cleanCc = EmailUtils.sanitizeRecipients(cc, destino);
+            try {
+                enviarMensajeHtml(destino, cleanCc, subject, htmlBody, null);
+                logger.info("Correo '{}' enviado a: {} (cc: {})", subject, destino, cleanCc.size());
+            } catch (MessagingException e) {
+                logger.error("Falló el envío de '{}' con CC ({}); reintentando solo al destinatario",
+                        subject, e.getMessage());
+                enviarMensajeHtml(destino, List.of(), subject, htmlBody, null);
+                logger.info("Correo '{}' enviado a: {} (sin CC tras reintento)", subject, destino);
+            }
+            return true;
+        } catch (Exception e) {
+            logger.error("Error al enviar correo '{}' a {}: {}", subject, destino, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
      * Variante que además adjunta un archivo (p. ej. el ICS de la entrevista). El
      * adjunto es opcional: si {@code attachmentBytes} es null/vacío, se envía sin él.
      */

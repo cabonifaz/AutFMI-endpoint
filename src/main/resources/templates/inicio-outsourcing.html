@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Próximo inicio de labores</title>
+</head>
+
+<body style="margin: 0; padding: 16px; background-color: #ffffff; font-family: Arial, sans-serif; color: #000000;">
+
+  <div style="max-width: 720px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb;">
+
+    <!-- Header -->
+    <div style="padding: 20px 24px; background-color: #2D5294;">
+      <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #ffffff;"
+        th:text="${esDiaInicio} ? 'Inicio de labores hoy' : 'Próximo inicio de labores'">
+        Próximo inicio de labores
+      </h1>
+    </div>
+
+    <!-- Content -->
+    <div style="padding: 24px;">
+
+      <p style="margin: 0 0 16px 0; font-size: 15px;">Estimados,</p>
+
+      <p style="margin: 0 0 16px 0; font-size: 15px;" th:if="${esDiaInicio}">
+        Les comunicamos que <strong>hoy</strong> inicia labores el siguiente talento asignado a
+        <strong th:text="${cliente}">Cliente</strong>. Compartimos sus datos:
+      </p>
+      <p style="margin: 0 0 16px 0; font-size: 15px;" th:unless="${esDiaInicio}">
+        Les indicamos que el día <strong th:text="${fchInicio}">dd/mm/aaaa</strong> iniciará labores el siguiente
+        talento asignado a <strong th:text="${cliente}">Cliente</strong>. Compartimos sus datos:
+      </p>
+
+      <table width="100%" cellpadding="8" cellspacing="0"
+        style="border: 1px solid #e5e7eb; border-collapse: collapse; font-size: 14px;">
+        <tr>
+          <td width="25%"
+            style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Nombre completo</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${nombreCompleto}">Nombres Apellidos</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Documento</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${dni}">00000000</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Cargo</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${cargo}">Cargo</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Celular</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${celular}">999999999</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Correo</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${correo}">correo@dominio.com</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Inicio de labores</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${fchInicio}">dd/mm/aaaa</td>
+        </tr>
+      </table>
+
+      <p style="margin: 20px 0 0 0; font-size: 15px;">Saludos cordiales.</p>
+
+    </div>
+  </div>
+
+</body>
+
+</html>

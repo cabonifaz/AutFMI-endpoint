@@ -35,4 +35,11 @@ public class RequirementTalentDTO {
     private Integer idCVEs;
     private Integer idCVEn;
     private Integer ingreso;
+    private BigDecimal montoInicialPlanilla;
+    private BigDecimal montoFinalPlanilla;
+    private BigDecimal montoInicialRxH;
+    private BigDecimal montoFinalRxH;
+    private Integer idMonedaPlan;
+    private Integer idMonedaRxh;
+    private Integer idModalidadFacturacion;
 }

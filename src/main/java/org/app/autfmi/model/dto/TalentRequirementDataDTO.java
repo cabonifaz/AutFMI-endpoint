@@ -1,5 +1,7 @@
 package org.app.autfmi.model.dto;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,4 +22,11 @@ public class TalentRequirementDataDTO {
     private Integer idEstado;
     private String estado;
     private Integer tieneEquipo;
+    private BigDecimal montoInicialPlanilla;
+    private BigDecimal montoFinalPlanilla;
+    private BigDecimal montoInicialRxH;
+    private BigDecimal montoFinalRxH;
+    private Integer idMonedaPlan;
+    private Integer idMonedaRxh;
+    private Integer idModalidadFacturacion;
 }

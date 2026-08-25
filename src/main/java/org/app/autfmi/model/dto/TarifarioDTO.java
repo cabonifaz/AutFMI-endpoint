@@ -15,4 +15,6 @@ public class TarifarioDTO {
     private BigDecimal tarifa;
     private String moneda;
     private String tipoTarifa;
+    private Integer idMoneda;
+    private BigDecimal tipoCambio;
 }

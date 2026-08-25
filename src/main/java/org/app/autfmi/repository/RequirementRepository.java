@@ -128,32 +128,46 @@ public class RequirementRepository {
 
 					if (resultSet3 != null && !resultSet3.isEmpty()) {
 						for (Map<String, Object> rqTalentRow : resultSet3) {
-							RequirementTalentDTO itemRqTalento = new RequirementTalentDTO(
-									(Integer) rqTalentRow.get("ID_REQUERIMIENTO_TALENTO"),
-									(Integer) rqTalentRow.get("ID_TALENTO"),
-									(String) rqTalentRow.get("NOMBRES_TALENTO"),
-									(String) rqTalentRow.get("APELLIDOS_TALENTO"),
-									(String) rqTalentRow.get("DNI"),
-									(String) rqTalentRow.get("CELULAR"),
-									(String) rqTalentRow.get("EMAIL"),
-									(Integer) rqTalentRow.get("ID_SITUACION"),
-									(String) rqTalentRow.get("SITUACION"),
-									(Integer) rqTalentRow.get("ID_ESTADO"),
-									(String) rqTalentRow.get("ESTADO"),
-									(Integer) rqTalentRow.get("ID_PERFIL"),
-									(String) rqTalentRow.get("PERFIL"),
-									(Boolean) rqTalentRow.get("CONFIRMADO"),
-									(String) rqTalentRow.get("TOOL_TIP"),
-									(Integer) rqTalentRow.get("TIENE_EQUIPO"),
-									(String) rqTalentRow.get("UBICACION"),
-									(Integer) rqTalentRow.get("ID_MODALIDAD_CONTRATO"),
-									(String) rqTalentRow.get("FCH_INICIO_LABORES"),
-									(String) rqTalentRow.get("FCH_FIN_LABORES"),
-									(BigDecimal) rqTalentRow.get("MONTO_BASE"),
-									(Integer) rqTalentRow.get("ID_CV_FILE"),
-									(Integer) rqTalentRow.get("ID_CV_FILE_ES"),
-									(Integer) rqTalentRow.get("ID_CV_FILE_EN"),
-									(Integer) rqTalentRow.get("INGRESO"));
+							// Se asigna por setters y no por el constructor de Lombok:
+							// con la pretensión salarial serían 32 argumentos
+							// posicionales, donde cruzar dos por error es invisible.
+							RequirementTalentDTO itemRqTalento = new RequirementTalentDTO();
+							itemRqTalento.setIdRequerimientoTalento(
+									(Integer) rqTalentRow.get("ID_REQUERIMIENTO_TALENTO"));
+							itemRqTalento.setIdTalento((Integer) rqTalentRow.get("ID_TALENTO"));
+							itemRqTalento.setNombresTalento((String) rqTalentRow.get("NOMBRES_TALENTO"));
+							itemRqTalento.setApellidosTalento((String) rqTalentRow.get("APELLIDOS_TALENTO"));
+							itemRqTalento.setDni((String) rqTalentRow.get("DNI"));
+							itemRqTalento.setCelular((String) rqTalentRow.get("CELULAR"));
+							itemRqTalento.setEmail((String) rqTalentRow.get("EMAIL"));
+							itemRqTalento.setIdSituacion((Integer) rqTalentRow.get("ID_SITUACION"));
+							itemRqTalento.setSituacion((String) rqTalentRow.get("SITUACION"));
+							itemRqTalento.setIdEstado((Integer) rqTalentRow.get("ID_ESTADO"));
+							itemRqTalento.setEstado((String) rqTalentRow.get("ESTADO"));
+							itemRqTalento.setIdPerfil((Integer) rqTalentRow.get("ID_PERFIL"));
+							itemRqTalento.setPerfil((String) rqTalentRow.get("PERFIL"));
+							itemRqTalento.setConfirmado(Boolean.TRUE.equals(rqTalentRow.get("CONFIRMADO")));
+							itemRqTalento.setTooltip((String) rqTalentRow.get("TOOL_TIP"));
+							itemRqTalento.setTieneEquipo((Integer) rqTalentRow.get("TIENE_EQUIPO"));
+							itemRqTalento.setUbicacion((String) rqTalentRow.get("UBICACION"));
+							itemRqTalento.setIdModalidadContrato((Integer) rqTalentRow.get("ID_MODALIDAD_CONTRATO"));
+							itemRqTalento.setFchInicioContrato((String) rqTalentRow.get("FCH_INICIO_LABORES"));
+							itemRqTalento.setFchTerminoContrato((String) rqTalentRow.get("FCH_FIN_LABORES"));
+							itemRqTalento.setMontoBase((BigDecimal) rqTalentRow.get("MONTO_BASE"));
+							itemRqTalento.setIdCvFile((Integer) rqTalentRow.get("ID_CV_FILE"));
+							itemRqTalento.setIdCVEs((Integer) rqTalentRow.get("ID_CV_FILE_ES"));
+							itemRqTalento.setIdCVEn((Integer) rqTalentRow.get("ID_CV_FILE_EN"));
+							itemRqTalento.setIngreso((Integer) rqTalentRow.get("INGRESO"));
+
+							// Pretensión salarial (modal "Ver Riesgo").
+							itemRqTalento.setMontoInicialPlanilla((BigDecimal) rqTalentRow.get("MONTO_INICIAL_PLANILLA"));
+							itemRqTalento.setMontoFinalPlanilla((BigDecimal) rqTalentRow.get("MONTO_FINAL_PLANILLA"));
+							itemRqTalento.setMontoInicialRxH((BigDecimal) rqTalentRow.get("MONTO_INICIAL_RXH"));
+							itemRqTalento.setMontoFinalRxH((BigDecimal) rqTalentRow.get("MONTO_FINAL_RXH"));
+							itemRqTalento.setIdMonedaPlan((Integer) rqTalentRow.get("ID_MONEDA_PLAN"));
+							itemRqTalento.setIdMonedaRxh((Integer) rqTalentRow.get("ID_MONEDA_RXH"));
+							itemRqTalento.setIdModalidadFacturacion(
+									(Integer) rqTalentRow.get("ID_MODALIDAD_FACTURACION"));
 
 							lstRqTalents.add(itemRqTalento);
 						}
@@ -782,19 +796,29 @@ public class RequirementRepository {
 	}
 
 	public static TalentRequirementDataDTO mapTalentRequirementDataDTO(Map<String, Object> talentoRQ) {
-		return new TalentRequirementDataDTO(
-				(Integer) talentoRQ.get("ID_TALENTO"),
-				(String) talentoRQ.get("NOMBRES"),
-				(String) talentoRQ.get("APELLIDOS"),
-				(String) talentoRQ.get("DNI"),
-				(String) talentoRQ.get("CELULAR"),
-				(String) talentoRQ.get("EMAIL"),
-				(Integer) talentoRQ.get("ID_SITUACION"),
-				(String) talentoRQ.get("SITUACION"),
-				(String) talentoRQ.get("TOOL_TIP"),
-				(Integer) talentoRQ.get("ID_ESTADO"),
-				(String) talentoRQ.get("ESTADO"),
-				(Integer) talentoRQ.get("TIENE_EQUIPO"));
+		TalentRequirementDataDTO dto = new TalentRequirementDataDTO();
+		dto.setIdTalento((Integer) talentoRQ.get("ID_TALENTO"));
+		dto.setNombres((String) talentoRQ.get("NOMBRES"));
+		dto.setApellidos((String) talentoRQ.get("APELLIDOS"));
+		dto.setDni((String) talentoRQ.get("DNI"));
+		dto.setCelular((String) talentoRQ.get("CELULAR"));
+		dto.setEmail((String) talentoRQ.get("EMAIL"));
+		dto.setIdSituacion((Integer) talentoRQ.get("ID_SITUACION"));
+		dto.setSituacion((String) talentoRQ.get("SITUACION"));
+		dto.setTooltip((String) talentoRQ.get("TOOL_TIP"));
+		dto.setIdEstado((Integer) talentoRQ.get("ID_ESTADO"));
+		dto.setEstado((String) talentoRQ.get("ESTADO"));
+		dto.setTieneEquipo((Integer) talentoRQ.get("TIENE_EQUIPO"));
+
+		// Pretensión salarial (modal "Ver Riesgo" de Asignar Talento).
+		dto.setMontoInicialPlanilla((BigDecimal) talentoRQ.get("MONTO_INICIAL_PLANILLA"));
+		dto.setMontoFinalPlanilla((BigDecimal) talentoRQ.get("MONTO_FINAL_PLANILLA"));
+		dto.setMontoInicialRxH((BigDecimal) talentoRQ.get("MONTO_INICIAL_RXH"));
+		dto.setMontoFinalRxH((BigDecimal) talentoRQ.get("MONTO_FINAL_RXH"));
+		dto.setIdMonedaPlan((Integer) talentoRQ.get("ID_MONEDA_PLAN"));
+		dto.setIdMonedaRxh((Integer) talentoRQ.get("ID_MONEDA_RXH"));
+		dto.setIdModalidadFacturacion((Integer) talentoRQ.get("ID_MODALIDAD_FACTURACION"));
+		return dto;
 	}
 
 	public BaseResponse saveRequirementFile(BaseRequest baseRequest, RequirementFileRequest request)

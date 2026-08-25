@@ -62,7 +62,9 @@ public class TarifarioRepository {
                 (String) tarifa.get("PERFIL"),
                 (BigDecimal) tarifa.get("TARIFA"),
                 (String) tarifa.get("MONEDA"),
-                (String) tarifa.get("TIPO_TARIFA"));
+                (String) tarifa.get("TIPO_TARIFA"),
+                (Integer) tarifa.get("ID_MONEDA"),
+                (BigDecimal) tarifa.get("TIPO_CAMBIO"));
     }
 
 }

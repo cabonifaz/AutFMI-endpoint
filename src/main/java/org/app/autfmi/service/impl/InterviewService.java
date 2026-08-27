@@ -148,6 +148,12 @@ public class InterviewService {
                 request.getContentType(),
                 5);
 
+        if (uploadUrl == null || uploadUrl.isEmpty()) {
+          return new OperationResult<>(
+              new BaseResponse(3, "Error generando URL"),
+              null);
+        }
+
         // 7. Respuesta
         InterviewUploadUrlResponse response = new InterviewUploadUrlResponse();
 
@@ -311,6 +317,17 @@ public class InterviewService {
             file.getPathFile(),
             5
         );
+
+        // generatePresignedUrl devuelve cadena vacia cuando la key no se puede
+        // firmar (ruta heredada de la epoca base64, marcador sin sustituir, bucket
+        // sin configurar). Sin esta guarda la respuesta salia como exito con una
+        // url vacia.
+        if (url == null || url.isEmpty()) {
+            return new OperationResult<>(
+                new BaseResponse(3, "Error generando URL de descarga"),
+                null
+            );
+        }
 
         InterviewDownloadFileResponse response = new InterviewDownloadFileResponse();
 

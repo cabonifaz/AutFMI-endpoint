@@ -562,35 +562,25 @@ public class RequirementService implements IRequirementService {
                 + fileName;
     }
 
-    /** Extensión en minúsculas (sin punto) del nombre/ruta, o "" si no tiene. */
+    /**
+     * Extension en minusculas (sin punto) del nombre/ruta, o "" si no tiene.
+     *
+     * <p>
+     * La implementacion vive ahora en {@link ClientS3V2}, compartida con Banco de
+     * Talentos: era el unico sitio de FMI que la tenia y estaba duplicada alli.
+     */
     private String extractExtension(String name) {
-        if (name == null) {
-            return "";
-        }
-        int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
-        String base = slash >= 0 ? name.substring(slash + 1) : name;
-        int dot = base.lastIndexOf('.');
-        return dot >= 0 ? base.substring(dot + 1).toLowerCase() : "";
+        return ClientS3V2.extractExtension(name);
     }
 
     /**
      * Sanea el nombre de archivo: descarta cualquier ruta, restringe a caracteres
-     * seguros [A-Za-z0-9._-], limita la longitud y conserva la extensión.
+     * seguros [A-Za-z0-9._-], limita la longitud y conserva la extension.
+     *
+     * @see ClientS3V2#sanitizeFileName(String, String)
      */
     private String sanitizeFileName(String originalFilename, String extension) {
-        int slash = Math.max(originalFilename.lastIndexOf('/'), originalFilename.lastIndexOf('\\'));
-        String base = slash >= 0 ? originalFilename.substring(slash + 1) : originalFilename;
-        int dot = base.lastIndexOf('.');
-        String namePart = dot >= 0 ? base.substring(0, dot) : base;
-
-        namePart = namePart.replaceAll("[^A-Za-z0-9._-]", "_");
-        if (namePart.isEmpty()) {
-            namePart = "archivo";
-        }
-        if (namePart.length() > 80) {
-            namePart = namePart.substring(0, 80);
-        }
-        return extension.isEmpty() ? namePart : namePart + "." + extension;
+        return ClientS3V2.sanitizeFileName(originalFilename, extension);
     }
 
     @Override

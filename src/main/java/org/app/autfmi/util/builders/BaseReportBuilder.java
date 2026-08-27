@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.util.FileUtils;
+import org.app.autfmi.util.SafeValues;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.core.io.ClassPathResource;
@@ -97,6 +98,37 @@ public abstract class BaseReportBuilder<T> {
     return Normalizer.normalize(filename, Normalizer.Form.NFD)
         .replaceAll("[\\p{InCombiningDiacriticalMarks}]", "") // Elimina tildes
         .replaceAll("[^a-zA-Z0-9\\s\\-_\\.]", ""); // Elimina caracteres especiales
+  }
+
+  /**
+   * Nombre del PDF: {@code <Nombre del talento> - <Tipo de formulario>}.
+   *
+   * El nombre de la persona va primero porque estos PDF viajan como adjunto de
+   * correo ({@code PDFUtils.construirYEnviar}) y quien los recibe los archiva
+   * por talento, no por codigo de formato. El codigo FT se conserva dentro del
+   * tipo, que es el que usa gestion documental.
+   *
+   * <p>
+   * <b>Sin fecha, por decision de negocio.</b> Consecuencia asumida: dos
+   * formularios del mismo tipo para la misma persona -dos movimientos, o un
+   * cese y una recontratacion- pasan a llamarse igual, y desambiguarlos queda
+   * del lado de quien los archiva. Si algun dia estorba, el sitio donde anadir
+   * la fecha es este y solo este.
+   *
+   * @param nombres        nombres del talento; admite nulo
+   * @param apellidos      apellidos del talento; admite nulo
+   * @param tipoFormulario codigo FT + descripcion, tal cual va en el documento
+   */
+  protected String buildFilename(String nombres, String apellidos, String tipoFormulario) {
+    // Nombre y apellidos se unen aqui y no en cada builder porque asi estaba y
+    // uno de los seis se olvidaba el espacio: salia "JuanPerez Gomez".
+    var nombreTalento = (SafeValues.safeString(nombres) + " " + SafeValues.safeString(apellidos))
+        .replaceAll("\\s+", " ")
+        .trim();
+    var filename = nombreTalento.isEmpty()
+        ? tipoFormulario
+        : nombreTalento + " - " + tipoFormulario;
+    return this.sanitizeFilename(filename);
   }
 
 }

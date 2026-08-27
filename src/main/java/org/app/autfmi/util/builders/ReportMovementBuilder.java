@@ -74,25 +74,11 @@ public class ReportMovementBuilder extends BaseReportBuilder<MovementReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = renderPdfFromHtml(htmlContent);
 
     // Filename
-    var year = Common.getCurrentYear();
-    var monthName = Common.getMonthText();
-    var formattedName = fullname.replaceAll("\\s+", "_");
-
-    var filename = new StringBuilder()
-        .append("FT-GTH-12 Formulario de Movimiento")
-        .append("_")
-        .append(year)
-        .append("_")
-        .append(monthName)
-        .append("_")
-        .append(formattedName)
-        .toString();
-
-    filename = this.sanitizeFilename(filename);
+    var filename = this.buildFilename(report.getNombres(), report.getApellidos(),
+        "FT-GTH-12 Formulario de Movimiento");
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;

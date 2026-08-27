@@ -49,25 +49,11 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Generar PDF
-    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
     // Filename
-    var year = Common.getCurrentYear();
-    var monthName = Common.getMonthText();
-    var formattedName = fullname.replaceAll("\\s+", "_");
-
-    var filename = new StringBuilder()
-        .append("FT-GTH-12 Formulario Cese")
-        .append("_")
-        .append(year)
-        .append("_")
-        .append(monthName)
-        .append("_")
-        .append(formattedName)
-        .toString();
-
-    filename = this.sanitizeFilename(filename);
+    var filename = this.buildFilename(report.getNombres(), report.getApellidos(),
+        "FT-GTH-12 Formulario Cese");
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;
@@ -110,24 +96,10 @@ public class ReportCeseBuilder extends BaseReportBuilder<CeseReport> {
     var htmlContent = templateEngine.process("solicitud_usuario", context);
 
     // 6. Generar PDF
-    var fullname = report.getNombres() + " " + report.getApellidos();
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
-    var year = Common.getCurrentYear();
-    var monthName = Common.getMonthText();
-    var formattedName = fullname.replaceAll("\\s+", "_");
-
-    var filename = new StringBuilder()
-        .append("FT-GS-01-Solicitud de Desactivación de Usuarios")
-        .append("_")
-        .append(year)
-        .append("_")
-        .append(monthName)
-        .append("_")
-        .append(formattedName)
-        .toString();
-
-    filename = this.sanitizeFilename(filename);
+    var filename = this.buildFilename(report.getNombres(), report.getApellidos(),
+        "FT-GS-01 Solicitud de Desactivación de Usuarios");
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;

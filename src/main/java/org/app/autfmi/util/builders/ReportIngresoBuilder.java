@@ -93,22 +93,8 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     var htmlContent = templateEngine.process("formulario_movimiento", context);
 
     // Filename
-    var fullname = report.getNombres() + " " + report.getApellidos();
-    var year = Common.getCurrentYear();
-    var monthName = Common.getMonthText();
-    var formattedName = fullname.replaceAll("\\s+", "_");
-
-    var filename = new StringBuilder()
-        .append("FT-GTH-12 Formulario de Ingreso")
-        .append("_")
-        .append(year)
-        .append("_")
-        .append(monthName)
-        .append("_")
-        .append(formattedName)
-        .toString();
-
-    filename = this.sanitizeFilename(filename);
+    var filename = this.buildFilename(report.getNombres(), report.getApellidos(),
+        "FT-GTH-12 Formulario de Ingreso");
 
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
@@ -117,8 +103,6 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
   }
 
   public ReportIngresoBuilder withCreateUser() {
-
-    String fullname = report.getNombres() + report.getApellidos();
 
     var context = new Context();
     var logoBase64 = imageToBase64("assets/logo-fractal-2.png");
@@ -157,21 +141,8 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 
     // Filename
-    var year = Common.getCurrentYear();
-    var monthName = Common.getMonthText();
-    var formattedName = fullname.replaceAll("\\s+", "_");
-
-    var filename = new StringBuilder()
-        .append("FT-GS-01-Solicitud de Creación de Usuarios")
-        .append("_")
-        .append(year)
-        .append("_")
-        .append(monthName)
-        .append("_")
-        .append(formattedName)
-        .toString();
-
-    filename = this.sanitizeFilename(filename);
+    var filename = this.buildFilename(report.getNombres(), report.getApellidos(),
+        "FT-GS-01 Solicitud de Creación de Usuarios");
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;

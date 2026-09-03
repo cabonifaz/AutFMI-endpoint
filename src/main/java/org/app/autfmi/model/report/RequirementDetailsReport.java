@@ -17,5 +17,7 @@ public class RequirementDetailsReport {
   private String estadoRQ;
   private String modalidadRQ;
   private String duracionRQ;
+  /** Plazo del contrato del talento; independiente de {@link #duracionRQ}. */
+  private String duracionContrato;
   private String cliente;
 }

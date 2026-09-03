@@ -22,6 +22,7 @@ public class RequirementReportMapper {
         (String) row.get("ESTADO_RQ"),
         (String) row.get("MODALIDAD_RQ"),
         (String) row.get("DURACION_RQ"),
+        (String) row.get("DURACION_CONTRATO"),
         (String) row.get("CLIENTE"));
   }
 

@@ -100,8 +100,14 @@
         </h2>
         <div style="display: flex; gap: 16px; margin-bottom: 16px;">
           <div style="flex: 1; padding: 12px; border: 1px solid #e5e7eb;">
-            <strong style="color: #000000; display: block; margin-bottom: 4px;">Duración:</strong>
-            <span style="color: #000000;" th:text="${gestion.duracion}">1 Días</span>
+            <strong style="color: #000000; display: block; margin-bottom: 4px;">Duración del RQ:</strong>
+            <span style="color: #000000;"
+              th:text="${#strings.isEmpty(gestion.duracion)} ? 'No especificado' : ${gestion.duracion}">1 Días</span>
+          </div>
+          <div style="flex: 1; padding: 12px; border: 1px solid #e5e7eb;">
+            <strong style="color: #000000; display: block; margin-bottom: 4px;">Duración del contrato:</strong>
+            <span style="color: #000000;"
+              th:text="${#strings.isEmpty(gestion.duracionContrato)} ? 'No especificado' : ${gestion.duracionContrato}">12 Meses</span>
           </div>
           <div style="flex: 1; padding: 12px; border: 1px solid #e5e7eb;">
             <strong style="color: #000000; display: block; margin-bottom: 4px;">Modalidad:</strong>

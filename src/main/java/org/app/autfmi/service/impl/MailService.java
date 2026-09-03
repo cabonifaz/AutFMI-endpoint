@@ -134,7 +134,9 @@ public class MailService implements IMailService {
     // --- Datos de gestión ---
     Map<String, Object> gestion = new HashMap<>();
     if (report.getRequirementDetails() != null) {
-      gestion.put("duracion", report.getRequirementDetails().getDuracionRQ());
+      gestion.put("duracion", SafeValues.safeString(report.getRequirementDetails().getDuracionRQ()));
+      gestion.put("duracionContrato",
+          SafeValues.safeString(report.getRequirementDetails().getDuracionContrato()));
       gestion.put("modalidad", report.getRequirementDetails().getModalidadRQ());
       gestion.put("modalidadesFacturacion", new ArrayList<>());
     }

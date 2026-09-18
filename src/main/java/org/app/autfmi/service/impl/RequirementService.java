@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.app.autfmi.model.dto.RequirementDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
@@ -25,6 +26,7 @@ import org.app.autfmi.model.dto.PostulantFileDTO;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
 import org.app.autfmi.model.response.PostulantFileListResponse;
+import org.app.autfmi.model.response.RequirementResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import org.app.autfmi.model.response.RqFileUploadUrlDTO;
 import org.app.autfmi.model.response.RqPresignedUrlResponse;
@@ -71,8 +73,29 @@ public class RequirementService implements IRequirementService {
             Boolean showVacantesList, Boolean showContactList) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.DETALLE_REQUERIMIENTO);
-        return requirementRepository.getRequirementById(idRequerimiento, showfiles, showVacantesList, showContactList,
-                baseRequest);
+        BaseResponse response = requirementRepository.getRequirementById(idRequerimiento, showfiles, showVacantesList,
+                showContactList, baseRequest);
+
+        // Misma regla que en /tarifario/list: al reclutador no le llegan las
+        // tarifas. Aquí viajaban por la otra puerta, dentro de cada vacante.
+        // El SP de actualización lee el null de TARIFA_FINAL como "deja la que
+        // ya estaba", así que devolverlas vacías no borra nada.
+        if (Common.esReclutador(user) && response instanceof RequirementResponse) {
+            sinTarifas(((RequirementResponse) response).getRequerimiento());
+        }
+
+        return response;
+    }
+
+    /** Vacía los importes de las vacantes de un RQ, dejando el resto intacto. */
+    private void sinTarifas(RequirementDTO requerimiento) {
+        if (requerimiento == null || requerimiento.getLstRqVacantes() == null) {
+            return;
+        }
+        requerimiento.getLstRqVacantes().forEach(vacante -> {
+            vacante.setTarifaInicial(null);
+            vacante.setTarifaFinal(null);
+        });
     }
 
     @Override

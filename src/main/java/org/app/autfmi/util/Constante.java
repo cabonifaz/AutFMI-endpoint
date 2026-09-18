@@ -68,6 +68,11 @@ public class Constante {
 
     public static final String LISTAR_TARIFARIO = "26";
 
+    // ROLES (maestro 1): 1 Admin · 2 Gestor de servicio · 3 Gestor operativo ·
+    // 4 Reclutador · 5 Superadmin. El reclutador es el único al que no se le
+    // envían las tarifas de un perfil.
+    public static final int ROL_RECLUTADOR = 4;
+
     public static final String DOMINIO_CORREO = "@fractalservicios.pe";
     public static final String GUARDAR_INTERVIEW = "27";
 

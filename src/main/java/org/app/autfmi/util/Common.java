@@ -29,6 +29,15 @@ public class Common {
         return baseRequest;
     }
 
+    /**
+     * ¿El usuario es RECLUTADOR? Es el único rol al que no se le envían las
+     * tarifas de un perfil, ni en el tarifario ni en el detalle de un RQ.
+     */
+    public static boolean esReclutador(UserDTO userDTO) {
+        List<Integer> idRoles = userDTO != null ? userDTO.getIdRoles() : null;
+        return idRoles != null && idRoles.contains(Constante.ROL_RECLUTADOR);
+    }
+
     public static LocalDate formatDate(String date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         if (date != null && !date.isEmpty()) {

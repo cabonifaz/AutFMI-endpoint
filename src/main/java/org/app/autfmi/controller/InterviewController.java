@@ -1,11 +1,17 @@
 package org.app.autfmi.controller;
 
+import java.util.List;
+
 import org.app.autfmi.model.response.InterviewResponseDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.InterviewUploadConfirmRequest;
 import org.app.autfmi.model.request.InterviewUploadUrlRequest;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.dto.InterviewByTalentDTO;
+import org.app.autfmi.model.dto.InterviewQuestionDTO;
 import org.app.autfmi.model.request.InterviewListRequest;
+import org.app.autfmi.model.request.InterviewQuestionUpdateRequest;
+import org.app.autfmi.model.request.InterviewQuestionsRequest;
 import org.app.autfmi.model.request.InterviewRequest;
 import org.app.autfmi.model.request.InterviewUpdateRequest;
 import org.app.autfmi.model.request.InterviewDownloadFileRequest;
@@ -108,6 +114,125 @@ public class InterviewController {
     } catch (Exception e) {
       return ResponseEntity.status(500).body(
           new BaseResponse(3, "Error de autenticación o token inválido"));
+    }
+  }
+
+  /**
+   * Entrevistas de un talento, opcionalmente de un solo tipo. La usa el atajo
+   * "Entrevista telefónica" del detalle del talento para saber si ya tuvo una y
+   * cuál fue la última.
+   */
+  @GetMapping("/by-talent")
+  public ResponseEntity<?> listInterviewsByTalent(
+      @RequestParam("idTalento") Integer idTalento,
+      @RequestParam(value = "idTipoEntrevista", required = false) Integer idTipoEntrevista,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LIST_INTERVIEW);
+
+      OperationResult<List<InterviewByTalentDTO>> result =
+          this.interviewService.listInterviewsByTalent(idTalento, idTipoEntrevista, baseRequest);
+
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      return ResponseEntity.ok(
+          new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
+    }
+  }
+
+  // ─── Preguntas y respuestas (entrevista telefónica) ──────────────────────
+
+  /**
+   * Alta en bloque de las preguntas de una entrevista. Se llama después de
+   * crearla —cuando ya hay id— igual que la subida del ICS.
+   */
+  @PostMapping("/questions")
+  public ResponseEntity<BaseResponse> saveInterviewQuestions(
+      @RequestBody InterviewQuestionsRequest request,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
+
+      OperationResult<Void> result = this.interviewService.saveInterviewQuestions(
+          request.getIdEntrevista(),
+          request.getPreguntas(),
+          baseRequest);
+
+      return ResponseEntity.ok(result.getBaseResponse());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          new BaseResponse(3, "Error de autenticación o token inválido"));
+    }
+  }
+
+  /** Edición de una pregunta (habitualmente, su respuesta). */
+  @PostMapping("/questions/update")
+  public ResponseEntity<BaseResponse> updateInterviewQuestion(
+      @RequestBody InterviewQuestionUpdateRequest request,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
+
+      OperationResult<Void> result = this.interviewService.updateInterviewQuestion(
+          request.getIdPregunta(),
+          request.getPregunta(),
+          request.getRespuesta(),
+          baseRequest);
+
+      return ResponseEntity.ok(result.getBaseResponse());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          new BaseResponse(3, "Error de autenticación o token inválido"));
+    }
+  }
+
+  /** Baja lógica de una pregunta. */
+  @PostMapping("/questions/remove")
+  public ResponseEntity<BaseResponse> removeInterviewQuestion(
+      @RequestParam("idPregunta") Integer idPregunta,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
+
+      OperationResult<Void> result = this.interviewService.deleteInterviewQuestion(idPregunta, baseRequest);
+
+      return ResponseEntity.ok(result.getBaseResponse());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          new BaseResponse(3, "Error de autenticación o token inválido"));
+    }
+  }
+
+  /** Preguntas vigentes de una entrevista. */
+  @GetMapping("/questions/{idEntrevista}")
+  public ResponseEntity<?> listInterviewQuestions(
+      @PathVariable("idEntrevista") Integer idEntrevista,
+      HttpServletRequest httpServletRequest) {
+
+    try {
+      String token = JwtHelper.extractToken(httpServletRequest);
+      UserDTO user = jwt.decodeToken(token);
+      BaseRequest baseRequest = Common.createBaseRequest(user, Constante.VIEW_INTERVIEW);
+
+      OperationResult<List<InterviewQuestionDTO>> result =
+          this.interviewService.listInterviewQuestions(idEntrevista, baseRequest);
+
+      return ResponseEntity.ok(result);
+    } catch (Exception e) {
+      return ResponseEntity.ok(
+          new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
     }
   }
 

@@ -6,7 +6,9 @@ import java.util.Map;
 
 import org.app.autfmi.model.dto.EntrevistadorDTO;
 import org.app.autfmi.model.dto.GrabacionDTO;
+import org.app.autfmi.model.dto.InterviewByTalentDTO;
 import org.app.autfmi.model.dto.InterviewFileDTO;
+import org.app.autfmi.model.dto.InterviewQuestionDTO;
 import org.app.autfmi.model.response.InterviewFileResponse;
 import org.app.autfmi.model.response.InterviewResponseDTO;
 import org.app.autfmi.model.dto.InterviewRqDTO;
@@ -407,6 +409,202 @@ public class InterviewRepository {
       this.logger.error("Error crítico en updateInterview: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
     }
+  }
+
+  /**
+   * Ejecuta el SP_ENTREVISTAS_TALENTO_TIPO_LST: entrevistas de un talento,
+   * opcionalmente de un solo tipo, de la más reciente a la más antigua.
+   */
+  public OperationResult<List<InterviewByTalentDTO>> listInterviewsByTalent(
+      Integer idTalento,
+      Integer idTipoEntrevista,
+      BaseRequest baseRequest) {
+
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_TALENTO_TIPO_LST");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_TALENTO", idTalento)
+          .addValue("ID_TIPO_ENTREVISTA", idTipoEntrevista)
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("USERNAME", baseRequest.getUsername());
+
+      Map<String, Object> result = simpleJdbcCall.execute(params);
+      BaseResponse baseResponse = readMessage(result);
+
+      if (baseResponse.getIdTipoMensaje() != 2) {
+        return new OperationResult<>(baseResponse, new ArrayList<>());
+      }
+
+      List<Map<String, Object>> rows = (List<Map<String, Object>>) result
+          .getOrDefault("#result-set-2", new ArrayList<>());
+
+      List<InterviewByTalentDTO> entrevistas = new ArrayList<>();
+      for (Map<String, Object> row : rows) {
+        entrevistas.add(new InterviewByTalentDTO(
+            (Integer) row.get("ID_ENTREVISTA"),
+            (Integer) row.get("ID_TIPO_ENTREVISTA"),
+            (String) row.get("FECHA"),
+            (String) row.get("HORA")));
+      }
+
+      return new OperationResult<>(baseResponse, entrevistas);
+
+    } catch (Exception e) {
+      this.logger.error("Error listando entrevistas del talento: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), new ArrayList<>());
+    }
+  }
+
+  // ─── Preguntas y respuestas (entrevista telefónica) ──────────────────────
+
+  /**
+   * Ejecuta el SP_ENTREVISTAS_PREGUNTAS_INS.
+   *
+   * Las preguntas viajan en JSON, igual que los entrevistadores: el formulario
+   * las arma como filas y se guardan en bloque.
+   */
+  public OperationResult<Void> saveInterviewQuestions(
+      Integer idEntrevista,
+      List<InterviewQuestionDTO> preguntas,
+      BaseRequest baseRequest) {
+
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_INS");
+
+    try {
+      String preguntasJson = objectMapper.writeValueAsString(
+          preguntas != null ? preguntas : new ArrayList<InterviewQuestionDTO>());
+
+      var params = new MapSqlParameterSource()
+          .addValue("ID_ENTREVISTA", idEntrevista)
+          .addValue("LST_PREGUNTAS", preguntasJson)
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("USERNAME", baseRequest.getUsername());
+
+      return new OperationResult<>(readMessage(simpleJdbcCall.execute(params)), null);
+
+    } catch (JsonProcessingException e) {
+      this.logger.error("Error al serializar preguntas a JSON", e);
+      return new OperationResult<>(new BaseResponse(3, "Error de formato en las preguntas"), null);
+    } catch (Exception e) {
+      this.logger.error("Error guardando preguntas: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
+    }
+  }
+
+  /** Ejecuta el SP_ENTREVISTAS_PREGUNTAS_UPD (normalmente, llenar la respuesta). */
+  public OperationResult<Void> updateInterviewQuestion(
+      Integer idPregunta,
+      String pregunta,
+      String respuesta,
+      BaseRequest baseRequest) {
+
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_UPD");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_PREGUNTA", idPregunta)
+          .addValue("PREGUNTA", pregunta)
+          .addValue("RESPUESTA", respuesta)
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("USERNAME", baseRequest.getUsername());
+
+      return new OperationResult<>(readMessage(simpleJdbcCall.execute(params)), null);
+
+    } catch (Exception e) {
+      this.logger.error("Error actualizando pregunta: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
+    }
+  }
+
+  /** Ejecuta el SP_ENTREVISTAS_PREGUNTAS_DEL (baja lógica). */
+  public OperationResult<Void> deleteInterviewQuestion(Integer idPregunta, BaseRequest baseRequest) {
+
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_DEL");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_PREGUNTA", idPregunta)
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("USERNAME", baseRequest.getUsername());
+
+      return new OperationResult<>(readMessage(simpleJdbcCall.execute(params)), null);
+
+    } catch (Exception e) {
+      this.logger.error("Error eliminando pregunta: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
+    }
+  }
+
+  /** Ejecuta el SP_ENTREVISTAS_PREGUNTAS_LST: mensaje + filas. */
+  public OperationResult<List<InterviewQuestionDTO>> listInterviewQuestions(
+      Integer idEntrevista,
+      BaseRequest baseRequest) {
+
+    SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_LST");
+
+    try {
+      var params = new MapSqlParameterSource()
+          .addValue("ID_ENTREVISTA", idEntrevista)
+          .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+          .addValue("ID_ROL", baseRequest.getIdRol())
+          .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
+          .addValue("USERNAME", baseRequest.getUsername());
+
+      Map<String, Object> result = simpleJdbcCall.execute(params);
+      BaseResponse baseResponse = readMessage(result);
+
+      if (baseResponse.getIdTipoMensaje() != 2) {
+        return new OperationResult<>(baseResponse, new ArrayList<>());
+      }
+
+      List<Map<String, Object>> rows = (List<Map<String, Object>>) result
+          .getOrDefault("#result-set-2", new ArrayList<>());
+
+      List<InterviewQuestionDTO> preguntas = new ArrayList<>();
+      for (Map<String, Object> row : rows) {
+        preguntas.add(new InterviewQuestionDTO(
+            (Integer) row.get("ID_PREGUNTA"),
+            (Integer) row.get("ID_ENTREVISTA"),
+            (String) row.get("PREGUNTA"),
+            (String) row.get("RESPUESTA"),
+            (Integer) row.get("ORDEN")));
+      }
+
+      return new OperationResult<>(baseResponse, preguntas);
+
+    } catch (Exception e) {
+      this.logger.error("Error listando preguntas: ", e);
+      return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), new ArrayList<>());
+    }
+  }
+
+  /** Primer result set de los SP de preguntas: ID_TIPO_MENSAJE + MENSAJE. */
+  private BaseResponse readMessage(Map<String, Object> result) {
+    List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+    if (resultSet == null || resultSet.isEmpty()) {
+      this.logger.error("DB response is null or empty");
+      return new BaseResponse(3, "La base de datos no retornó información.");
+    }
+
+    Map<String, Object> row = resultSet.get(0);
+    return new BaseResponse(
+        (Integer) row.get("ID_TIPO_MENSAJE"),
+        (String) row.get("MENSAJE"));
   }
 
   /**

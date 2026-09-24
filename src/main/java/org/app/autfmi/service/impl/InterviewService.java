@@ -9,6 +9,8 @@ import org.app.autfmi.model.response.InterviewDownloadFileResponse;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.InterviewListRequest;
 import org.app.autfmi.model.request.InterviewRequest;
+import org.app.autfmi.model.dto.InterviewByTalentDTO;
+import org.app.autfmi.model.dto.InterviewQuestionDTO;
 import org.app.autfmi.model.request.InterviewUpdateRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.InterviewDetailResponseDTO;
@@ -95,6 +97,45 @@ public class InterviewService {
     // El correo de actualización (con el ICS adjunto) se envía cuando el frontend
     // confirma el ICS regenerado, no aquí.
     return this.interviewRepository.updateInterview(request, baseRequest);
+  }
+
+  /** Entrevistas de un talento, opcionalmente filtradas por tipo. */
+  public OperationResult<List<InterviewByTalentDTO>> listInterviewsByTalent(
+      Integer idTalento,
+      Integer idTipoEntrevista,
+      BaseRequest baseRequest) {
+    return this.interviewRepository.listInterviewsByTalent(idTalento, idTipoEntrevista, baseRequest);
+  }
+
+  // ─── Preguntas y respuestas (entrevista telefónica) ──────────────────────
+
+  /** Alta en bloque de las preguntas de una entrevista. */
+  public OperationResult<Void> saveInterviewQuestions(
+      Integer idEntrevista,
+      List<InterviewQuestionDTO> preguntas,
+      BaseRequest baseRequest) {
+    return this.interviewRepository.saveInterviewQuestions(idEntrevista, preguntas, baseRequest);
+  }
+
+  /** Edición de una pregunta: normalmente, registrar la respuesta. */
+  public OperationResult<Void> updateInterviewQuestion(
+      Integer idPregunta,
+      String pregunta,
+      String respuesta,
+      BaseRequest baseRequest) {
+    return this.interviewRepository.updateInterviewQuestion(idPregunta, pregunta, respuesta, baseRequest);
+  }
+
+  /** Baja lógica de una pregunta. */
+  public OperationResult<Void> deleteInterviewQuestion(Integer idPregunta, BaseRequest baseRequest) {
+    return this.interviewRepository.deleteInterviewQuestion(idPregunta, baseRequest);
+  }
+
+  /** Preguntas vigentes de una entrevista, en su orden. */
+  public OperationResult<List<InterviewQuestionDTO>> listInterviewQuestions(
+      Integer idEntrevista,
+      BaseRequest baseRequest) {
+    return this.interviewRepository.listInterviewQuestions(idEntrevista, baseRequest);
   }
 
   public OperationResult<InterviewUploadUrlResponse> generateUploadUrl(

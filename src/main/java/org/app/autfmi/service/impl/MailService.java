@@ -542,7 +542,12 @@ public class MailService implements IMailService {
     // (VIRTUAL o no resoluble/legacy) se mantiene el enlace de la videollamada.
     String tipoEntrevista = resolveTipoEntrevista(detail.getIdTipoEntrevista());
     boolean esPresencial = Constante.TIPO_ENTREVISTA_PRESENCIAL.equalsIgnoreCase(tipoEntrevista);
+    // La telefónica no tiene enlace ni dirección: sin esta bandera el correo le
+    // mandaba al candidato el bloque de la videollamada ("Reunión - Join").
+    boolean esTelefonica = Constante.TIPO_ENTREVISTA_TELEFONICA
+        .equalsIgnoreCase(sinTildes(tipoEntrevista));
     variables.put("esPresencial", esPresencial);
+    variables.put("esTelefonica", esTelefonica);
     variables.put("ubicacion", SafeValues.safeString(detail.getUbicacion()));
     variables.put("direccion", SafeValues.safeString(detail.getDireccion()));
 
@@ -577,9 +582,31 @@ public class MailService implements IMailService {
     logger.info("Interview notification dispatched.");
   }
 
+  /** El maestro 47 escribe "TELEFÓNICA" con tilde; la comparación no debe depender de eso. */
+  private String sinTildes(String texto) {
+    if (texto == null) {
+      return "";
+    }
+
+    // Sin expresion regular a proposito: descomponer y descartar los acentos
+    // (marcas sin espaciado) evita depender de un escape dentro del literal.
+    String descompuesto = java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD);
+    StringBuilder limpio = new StringBuilder(descompuesto.length());
+
+    for (int i = 0; i < descompuesto.length(); i++) {
+      char caracter = descompuesto.charAt(i);
+      if (Character.getType(caracter) != Character.NON_SPACING_MARK) {
+        limpio.append(caracter);
+      }
+    }
+
+    return limpio.toString().trim();
+  }
+
   /**
-   * Resuelve el texto del tipo de entrevista (p. ej. "PRESENCIAL" / "VIRTUAL") a
-   * partir de ID_TIPO_ENTREVISTA, reutilizando el mecanismo centralizado de
+   * Resuelve el texto del tipo de entrevista (p. ej. "PRESENCIAL", "VIRTUAL" o
+   * "TELEFONICA") a partir de ID_TIPO_ENTREVISTA, reutilizando el mecanismo
+   * centralizado de
    * parámetros (maestro 47). No hardcodea los IDs de los parámetros.
    *
    * @param idTipoEntrevista num1 del tipo de entrevista (o null).

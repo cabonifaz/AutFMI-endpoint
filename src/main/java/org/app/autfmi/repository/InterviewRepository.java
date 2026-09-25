@@ -462,10 +462,11 @@ public class InterviewRepository {
   // ─── Preguntas y respuestas (entrevista telefónica) ──────────────────────
 
   /**
-   * Ejecuta el SP_ENTREVISTAS_PREGUNTAS_INS.
+   * Ejecuta el SP_ENTREVISTAS_RESPUESTAS_INS.
    *
-   * Las preguntas viajan en JSON, igual que los entrevistadores: el formulario
-   * las arma como filas y se guardan en bloque.
+   * Viajan en JSON, igual que los entrevistadores: el formulario las arma como
+   * filas y se guardan en bloque. Sólo va el id de la pregunta (maestro 55),
+   * no su texto.
    */
   public OperationResult<Void> saveInterviewQuestions(
       Integer idEntrevista,
@@ -473,7 +474,7 @@ public class InterviewRepository {
       BaseRequest baseRequest) {
 
     SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_INS");
+        .withProcedureName("SP_ENTREVISTAS_RESPUESTAS_INS");
 
     try {
       String preguntasJson = objectMapper.writeValueAsString(
@@ -481,7 +482,7 @@ public class InterviewRepository {
 
       var params = new MapSqlParameterSource()
           .addValue("ID_ENTREVISTA", idEntrevista)
-          .addValue("LST_PREGUNTAS", preguntasJson)
+          .addValue("LST_RESPUESTAS", preguntasJson)
           .addValue("ID_USUARIO", baseRequest.getIdUsuario())
           .addValue("ID_ROL", baseRequest.getIdRol())
           .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
@@ -490,28 +491,28 @@ public class InterviewRepository {
       return new OperationResult<>(readMessage(simpleJdbcCall.execute(params)), null);
 
     } catch (JsonProcessingException e) {
-      this.logger.error("Error al serializar preguntas a JSON", e);
-      return new OperationResult<>(new BaseResponse(3, "Error de formato en las preguntas"), null);
+      this.logger.error("Error al serializar respuestas a JSON", e);
+      return new OperationResult<>(new BaseResponse(3, "Error de formato en las respuestas"), null);
     } catch (Exception e) {
-      this.logger.error("Error guardando preguntas: ", e);
+      this.logger.error("Error guardando respuestas: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
     }
   }
 
-  /** Ejecuta el SP_ENTREVISTAS_PREGUNTAS_UPD (normalmente, llenar la respuesta). */
+  /** Ejecuta el SP_ENTREVISTAS_RESPUESTAS_UPD (normalmente, llenar la respuesta). */
   public OperationResult<Void> updateInterviewQuestion(
+      Integer idRespuesta,
       Integer idPregunta,
-      String pregunta,
       String respuesta,
       BaseRequest baseRequest) {
 
     SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_UPD");
+        .withProcedureName("SP_ENTREVISTAS_RESPUESTAS_UPD");
 
     try {
       var params = new MapSqlParameterSource()
+          .addValue("ID_RESPUESTA", idRespuesta)
           .addValue("ID_PREGUNTA", idPregunta)
-          .addValue("PREGUNTA", pregunta)
           .addValue("RESPUESTA", respuesta)
           .addValue("ID_USUARIO", baseRequest.getIdUsuario())
           .addValue("ID_ROL", baseRequest.getIdRol())
@@ -521,20 +522,20 @@ public class InterviewRepository {
       return new OperationResult<>(readMessage(simpleJdbcCall.execute(params)), null);
 
     } catch (Exception e) {
-      this.logger.error("Error actualizando pregunta: ", e);
+      this.logger.error("Error actualizando respuesta: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
     }
   }
 
-  /** Ejecuta el SP_ENTREVISTAS_PREGUNTAS_DEL (baja lógica). */
-  public OperationResult<Void> deleteInterviewQuestion(Integer idPregunta, BaseRequest baseRequest) {
+  /** Ejecuta el SP_ENTREVISTAS_RESPUESTAS_DEL (baja lógica). */
+  public OperationResult<Void> deleteInterviewQuestion(Integer idRespuesta, BaseRequest baseRequest) {
 
     SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_DEL");
+        .withProcedureName("SP_ENTREVISTAS_RESPUESTAS_DEL");
 
     try {
       var params = new MapSqlParameterSource()
-          .addValue("ID_PREGUNTA", idPregunta)
+          .addValue("ID_RESPUESTA", idRespuesta)
           .addValue("ID_USUARIO", baseRequest.getIdUsuario())
           .addValue("ID_ROL", baseRequest.getIdRol())
           .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
@@ -543,18 +544,18 @@ public class InterviewRepository {
       return new OperationResult<>(readMessage(simpleJdbcCall.execute(params)), null);
 
     } catch (Exception e) {
-      this.logger.error("Error eliminando pregunta: ", e);
+      this.logger.error("Error eliminando respuesta: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
     }
   }
 
-  /** Ejecuta el SP_ENTREVISTAS_PREGUNTAS_LST: mensaje + filas. */
+  /** Ejecuta el SP_ENTREVISTAS_RESPUESTAS_LST: mensaje + filas. */
   public OperationResult<List<InterviewQuestionDTO>> listInterviewQuestions(
       Integer idEntrevista,
       BaseRequest baseRequest) {
 
     SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
-        .withProcedureName("SP_ENTREVISTAS_PREGUNTAS_LST");
+        .withProcedureName("SP_ENTREVISTAS_RESPUESTAS_LST");
 
     try {
       var params = new MapSqlParameterSource()
@@ -577,17 +578,17 @@ public class InterviewRepository {
       List<InterviewQuestionDTO> preguntas = new ArrayList<>();
       for (Map<String, Object> row : rows) {
         preguntas.add(new InterviewQuestionDTO(
-            (Integer) row.get("ID_PREGUNTA"),
+            (Integer) row.get("ID_RESPUESTA"),
             (Integer) row.get("ID_ENTREVISTA"),
+            (Integer) row.get("ID_PREGUNTA"),
             (String) row.get("PREGUNTA"),
-            (String) row.get("RESPUESTA"),
-            (Integer) row.get("ORDEN")));
+            (String) row.get("RESPUESTA")));
       }
 
       return new OperationResult<>(baseResponse, preguntas);
 
     } catch (Exception e) {
-      this.logger.error("Error listando preguntas: ", e);
+      this.logger.error("Error listando respuestas: ", e);
       return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), new ArrayList<>());
     }
   }

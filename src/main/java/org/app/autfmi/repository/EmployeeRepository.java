@@ -262,6 +262,7 @@ public class EmployeeRepository {
       response.setTalentId(talentId);
 
       response.setEmail((String) row.get("CORREO_ELECTRONICO"));
+      response.setCelular((String) row.get("CELULAR"));
       response.setDocumentNumber((String) row.get("NRO_DOCUMENTO"));
       response.setDescription((String) row.get("DESCRIPCION"));
       response.setPhotoUrl((String) row.get("URL_FOTO"));

@@ -546,6 +546,15 @@ public class MailService implements IMailService {
     // mandaba al candidato el bloque de la videollamada ("Reunión - Join").
     boolean esTelefonica = Constante.TIPO_ENTREVISTA_TELEFONICA
         .equalsIgnoreCase(sinTildes(tipoEntrevista));
+
+    // La entrevista telefónica no notifica al candidato: se coordina por
+    // teléfono. El guard vive aquí, y no sólo en el frontend, para que ninguna
+    // otra vía (reintento, integración futura) termine mandando el correo.
+    if (esTelefonica) {
+      logger.info("Interview {} is TELEFONICA: notification skipped.", detail.getId());
+      return;
+    }
+
     variables.put("esPresencial", esPresencial);
     variables.put("esTelefonica", esTelefonica);
     variables.put("ubicacion", SafeValues.safeString(detail.getUbicacion()));

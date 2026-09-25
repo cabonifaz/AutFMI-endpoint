@@ -7,7 +7,7 @@ import org.app.autfmi.model.dto.InterviewQuestionDTO;
 import lombok.Data;
 
 /**
- * Alta de preguntas de una entrevista: llegan en bloque, como los
+ * Alta de las respuestas de una entrevista: llegan en bloque, como los
  * entrevistadores, porque el formulario las arma como filas.
  */
 @Data

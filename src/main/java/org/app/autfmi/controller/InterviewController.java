@@ -146,7 +146,7 @@ public class InterviewController {
   // ─── Preguntas y respuestas (entrevista telefónica) ──────────────────────
 
   /**
-   * Alta en bloque de las preguntas de una entrevista. Se llama después de
+   * Alta en bloque de las respuestas de una entrevista. Se llama después de
    * crearla —cuando ya hay id— igual que la subida del ICS.
    */
   @PostMapping("/questions")
@@ -171,7 +171,7 @@ public class InterviewController {
     }
   }
 
-  /** Edición de una pregunta (habitualmente, su respuesta). */
+  /** Edición de una respuesta (habitualmente, su texto). */
   @PostMapping("/questions/update")
   public ResponseEntity<BaseResponse> updateInterviewQuestion(
       @RequestBody InterviewQuestionUpdateRequest request,
@@ -183,8 +183,8 @@ public class InterviewController {
       BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
 
       OperationResult<Void> result = this.interviewService.updateInterviewQuestion(
+          request.getIdRespuesta(),
           request.getIdPregunta(),
-          request.getPregunta(),
           request.getRespuesta(),
           baseRequest);
 
@@ -195,10 +195,10 @@ public class InterviewController {
     }
   }
 
-  /** Baja lógica de una pregunta. */
+  /** Baja lógica de una respuesta. */
   @PostMapping("/questions/remove")
   public ResponseEntity<BaseResponse> removeInterviewQuestion(
-      @RequestParam("idPregunta") Integer idPregunta,
+      @RequestParam("idRespuesta") Integer idRespuesta,
       HttpServletRequest httpServletRequest) {
 
     try {
@@ -206,7 +206,7 @@ public class InterviewController {
       UserDTO user = jwt.decodeToken(token);
       BaseRequest baseRequest = Common.createBaseRequest(user, Constante.UPDATE_INTERVIEW);
 
-      OperationResult<Void> result = this.interviewService.deleteInterviewQuestion(idPregunta, baseRequest);
+      OperationResult<Void> result = this.interviewService.deleteInterviewQuestion(idRespuesta, baseRequest);
 
       return ResponseEntity.ok(result.getBaseResponse());
     } catch (Exception e) {
@@ -215,7 +215,7 @@ public class InterviewController {
     }
   }
 
-  /** Preguntas vigentes de una entrevista. */
+  /** Respuestas vigentes de una entrevista. */
   @GetMapping("/questions/{idEntrevista}")
   public ResponseEntity<?> listInterviewQuestions(
       @PathVariable("idEntrevista") Integer idEntrevista,

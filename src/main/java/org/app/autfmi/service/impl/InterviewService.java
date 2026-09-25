@@ -117,21 +117,21 @@ public class InterviewService {
     return this.interviewRepository.saveInterviewQuestions(idEntrevista, preguntas, baseRequest);
   }
 
-  /** Edición de una pregunta: normalmente, registrar la respuesta. */
+  /** Edición de una respuesta: normalmente, registrar su texto. */
   public OperationResult<Void> updateInterviewQuestion(
+      Integer idRespuesta,
       Integer idPregunta,
-      String pregunta,
       String respuesta,
       BaseRequest baseRequest) {
-    return this.interviewRepository.updateInterviewQuestion(idPregunta, pregunta, respuesta, baseRequest);
+    return this.interviewRepository.updateInterviewQuestion(idRespuesta, idPregunta, respuesta, baseRequest);
   }
 
-  /** Baja lógica de una pregunta. */
-  public OperationResult<Void> deleteInterviewQuestion(Integer idPregunta, BaseRequest baseRequest) {
-    return this.interviewRepository.deleteInterviewQuestion(idPregunta, baseRequest);
+  /** Baja lógica de una respuesta. */
+  public OperationResult<Void> deleteInterviewQuestion(Integer idRespuesta, BaseRequest baseRequest) {
+    return this.interviewRepository.deleteInterviewQuestion(idRespuesta, baseRequest);
   }
 
-  /** Preguntas vigentes de una entrevista, en su orden. */
+  /** Respuestas vigentes de una entrevista, en su orden. */
   public OperationResult<List<InterviewQuestionDTO>> listInterviewQuestions(
       Integer idEntrevista,
       BaseRequest baseRequest) {

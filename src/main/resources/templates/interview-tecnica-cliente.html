@@ -24,18 +24,28 @@
       Puesto: <span th:text="${position}">—</span><br/>
       Fecha: <span th:text="${formattedDate}">—</span><br/>
       Hora: <span th:text="${formattedTime}">—</span><br/>
-      <span th:unless="${esPresencial}">Enlace de la videollamada: Entrevista técnica - <span th:text="${candidateName}">—</span> | Reunión -
+      <span th:if="${!esPresencial and !esTelefonica}">Enlace de la videollamada: Entrevista técnica - <span th:text="${candidateName}">—</span> | Reunión -
       <a th:if="${enlace != null and !#strings.isEmpty(enlace)}" th:href="${enlace}" style="color:#1a2e4a;font-weight:700;">Unirse</a><span th:unless="${enlace != null and !#strings.isEmpty(enlace)}">Join</span></span>
       <span th:if="${esPresencial}">Dirección: <span th:text="${direccion}">—</span> -
       <a th:if="${ubicacion != null and !#strings.isEmpty(ubicacion)}" th:href="${ubicacion}" style="color:#1a2e4a;font-weight:700;">Ubicación</a><span th:unless="${ubicacion != null and !#strings.isEmpty(ubicacion)}">Ubicación</span></span>
+      <span th:if="${esTelefonica}">Modalidad: Entrevista telefónica - te llamaremos al número de contacto que registraste.</span>
     </p>
 
-    <th:block th:unless="${esPresencial}">
+    <th:block th:if="${!esPresencial and !esTelefonica}">
       <p style="font-size:14px;line-height:1.65;margin:0 0 8px 0;">Recomendaciones para la entrevista:</p>
       <ul style="font-size:14px;line-height:1.65;margin:0 0 16px 0;padding-left:20px;">
         <li>Verifica tu conexión de internet.</li>
         <li>Cuenta con un espacio ordenado y libre de ruido.</li>
         <li>Tu cámara debe estar encendida durante la entrevista.</li>
+        <li>Puedes realizar preguntas para resolver tus dudas.</li>
+      </ul>
+    </th:block>
+
+    <th:block th:if="${esTelefonica}">
+      <p style="font-size:14px;line-height:1.65;margin:0 0 8px 0;">Recomendaciones para la entrevista:</p>
+      <ul style="font-size:14px;line-height:1.65;margin:0 0 16px 0;padding-left:20px;">
+        <li>Ten tu teléfono a la mano y con buena señal unos minutos antes.</li>
+        <li>Busca un lugar tranquilo y libre de ruido para la llamada.</li>
         <li>Puedes realizar preguntas para resolver tus dudas.</li>
       </ul>
     </th:block>

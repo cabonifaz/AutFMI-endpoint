@@ -11,6 +11,9 @@ public class Constante {
     // TIPO DE ENTREVISTA (valores string1 del maestro 47)
     public static final String TIPO_ENTREVISTA_PRESENCIAL = "PRESENCIAL";
     public static final String TIPO_ENTREVISTA_VIRTUAL = "VIRTUAL";
+    // Sin tilde a propósito: la comparación normaliza el texto del maestro, que
+    // puede venir como "TELEFÓNICA".
+    public static final String TIPO_ENTREVISTA_TELEFONICA = "TELEFONICA";
 
     // TIPO DE ARCHIVO DE ENTREVISTA (maestro 45). El ICS es generado por el sistema.
     public static final int TIPO_ARCHIVO_ENTREVISTA_ICS = 4;

@@ -23,6 +23,8 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
     private String lastname;
     private String surname;
     private String email;
+    /** BT_TALENTO.CELULAR: el detalle del expediente lo muestra junto al DNI. */
+    private String celular;
     private String documentNumber;
     private String description;
     private String photoUrl;

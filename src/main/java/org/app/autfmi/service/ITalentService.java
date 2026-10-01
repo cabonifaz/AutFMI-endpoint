@@ -11,4 +11,6 @@ public interface ITalentService {
     BaseResponse saveTalent(String token, TalentRequest talent);
 
     BaseResponse getTalentsToRequirementList(String token, Integer nPag, String busqueda);
+
+    BaseResponse searchIdentity(String token, String busqueda, String dni, String email);
 }

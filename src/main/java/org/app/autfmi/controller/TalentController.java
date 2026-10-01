@@ -87,4 +87,32 @@ public class TalentController {
             );
         }
     }
+
+    /**
+     * Candidatos a que una persona ya exista en el banco de talentos, para la
+     * carga de colaboradores desde un FMI.
+     *
+     * Se busca por nombre (lo unico que trae el formulario) y, en la segunda
+     * pasada, por DNI o correo, que son las claves que aporta el CV y las
+     * unicas que dan certeza. Devuelve DNI, correo y situacion para que el
+     * operador pueda distinguir homonimos.
+     */
+    @GetMapping("/search-identity")
+    public ResponseEntity<BaseResponse> searchIdentity(
+            @RequestParam @Nullable String busqueda,
+            @RequestParam @Nullable String dni,
+            @RequestParam @Nullable String email,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            BaseResponse response = talentService.searchIdentity(token, busqueda, dni, email);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(
+                    new BaseResponse(3, e.getMessage()),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

@@ -48,4 +48,15 @@ public class TalentService implements ITalentService {
         return talentRepository.getTalentsToRequirementList(baseRequest, nPag, busqueda);
     }
 
+    /**
+     * Busca a quien pueda ser la persona de un FMI: por nombre (lo unico que
+     * trae el formulario) o por DNI/correo, que es lo que aporta su CV.
+     */
+    @Override
+    public BaseResponse searchIdentity(String token, String busqueda, String dni, String email) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
+        return talentRepository.searchIdentity(baseRequest, busqueda, dni, email);
+    }
+
 }

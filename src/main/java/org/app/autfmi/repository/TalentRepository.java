@@ -3,8 +3,10 @@ package org.app.autfmi.repository;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.*;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.FmiCargaRequest;
 import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
+import org.app.autfmi.model.response.FmiCargaResponse;
 import org.app.autfmi.model.response.TalentListResponse;
 import org.app.autfmi.model.response.TalentMatchListResponse;
 import org.app.autfmi.model.response.TalentRequirementListResponse;
@@ -234,6 +236,62 @@ public class TalentRepository {
         }
 
         return new TalentMatchListResponse(idTipoMensaje, mensaje, talentList);
+    }
+
+    /**
+     * Registra el contrato de un colaborador a partir de su FMI, con su
+     * movimiento de ingreso. El requerimiento solo se referencia en el contrato
+     * y en el historial: el RQ no se toca. El SP no manda correos ni PDFs.
+     */
+    public BaseResponse cargarDesdeFmi(FmiCargaRequest request, BaseRequest baseRequest) {
+        SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+                .withProcedureName("SP_FMI_CARGA_TALENTO_INS");
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ID_TALENTO", request.getIdTalento())
+                .addValue("ID_REQUERIMIENTO", request.getIdRequerimiento())
+                .addValue("ACTIVO", Boolean.FALSE.equals(request.getActivo()) ? 0 : 1)
+                .addValue("ID_AREA", request.getIdArea())
+                .addValue("CARGO", request.getCargo())
+                .addValue("ID_MODALIDAD_CONTRATO", request.getIdModalidadContrato())
+                .addValue("ID_MOTIVO", request.getIdMotivo())
+                .addValue("HORARIO", request.getHorario())
+                .addValue("PROYECTO_SERVICIO", request.getProyectoServicio())
+                .addValue("OBJETO_CONTRATO", request.getObjetoContrato())
+                .addValue("DECLARAR_SUNAT", request.getDeclararSunat())
+                .addValue("SEDE_DECLARAR", request.getSedeDeclarar())
+                .addValue("UBICACION", request.getUbicacion())
+                .addValue("CLIENTE", request.getCliente())
+                .addValue("ID_MONEDA", request.getIdMoneda())
+                .addValue("MONTO_BASE", request.getMontoBase())
+                .addValue("MONTO_MOVILIDAD", request.getMontoMovilidad())
+                .addValue("MONTO_MENSUAL", request.getMontoMensual())
+                .addValue("MONTO_TRIMESTRAL", request.getMontoTrimestral())
+                .addValue("MONTO_SEMESTRAL", request.getMontoSemestral())
+                .addValue("FCH_INICIO_CONTRATO", request.getFchInicioContrato())
+                .addValue("FCH_TERMINO_CONTRATO", request.getFchTerminoContrato())
+                .addValue("ID_USUARIO", baseRequest.getIdUsuario())
+                .addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+                .addValue("ID_ROL", baseRequest.getIdRol())
+                .addValue("USUARIO", baseRequest.getUsername())
+                .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+        Map<String, Object> result = simpleJdbcCall.execute(params);
+        List<Map<String, Object>> resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+        if (resultSet == null || resultSet.isEmpty())
+            return null;
+
+        Map<String, Object> row = resultSet.get(0);
+        Integer idTipoMensaje = (Integer) row.get("ID_TIPO_MENSAJE");
+        String mensaje = (String) row.get("MENSAJE");
+
+        if (idTipoMensaje != 2)
+            return new BaseResponse(idTipoMensaje, mensaje);
+
+        return new FmiCargaResponse(idTipoMensaje, mensaje,
+                (Integer) row.get("ID_CONTRATO"),
+                (Integer) row.get("ID_HISTORIAL"));
     }
 
     private TalentMatchDTO mapToTalentMatchDTO(Map<String, Object> talent) {

@@ -3,6 +3,7 @@ package org.app.autfmi.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.request.BaseRequest;
+import org.app.autfmi.model.request.FmiCargaRequest;
 import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.repository.TalentRepository;
@@ -57,6 +58,18 @@ public class TalentService implements ITalentService {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_TALENTOS);
         return talentRepository.searchIdentity(baseRequest, busqueda, dni, email);
+    }
+
+    /**
+     * Registra el contrato de un colaborador desde su FMI. Exige la misma
+     * funcionalidad que ingresar talentos desde Asignar Talento: quien puede
+     * hacer eso puede hacer esto.
+     */
+    @Override
+    public BaseResponse cargarDesdeFmi(String token, FmiCargaRequest request) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.GUARDAR_REQUERIMIENTO);
+        return talentRepository.cargarDesdeFmi(request, baseRequest);
     }
 
 }

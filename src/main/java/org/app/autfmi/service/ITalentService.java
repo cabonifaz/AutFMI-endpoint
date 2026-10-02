@@ -1,5 +1,6 @@
 package org.app.autfmi.service;
 
+import org.app.autfmi.model.request.FmiCargaRequest;
 import org.app.autfmi.model.request.TalentRequest;
 import org.app.autfmi.model.response.BaseResponse;
 
@@ -13,4 +14,6 @@ public interface ITalentService {
     BaseResponse getTalentsToRequirementList(String token, Integer nPag, String busqueda);
 
     BaseResponse searchIdentity(String token, String busqueda, String dni, String email);
+
+    BaseResponse cargarDesdeFmi(String token, FmiCargaRequest request);
 }

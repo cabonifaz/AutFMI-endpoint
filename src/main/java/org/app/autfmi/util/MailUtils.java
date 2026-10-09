@@ -43,6 +43,18 @@ public class MailUtils {
     @Async("notificationExecutor")
     public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes,
             List<String> lstEmails, List<FileDTO> attachments) {
+        sendRequirementPostulantMailSync(gestor, asunto, lstPostulantes, lstEmails, attachments);
+    }
+
+    /**
+     * Variante SÍNCRONA de {@link #sendRequirementPostulantMail}: se usa al enviar
+     * los formularios tras la confirmación del gestor, donde hay que saber si el
+     * correo salió para marcar a los talentos.
+     *
+     * @return {@code true} si el correo se envió (con o sin CC).
+     */
+    public boolean sendRequirementPostulantMailSync(GestorRqDTO gestor, String asunto,
+            List<PostulantDTO> lstPostulantes, List<String> lstEmails, List<FileDTO> attachments) {
         try {
             // lista de talentos al RQ
             List<String> listaTalentosRQ = new ArrayList<>();
@@ -73,7 +85,7 @@ public class MailUtils {
             String to = gestor.getCorreo() != null ? gestor.getCorreo().trim() : null;
             if (!EmailUtils.isValidEmail(to)) {
                 logger.error("Correo cancelado: el usuario destino no tiene un correo válido ('{}')", to);
-                return;
+                return false;
             }
 
             // Descartamos CC nulos/vacíos, con formato inválido, duplicados y el propio TO.
@@ -89,9 +101,11 @@ public class MailUtils {
                 enviarMensajeHtml(to, List.of(), asuntoCorreo, mensajeCorreo, attachments);
                 logger.info("Email sent to: {} (sin CC tras reintento)", to);
             }
+            return true;
         } catch (Exception e) {
             logger.error("Email not sent to: {}", gestor.getCorreo());
             logger.error("Error al enviar correo: {}", e.getMessage(), e);
+            return false;
         }
     }
 

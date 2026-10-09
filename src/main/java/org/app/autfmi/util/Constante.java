@@ -47,6 +47,25 @@ public class Constante {
     public static final String MAESTRO_CORREO_TALENTO = "52";
     public static final String MAESTRO_CORREO_SELECCION = "35";
 
+    // CONFIRMACIÓN DE FORMULARIOS POR CORREO (gestor/suplente -> n8n -> backend).
+    // n8n lee el tipo, el ID y el código del asunto de la respuesta ("RE: ..."), así
+    // que el bloque entre corchetes NO debe cambiar de formato. Regex para n8n:
+    //   \[TIPO:\s*(\w+)\s*\|\s*ID:\s*(\d+)\s*\|\s*CODIGO:\s*([^\]]+?)\s*\]
+    // Parámetros: etiqueta del tipo, cliente, TIPO, ID, CODIGO.
+    //   RQ: ID = ID_REQUERIMIENTO, CODIGO = CODIGO_RQ
+    //   INGRESO/MOVIMIENTO/CESE: ID = ID_HISTORIAL, CODIGO = IN-/MV-/CE-<ID>
+    //   EQUIPO: ID = ID_EQUIPO_SOLICITUD, CODIGO = EQ-<ID>
+    public static final String ASUNTO_CONFIRMACION = "Confirmación de %s | %s [TIPO: %s | ID: %d | CODIGO: %s]";
+    // Plantilla para Asignar Talento (tabla de talentos del RQ)
+    public static final String PLANTILLA_CONFIRMACION_INGRESO = "confirmacion-ingreso";
+    // Plantilla para los formularios generados desde las pantallas de FMI
+    public static final String PLANTILLA_CONFIRMACION_FORMULARIO = "confirmacion-formulario";
+    // Cabecera con la API key que envía n8n (valor en la propiedad n8n.api-key).
+    public static final String HEADER_API_KEY = "X-Api-Key";
+    // detalleMensaje cuando la confirmación llegó pero los formularios no salieron:
+    // el controller responde 503 para que n8n reintente.
+    public static final String CONFIRMACION_REINTENTAR = "REINTENTAR";
+
     // FUNCIONALIDADES
     public static final String LISTAR_TALENTOS = "1";
     public static final String MOSTRAR_DATOS_TALENTO = "2";

@@ -15,7 +15,7 @@ spring:
         boot:
           allow_jdbc_metadata_access: false
   mail:
-    host: smtp.gmail.com
+    host: ${MAIL_HOST:smtp.gmail.com}
     port: 465
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
@@ -24,6 +24,6 @@ spring:
         smtp:
           auth: true
           ssl.enable: true
-          ssl.trust: smtp.gmail.com
+          ssl.trust: ${MAIL_HOST:smtp.gmail.com}
           socketFactory.port: "465"
           socketFactory.class: "javax.net.ssl.SSLSocketFactory"

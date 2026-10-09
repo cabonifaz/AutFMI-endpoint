@@ -358,7 +358,7 @@ public class MailService implements IMailService {
    * varios, el resto van a CC); si el maestro no resuelve, cae al generador. CC =
    * generador + selección(35) + gestores del cliente + correos extra del maestro.
    */
-  private void sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
+  private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
       String gestoresCsv, String subject, String message) {
     List<String> toEmails = resolveMaestroEmails(maestro);
     String to = !toEmails.isEmpty()
@@ -366,7 +366,7 @@ public class MailService implements IMailService {
         : (correoGestor != null ? correoGestor.trim() : "");
     if (to == null || to.isEmpty()) {
       logger.error("Correo '{}' no enviado: sin destinatario (maestro {} ni correoGestor).", subject, maestro);
-      return;
+      return false;
     }
     List<String> extraTo = toEmails.size() > 1
         ? new ArrayList<>(toEmails.subList(1, toEmails.size()))
@@ -375,8 +375,10 @@ public class MailService implements IMailService {
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
       pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message);
+      return true;
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
+      return false;
     }
   }
 
@@ -397,28 +399,40 @@ public class MailService implements IMailService {
   @Async("notificationExecutor")
   @Override
   public void sendEntryReportNotification(EntryReport report) {
+    sendEntryReportNotificationSync(report);
+  }
+
+  @Override
+  public boolean sendEntryReportNotificationSync(EntryReport report) {
     String fullname = report.getNombres() + " " + report.getApellidos();
     String cliente = report.getCliente();
     String gestores = report.getGestoresCliente();
 
     // Correo 1: Formulario de Ingreso -> maestro 52 (talento)
-    sendFormularioEmail(
+    boolean ingreso = sendFormularioEmail(
         this.reportPDFBuilder.forIngreso(report).withFormulario().build(),
         Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(), gestores,
         buildFormularioSubject("ingreso", cliente, fullname),
         buildFormularioBody("ingreso"));
 
     // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte)
-    sendFormularioEmail(
+    boolean usuario = sendFormularioEmail(
         this.reportPDFBuilder.forIngreso(report).withCreateUser().build(),
         Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), gestores,
         buildFormularioSubject("creación de usuario", cliente, fullname),
         buildFormularioBody("creación de usuario"));
+
+    return ingreso && usuario;
   }
 
   @Async("notificationExecutor")
   @Override
   public void sendCeseReportNotification(CeseReport report) {
+    sendCeseReportNotificationSync(report);
+  }
+
+  @Override
+  public boolean sendCeseReportNotificationSync(CeseReport report) {
     logger.info("Preparing to send cese report notification email...");
     String fullname = report.getNombres() + " " + report.getApellidos();
 
@@ -429,7 +443,7 @@ public class MailService implements IMailService {
         .build();
 
     // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
-    sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
+    return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
         report.getGestoresCliente(),
         buildFormularioSubject("cese", report.getCliente(), fullname),
         buildFormularioBody("cese"));
@@ -437,6 +451,11 @@ public class MailService implements IMailService {
 
   @Override
   public void sendMovementReportNotification(MovementReport report) {
+    sendMovementReportNotificationSync(report);
+  }
+
+  @Override
+  public boolean sendMovementReportNotificationSync(MovementReport report) {
     String fullname = report.getNombres() + " " + report.getApellidos();
 
     List<FileDTO> attachments = this.reportPDFBuilder
@@ -445,7 +464,7 @@ public class MailService implements IMailService {
         .build();
 
     // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
-    sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
+    return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
         report.getGestoresCliente(),
         buildFormularioSubject("movimiento", report.getCliente(), fullname),
         buildFormularioBody("movimiento"));
@@ -754,6 +773,11 @@ public class MailService implements IMailService {
   @Async("notificationExecutor")
   @Override
   public void sendEquipmentRequestNotification(SolicitudEquipoReport report) {
+    sendEquipmentRequestNotificationSync(report);
+  }
+
+  @Override
+  public boolean sendEquipmentRequestNotificationSync(SolicitudEquipoReport report) {
     String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
 
     List<FileDTO> attachments = this.reportPDFBuilder
@@ -762,7 +786,7 @@ public class MailService implements IMailService {
         .build();
 
     // TO: maestro 51 (soporte). CC: generador + selección(35) + gestores del cliente.
-    sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(),
+    return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(),
         report.getGestoresCliente(),
         buildFormularioSubject("equipo", report.getCliente(), employee),
         buildFormularioBody("equipo"));

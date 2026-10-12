@@ -2,8 +2,11 @@ package org.app.autfmi.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.app.autfmi.model.dto.ContactoTalentoDTO;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.ParametrosDTO;
@@ -14,6 +17,7 @@ import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.FormularioCorreoUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.builders.ReportPDFBuilder;
@@ -130,11 +134,12 @@ public class NotificationService {
         this.logger.info("Correo 'Ingreso de nuevo talento' procesado (adjuntos de ingreso: {})", ingresoFiles.size());
       }
 
-      /* 2. Solicitud de Creación de Usuario -> maestro 51 (bundle de todos los talentos). */
+      /* 2. Solicitud de Creación de Usuario -> maestro 51 (bundle de todos los talentos).
+       *    El cuerpo lleva la tabla de contacto de los talentos ingresados. */
       if (!usuarioFiles.isEmpty()) {
         todoEnviado &= sendBundleToMaestro(usuarioFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
             "Solicitud de creación de usuario: " + cliente + " - " + codigoRQ,
-            "Estimados,\n\nFavor atender la solicitud de creación de usuario.\nSlds");
+            FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", contactos(postulantes, null)));
       }
 
       /* 3. Solicitudes de equipo -> maestro 51 (bundle de todos los talentos). */
@@ -147,9 +152,12 @@ public class NotificationService {
           equipoFiles.addAll(this.reportPDFBuilder.fEquipoReport(reporte).withFormulario().build());
         });
         if (!equipoFiles.isEmpty()) {
+          // Tabla de contacto solo de los talentos que tienen solicitud de equipo
+          Set<Integer> conEquipo = new HashSet<>();
+          solicitudesEquipo.forEach(sol -> conEquipo.add(sol.getIdTalento()));
           todoEnviado &= sendBundleToMaestro(equipoFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
               "Solicitud de equipo: " + cliente + " - " + codigoRQ,
-              "Estimados,\n\nFavor atender la solicitud de equipo.\nSlds");
+              FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", contactos(postulantes, conEquipo)));
         }
       }
 
@@ -159,6 +167,23 @@ public class NotificationService {
     }
 
     return todoEnviado;
+  }
+
+  /**
+   * Contactos de los postulantes para la tabla de los correos de solicitud. Con
+   * {@code soloTalentos} se limita a esos talentos (p. ej. los que piden equipo).
+   */
+  private List<ContactoTalentoDTO> contactos(List<PostulantDTO> postulantes, Set<Integer> soloTalentos) {
+    List<ContactoTalentoDTO> contactos = new ArrayList<>();
+    if (postulantes == null) {
+      return contactos;
+    }
+    for (PostulantDTO p : postulantes) {
+      if (soloTalentos == null || soloTalentos.contains(p.getIdTalento())) {
+        contactos.add(ContactoTalentoDTO.from(p));
+      }
+    }
+    return contactos;
   }
 
   /**
@@ -207,7 +232,7 @@ public class NotificationService {
     }
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message);
+      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, true);
       return true;
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);

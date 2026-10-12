@@ -14,4 +14,8 @@ public class GestorRqDTO {
     private String codigoRQ;
     private String cliente;
     private String tipoFormulario;
+    // Requisitos de ingreso del RQ (0 = No requiere, 1 = Requiere)
+    private Integer emo;
+    private Integer sctr;
+    private Integer asignacionLaptop;
 }

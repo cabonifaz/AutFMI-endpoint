@@ -146,6 +146,8 @@ public class MailUtils {
         return cuerpoCorreo.replace("[GESTOR]", gestor.getNombres())
                 .replace("[CLIENTE]", gestor.getCliente())
                 .replace("[TIPO_FORMULARIO]", tipoFormulario)
+                .replace("{{requisitosIngreso}}", FormularioCorreoUtils.requisitosIngresoHtml(
+                        gestor.getEmo(), gestor.getSctr(), gestor.getAsignacionLaptop()))
                 .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 

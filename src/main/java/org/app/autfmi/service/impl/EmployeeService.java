@@ -97,7 +97,7 @@ public class EmployeeService implements IEmployeeService {
     // SP_FORMULARIO_CONFIRMACION_REGISTRAR).
     if (enviarDirecto(TipoFormulario.INGRESO, null, request.getIdTalento(), request.getIdCliente(), user,
         report.getNombres() + " " + report.getApellidos(), report.getResponse())) {
-      this.mailService.sendEntryReportNotification(report);
+      this.mailService.sendEntryReportNotification(report, request.getIdTalento());
     }
 
     return report.getResponse();
@@ -217,7 +217,7 @@ public class EmployeeService implements IEmployeeService {
     // gestor/suplente del cliente; si no, se pide confirmación)
     if (enviarDirecto(TipoFormulario.EQUIPO, operationId, talentId, request.getIdCliente(), user,
         rp.getNombreEmpleado() + " " + rp.getApellidosEmpleado(), response.getBaseResponse())) {
-      this.mailService.sendEquipmentRequestNotification(rp);
+      this.mailService.sendEquipmentRequestNotification(rp, talentId);
     }
 
     return response.getBaseResponse();

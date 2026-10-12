@@ -38,4 +38,9 @@ public class RequirementRequest {
 
     // Facturacion asociada a la modalidad de contrato
     private List<RQFacturacionDTO> lstFacturacion;
+
+    // Requisitos de ingreso (0 = No requiere, 1 = Requiere)
+    private Integer emo;
+    private Integer sctr;
+    private Integer asignacionLaptop;
 }

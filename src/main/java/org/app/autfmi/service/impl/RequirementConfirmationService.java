@@ -30,6 +30,7 @@ import org.app.autfmi.service.IMailService;
 import org.app.autfmi.service.IRequirementConfirmationService;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.EmailUtils;
+import org.app.autfmi.util.FormularioCorreoUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.SafeValues;
 import org.slf4j.Logger;
@@ -98,6 +99,10 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
         variables.put("solicitante", solicitante);
         variables.put("codigoRq", codigoRq);
         variables.put("cliente", cliente);
+        // Requisitos de ingreso del RQ (EMO, SCTR, asignación de laptop)
+        variables.put("requisitos", actor != null
+                ? FormularioCorreoUtils.requisitosIngreso(actor.getEmo(), actor.getSctr(), actor.getAsignacionLaptop())
+                : null);
         // Qué formularios saldrán al confirmar: ingreso y creación de usuario para
         // cada talento ingresado; solicitud de equipo solo para quien la tiene.
         Set<Integer> conEquipo = new HashSet<>();
@@ -326,14 +331,14 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
 
         if (tipo == TipoFormulario.EQUIPO) {
             SolicitudEquipoReport report = historyRepository.getSolicitudEquipoReport(baseRequest, idTalento, id, false);
-            return mailService.sendEquipmentRequestNotificationSync(report);
+            return mailService.sendEquipmentRequestNotificationSync(report, idTalento);
         }
 
         IReport report = historyRepository.getHistoryReport(baseRequest, idTalento, tipo.getIdTipoHistorial(), id, false);
         switch (tipo) {
             case INGRESO:
                 if (report instanceof EntryReport entry) {
-                    return mailService.sendEntryReportNotificationSync(entry);
+                    return mailService.sendEntryReportNotificationSync(entry, idTalento);
                 }
                 break;
             case MOVIMIENTO:

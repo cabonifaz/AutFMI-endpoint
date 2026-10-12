@@ -20,4 +20,8 @@ public class RequirementDetailsReport {
   /** Plazo del contrato del talento; independiente de {@link #duracionRQ}. */
   private String duracionContrato;
   private String cliente;
+  /** Requisitos de ingreso (0 = No requiere, 1 = Requiere). */
+  private Integer emo;
+  private Integer sctr;
+  private Integer asignacionLaptop;
 }

@@ -4,6 +4,7 @@ import com.microsoft.sqlserver.jdbc.SQLServerDataTable;
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 import lombok.RequiredArgsConstructor;
 
+import org.app.autfmi.model.dto.ContactoTalentoDTO;
 import org.app.autfmi.model.dto.EmployeeDTO;
 import org.app.autfmi.model.dto.EmployeeFullHistoryDTO;
 import org.app.autfmi.model.request.BaseRequest;
@@ -38,6 +39,30 @@ public class EmployeeRepository {
   private final JdbcTemplate jdbcTemplate;
 
   private Logger logger = LoggerFactory.getLogger(EmployeeRepository.class);
+
+  /**
+   * Datos de contacto del talento (SP_TALENTO_CONTACTO_SEL) para la tabla de los
+   * correos de solicitud de creación de usuario y de equipo. null si no existe.
+   */
+  public ContactoTalentoDTO getContactoTalento(Integer idTalento) {
+    if (idTalento == null) {
+      return null;
+    }
+    Map<String, Object> result = new SimpleJdbcCall(jdbcTemplate)
+        .withProcedureName("SP_TALENTO_CONTACTO_SEL")
+        .execute(new MapSqlParameterSource().addValue("ID_TALENTO", idTalento));
+
+    var rows = (List<Map<String, Object>>) result.get("#result-set-1");
+    if (rows == null || rows.isEmpty()) {
+      return null;
+    }
+    var row = rows.get(0);
+    return new ContactoTalentoDTO(
+        (String) row.get("NOMBRES"),
+        (String) row.get("APELLIDOS"),
+        (String) row.get("EMAIL"),
+        (String) row.get("CELULAR"));
+  }
 
   public BaseResponse getEmployee(Integer idTalento) {
     SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)

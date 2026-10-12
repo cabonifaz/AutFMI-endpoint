@@ -489,7 +489,12 @@ public class RequirementRepository {
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
 
 				// Facturacion asociada a la modalidad de contrato
-				.addValue("LST_FACTURACION", tvpFacturacion);
+				.addValue("LST_FACTURACION", tvpFacturacion)
+
+				// Requisitos de ingreso (0/1)
+				.addValue("EMO", request.getEmo())
+				.addValue("SCTR", request.getSctr())
+				.addValue("ASIGNACION_LAPTOP", request.getAsignacionLaptop());
 
 		var result = simpleJdbcCall.execute(params);
 		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -613,7 +618,11 @@ public class RequirementRepository {
 				.addValue("MODALIDAD_FACT", request.getIdModalidadFact())
 				.addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
-				.addValue("LST_FACTURACION", lstFactuacion);
+				.addValue("LST_FACTURACION", lstFactuacion)
+				// Requisitos de ingreso (0/1); null = no cambia
+				.addValue("EMO", request.getEmo())
+				.addValue("SCTR", request.getSctr())
+				.addValue("ASIGNACION_LAPTOP", request.getAsignacionLaptop());
 
 		var result = simpleJdbcCall.execute(params);
 		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -763,6 +772,10 @@ public class RequirementRepository {
 			gestorRq.setCorreo((String) usuario.get("CORREO"));
 			gestorRq.setCodigoRQ((String) usuario.get("CODIGO_RQ"));
 			gestorRq.setCliente((String) usuario.getOrDefault("CLIENTE", ""));
+			// Requisitos de ingreso del RQ (0/1)
+			gestorRq.setEmo(toFlag(usuario.get("EMO")));
+			gestorRq.setSctr(toFlag(usuario.get("SCTR")));
+			gestorRq.setAsignacionLaptop(toFlag(usuario.get("ASIGNACION_LAPTOP")));
 
 			builder.gestorRq(gestorRq);
 		} else {
@@ -1178,7 +1191,10 @@ public class RequirementRepository {
 				lstContactos,
 				(Integer) requerimiento.get("ID_DUR_CONTRATO"),
 				(BigDecimal) requerimiento.get("DURACION_CONTRATO"),
-				lstRQFacturacion);
+				lstRQFacturacion,
+				toFlag(requerimiento.get("EMO")),
+				toFlag(requerimiento.get("SCTR")),
+				toFlag(requerimiento.get("ASIGNACION_LAPTOP")));
 	}
 
 	private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)
@@ -1405,6 +1421,11 @@ public class RequirementRepository {
 		}
 
 		return tvpProductos;
+	}
+
+	/** Requisitos de ingreso (EMO/SCTR/laptop): 0 si la columna no viene o es NULL. */
+	private static Integer toFlag(Object value) {
+		return value instanceof Number n ? n.intValue() : 0;
 	}
 
 	private static PostulantDTO mapListPostulantDTO(Map<String, Object> postulanteRow) {

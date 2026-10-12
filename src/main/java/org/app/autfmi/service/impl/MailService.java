@@ -14,8 +14,10 @@ import org.app.autfmi.model.dto.InicioOutsourcingDTO;
 import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.app.autfmi.model.dto.ContactoTalentoDTO;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.ParametrosDTO;
+import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.model.report.CeseReport;
@@ -26,6 +28,7 @@ import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.response.InterviewDetailResponseDTO;
 import org.app.autfmi.service.IMailService;
+import org.app.autfmi.util.FormularioCorreoUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.SafeValues;
@@ -53,6 +56,9 @@ public class MailService implements IMailService {
 
   @Autowired
   private IParametrosService parametrosService;
+
+  @Autowired
+  private EmployeeRepository employeeRepository;
 
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
@@ -139,6 +145,11 @@ public class MailService implements IMailService {
           SafeValues.safeString(report.getRequirementDetails().getDuracionContrato()));
       gestion.put("modalidad", report.getRequirementDetails().getModalidadRQ());
       gestion.put("modalidadesFacturacion", new ArrayList<>());
+      // Requisitos de ingreso (EMO, SCTR, asignación de laptop)
+      gestion.put("requisitos", FormularioCorreoUtils.requisitosIngreso(
+          report.getRequirementDetails().getEmo(),
+          report.getRequirementDetails().getSctr(),
+          report.getRequirementDetails().getAsignacionLaptop()));
     }
     variables.put("gestion", gestion);
 
@@ -360,6 +371,12 @@ public class MailService implements IMailService {
    */
   private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
       String gestoresCsv, String subject, String message) {
+    return sendFormularioEmail(files, maestro, correoGestor, gestoresCsv, subject, message, false);
+  }
+
+  /** Igual que el anterior; con {@code html = true} el cuerpo va en HTML. */
+  private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
+      String gestoresCsv, String subject, String message, boolean html) {
     List<String> toEmails = resolveMaestroEmails(maestro);
     String to = !toEmails.isEmpty()
         ? toEmails.get(0)
@@ -374,7 +391,7 @@ public class MailService implements IMailService {
     List<String> cc = buildFormularioCcList(correoGestor, gestoresCsv, extraTo);
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message);
+      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, html);
       return true;
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
@@ -398,12 +415,12 @@ public class MailService implements IMailService {
    */
   @Async("notificationExecutor")
   @Override
-  public void sendEntryReportNotification(EntryReport report) {
-    sendEntryReportNotificationSync(report);
+  public void sendEntryReportNotification(EntryReport report, Integer idTalento) {
+    sendEntryReportNotificationSync(report, idTalento);
   }
 
   @Override
-  public boolean sendEntryReportNotificationSync(EntryReport report) {
+  public boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento) {
     String fullname = report.getNombres() + " " + report.getApellidos();
     String cliente = report.getCliente();
     String gestores = report.getGestoresCliente();
@@ -415,12 +432,14 @@ public class MailService implements IMailService {
         buildFormularioSubject("ingreso", cliente, fullname),
         buildFormularioBody("ingreso"));
 
-    // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte)
+    // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte), con la
+    // tabla de contacto del talento en el cuerpo.
+    var contacto = contactoTalento(idTalento, report.getNombres(), report.getApellidos(), null);
     boolean usuario = sendFormularioEmail(
         this.reportPDFBuilder.forIngreso(report).withCreateUser().build(),
         Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), gestores,
         buildFormularioSubject("creación de usuario", cliente, fullname),
-        buildFormularioBody("creación de usuario"));
+        FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", List.of(contacto)), true);
 
     return ingreso && usuario;
   }
@@ -772,12 +791,12 @@ public class MailService implements IMailService {
 
   @Async("notificationExecutor")
   @Override
-  public void sendEquipmentRequestNotification(SolicitudEquipoReport report) {
-    sendEquipmentRequestNotificationSync(report);
+  public void sendEquipmentRequestNotification(SolicitudEquipoReport report, Integer idTalento) {
+    sendEquipmentRequestNotificationSync(report, idTalento);
   }
 
   @Override
-  public boolean sendEquipmentRequestNotificationSync(SolicitudEquipoReport report) {
+  public boolean sendEquipmentRequestNotificationSync(SolicitudEquipoReport report, Integer idTalento) {
     String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
 
     List<FileDTO> attachments = this.reportPDFBuilder
@@ -785,10 +804,30 @@ public class MailService implements IMailService {
         .withFormulario()
         .build();
 
+    var contacto = contactoTalento(idTalento, report.getNombreEmpleado(), report.getApellidosEmpleado(),
+        report.getCelularTalento());
+
     // TO: maestro 51 (soporte). CC: generador + selección(35) + gestores del cliente.
+    // El cuerpo lleva la tabla de contacto del talento.
     return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(),
         report.getGestoresCliente(),
         buildFormularioSubject("equipo", report.getCliente(), employee),
-        buildFormularioBody("equipo"));
+        FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", List.of(contacto)), true);
+  }
+
+  /**
+   * Contacto del talento para la tabla de los correos de solicitud. Si no se
+   * puede consultar, se arma con lo que trae el reporte.
+   */
+  private ContactoTalentoDTO contactoTalento(Integer idTalento, String nombres, String apellidos, String celular) {
+    try {
+      ContactoTalentoDTO contacto = employeeRepository.getContactoTalento(idTalento);
+      if (contacto != null) {
+        return contacto;
+      }
+    } catch (Exception e) {
+      logger.warn("No se pudo obtener el contacto del talento {}: {}", idTalento, e.getMessage());
+    }
+    return new ContactoTalentoDTO(nombres, apellidos, "", celular != null ? celular : "");
   }
 }

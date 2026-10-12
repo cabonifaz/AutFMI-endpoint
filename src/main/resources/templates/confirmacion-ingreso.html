@@ -52,6 +52,18 @@
         </p>
       </div>
 
+      <!-- Requisitos de ingreso del RQ -->
+      <table cellpadding="8" cellspacing="0" th:if="${requisitos}"
+        style="border: 1px solid #e5e7eb; border-collapse: collapse; font-size: 14px; margin: 0 0 20px 0;">
+        <tr style="background-color: #f3f4f6;">
+          <th colspan="2" style="border: 1px solid #e5e7eb; text-align: left;">Requisitos de ingreso</th>
+        </tr>
+        <tr th:each="r : ${requisitos}">
+          <td style="border: 1px solid #e5e7eb;" th:text="${r.nombre}">EMO</td>
+          <td style="border: 1px solid #e5e7eb; font-weight: 600;" th:text="${r.valor}">No</td>
+        </tr>
+      </table>
+
       <table width="100%" cellpadding="8" cellspacing="0"
         style="border: 1px solid #e5e7eb; border-collapse: collapse; font-size: 14px;">
         <tr style="background-color: #f3f4f6;">

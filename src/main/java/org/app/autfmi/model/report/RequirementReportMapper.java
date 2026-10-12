@@ -23,7 +23,15 @@ public class RequirementReportMapper {
         (String) row.get("MODALIDAD_RQ"),
         (String) row.get("DURACION_RQ"),
         (String) row.get("DURACION_CONTRATO"),
-        (String) row.get("CLIENTE"));
+        (String) row.get("CLIENTE"),
+        flag(row.get("EMO")),
+        flag(row.get("SCTR")),
+        flag(row.get("ASIGNACION_LAPTOP")));
+  }
+
+  /** Requisitos de ingreso: 0 si la columna no viene o es NULL. */
+  private static Integer flag(Object value) {
+    return value instanceof Number n ? n.intValue() : 0;
   }
 
   /**

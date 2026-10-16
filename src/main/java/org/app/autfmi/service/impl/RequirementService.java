@@ -322,7 +322,8 @@ public class RequirementService implements IRequirementService {
         IRequirementConfirmationService.ResultadoSolicitud resultado;
         try {
             resultado = confirmationService.requestConfirmation(
-                    request.getIdRequerimiento(), response, user.getIdUsuario());
+                    request.getIdRequerimiento(), response, user.getIdUsuario(),
+                    Common.createBaseRequest(user, baseRequest.getFuncionalidades()));
         } catch (Exception e) {
             this.logger.error("Error al solicitar la confirmación del ingreso: {}", e.getMessage(), e);
             resultado = IRequirementConfirmationService.ResultadoSolicitud.ERROR_ENVIO;

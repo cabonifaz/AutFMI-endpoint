@@ -1,7 +1,12 @@
 package org.app.autfmi.service;
 
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.RequirementTalentsResult;
 import org.app.autfmi.model.dto.TipoFormulario;
+import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.request.EmailConfirmationRequest;
 import org.app.autfmi.model.response.BaseResponse;
 
@@ -28,9 +33,12 @@ public interface IRequirementConfirmationService {
     /**
      * Asignar Talento (Finalizar). Los talentos ya quedaron con
      * ESTADO_FORMULARIOS 0 (o 1 si el actor es gestor) en el SP.
+     *
+     * @param baseRequest usuario que finalizó; con él se generan los formularios
+     *                    que se adjuntan al correo de confirmación
      */
     ResultadoSolicitud requestConfirmation(Integer idRequerimiento, RequirementTalentsResult result,
-            Integer idUsuarioActor);
+            Integer idUsuarioActor, BaseRequest baseRequest);
 
     /**
      * Formularios de las pantallas de FMI. Registra el formulario y, si
@@ -39,9 +47,11 @@ public interface IRequirementConfirmationService {
      * @param id ID_HISTORIAL / ID_EQUIPO_SOLICITUD (null en INGRESO: lo resuelve el SP)
      * @param idCliente cliente cuyo gestor confirma (en MOVIMIENTO, el de destino)
      * @param talento nombre del talento para el correo
+     * @param adjuntos PDFs del formulario para adjuntar al correo de confirmación;
+     *                 solo se generan si de verdad se pide confirmación
      */
     ResultadoSolicitud requestFormConfirmation(TipoFormulario tipo, Integer id, Integer idTalento,
-            Integer idCliente, Integer idUsuarioActor, String talento);
+            Integer idCliente, Integer idUsuarioActor, String talento, Supplier<List<FileDTO>> adjuntos);
 
     /** Texto para detalleMensaje según el resultado; null en DIRECTO. */
     String describeResultado(ResultadoSolicitud resultado);

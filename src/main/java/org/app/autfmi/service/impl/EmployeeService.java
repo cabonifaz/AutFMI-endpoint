@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -52,11 +53,11 @@ public class EmployeeService implements IEmployeeService {
    * no hay cliente. En otro caso deja el aviso en {@code response.detalleMensaje}.
    */
   private boolean enviarDirecto(TipoFormulario tipo, Integer id, Integer idTalento, Integer idCliente,
-      UserDTO user, String talento, BaseResponse response) {
+      UserDTO user, String talento, BaseResponse response, Supplier<List<FileDTO>> adjuntos) {
     IRequirementConfirmationService.ResultadoSolicitud resultado;
     try {
       resultado = confirmationService.requestFormConfirmation(tipo, id, idTalento, idCliente,
-          user.getIdUsuario(), talento);
+          user.getIdUsuario(), talento, adjuntos);
     } catch (Exception e) {
       this.logger.error("Error al solicitar la confirmación de {} {}: ", tipo, id, e);
       resultado = IRequirementConfirmationService.ResultadoSolicitud.ERROR_ENVIO;
@@ -96,7 +97,8 @@ public class EmployeeService implements IEmployeeService {
     // confirmación (el SP de ingreso no devuelve el ID del historial: lo resuelve
     // SP_FORMULARIO_CONFIRMACION_REGISTRAR).
     if (enviarDirecto(TipoFormulario.INGRESO, null, request.getIdTalento(), request.getIdCliente(), user,
-        report.getNombres() + " " + report.getApellidos(), report.getResponse())) {
+        report.getNombres() + " " + report.getApellidos(), report.getResponse(),
+        () -> this.reportPDFBuilder.adjuntosIngreso(report))) {
       this.mailService.sendEntryReportNotification(report, request.getIdTalento());
     }
 
@@ -142,7 +144,8 @@ public class EmployeeService implements IEmployeeService {
 
     // Confirma el gestor/suplente del cliente de DESTINO del movimiento.
     if (enviarDirecto(TipoFormulario.MOVIMIENTO, operationId, talentId, request.getIdCliente(), user,
-        report.getNombres() + " " + report.getApellidos(), baseResponse)) {
+        report.getNombres() + " " + report.getApellidos(), baseResponse,
+        () -> this.reportPDFBuilder.adjuntosMovimiento(report))) {
       this.mailService.sendMovementReportNotification(report);
     }
 
@@ -185,7 +188,8 @@ public class EmployeeService implements IEmployeeService {
         operationId, false);
 
     if (enviarDirecto(TipoFormulario.CESE, operationId, talentId, request.getIdCliente(), user,
-        report.getNombres() + " " + report.getApellidos(), response)) {
+        report.getNombres() + " " + report.getApellidos(), response,
+        () -> this.reportPDFBuilder.adjuntosCese(report))) {
       this.logger.info("Generando y enviando correo con reporte de cese");
       this.mailService.sendCeseReportNotification(report);
     }
@@ -216,7 +220,8 @@ public class EmployeeService implements IEmployeeService {
     // Enviar correo con el reporte generado (directo solo si lo generó el
     // gestor/suplente del cliente; si no, se pide confirmación)
     if (enviarDirecto(TipoFormulario.EQUIPO, operationId, talentId, request.getIdCliente(), user,
-        rp.getNombreEmpleado() + " " + rp.getApellidosEmpleado(), response.getBaseResponse())) {
+        rp.getNombreEmpleado() + " " + rp.getApellidosEmpleado(), response.getBaseResponse(),
+        () -> this.reportPDFBuilder.adjuntosEquipo(rp))) {
       this.mailService.sendEquipmentRequestNotification(rp, talentId);
     }
 

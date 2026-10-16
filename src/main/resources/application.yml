@@ -29,3 +29,8 @@ springdoc:
     path: /fmi-backend.html
   api-docs:
     path: /fmi-docs
+# Correo automático de inicio de labores (outsourcing). Desactivado por defecto;
+# se reactiva con NOTIF_INICIO_ENABLED=true.
+notif:
+  inicio:
+    enabled: ${NOTIF_INICIO_ENABLED:false}

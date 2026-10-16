@@ -41,7 +41,7 @@ public class EmployeeRepository {
   private Logger logger = LoggerFactory.getLogger(EmployeeRepository.class);
 
   /**
-   * Datos de contacto del talento (SP_TALENTO_CONTACTO_SEL) para la tabla de los
+   * Datos de contacto del talento (SP_BT_TALENTO_CONTACTO_SEL) para la tabla de los
    * correos de solicitud de creación de usuario y de equipo. null si no existe.
    */
   public ContactoTalentoDTO getContactoTalento(Integer idTalento) {
@@ -49,7 +49,7 @@ public class EmployeeRepository {
       return null;
     }
     Map<String, Object> result = new SimpleJdbcCall(jdbcTemplate)
-        .withProcedureName("SP_TALENTO_CONTACTO_SEL")
+        .withProcedureName("SP_BT_TALENTO_CONTACTO_SEL")
         .execute(new MapSqlParameterSource().addValue("ID_TALENTO", idTalento));
 
     var rows = (List<Map<String, Object>>) result.get("#result-set-1");

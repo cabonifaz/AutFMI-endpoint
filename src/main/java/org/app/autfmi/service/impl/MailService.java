@@ -740,16 +740,16 @@ public class MailService implements IMailService {
    */
   @Override
   public boolean sendInicioOutsourcingNotification(InicioOutsourcingDTO dto) {
-    List<String> contactosCliente = splitEmails(dto.getCorreosCliente());
+    // Los contactos del cliente ligados al RQ (dto.getCorreosCliente()) ya no
+    // reciben este correo: va solo a los gestores del cliente y a Selección.
     List<String> gestores = splitEmails(dto.getCorreosGestores());             // gestores del cliente
     List<String> seleccion = resolveMaestroEmails(Constante.MAESTRO_CORREO_SELECCION); // Selección (35)
 
-    // Destinatario TO: contactos del RQ; si no hay, fallback a gestores del cliente;
-    // si tampoco hay gestores, a Selección. Solo se omite si no hay absolutamente nadie.
-    List<String> destinatarios = !contactosCliente.isEmpty() ? contactosCliente
-        : (!gestores.isEmpty() ? gestores : seleccion);
+    // Destinatario TO: gestores del cliente; si no hay, Selección. Solo se omite
+    // si no hay absolutamente nadie.
+    List<String> destinatarios = !gestores.isEmpty() ? gestores : seleccion;
     if (destinatarios.isEmpty()) {
-      logger.warn("Notif. inicio contrato {}: sin destinatarios (ni contactos RQ, ni gestores, ni Selección); "
+      logger.warn("Notif. inicio contrato {}: sin destinatarios (ni gestores, ni Selección); "
           + "se omite y reintentará.", dto.getIdContrato());
       return false;
     }

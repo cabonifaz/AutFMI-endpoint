@@ -44,8 +44,9 @@ public interface IMailService {
 
 	/**
 	 * Notificación de próximo inicio de labores de un talento en outsourcing
-	 * (faltando 2 días y el día de inicio). TO = contactos del requerimiento;
-	 * CC = gestores del cliente + Selección (maestro 35). Es síncrono: el job
+	 * (faltando 2 días y el día de inicio). Va a los gestores del cliente (si no
+	 * hay, a Selección) con copia a Selección (maestro 35); los contactos del
+	 * requerimiento ya no lo reciben. Es síncrono: el job
 	 * solo marca el contrato como notificado si el correo se envió.
 	 *
 	 * @return {@code true} si el correo se envió (procede marcar el contrato).

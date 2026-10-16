@@ -16,4 +16,6 @@ public class UserDTO {
     private String apellidos;
     private List<Integer> idRoles;
     private List<String> roles;
+    // Rutas del frontend permitidas (SP_VERIFY_CREDENTIALS #result-set-4)
+    private List<String> routes;
 }

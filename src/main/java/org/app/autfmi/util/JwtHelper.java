@@ -46,6 +46,7 @@ public class JwtHelper {
         claims.put("id_roles", user.getIdRoles());
         claims.put("id_usuario", user.getIdUsuario());
         claims.put("id_empresa", user.getIdEmpresa());
+        claims.put("routes", user.getRoutes());
 
         return Jwts.builder()
                 .setClaims(claims)

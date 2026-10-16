@@ -36,4 +36,9 @@ public class RequirementDTO {
     private BigDecimal duracionContrato;
 
     private List<RQFacturacionDTO> lstRqFacturacion;
+
+    // Requisitos de ingreso (0 = No requiere, 1 = Requiere)
+    private Integer emo;
+    private Integer sctr;
+    private Integer asignacionLaptop;
 }

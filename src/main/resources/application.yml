@@ -20,6 +20,10 @@ spring:
 jwt:
   expiration: ${JWT_EXPIRATION_MILLISECONDS} # 48 hours in milliseconds
   secret: ${JWT_SECRET}
+# API key con la que n8n llama a POST /fmi/requirement/confirmation.
+# Sin valor, el endpoint rechaza todas las llamadas.
+n8n:
+  api-key: ${N8N_API_KEY:}
 springdoc:
   swagger-ui:
     path: /fmi-backend.html

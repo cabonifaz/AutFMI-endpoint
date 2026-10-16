@@ -34,6 +34,7 @@ import org.app.autfmi.model.response.SaveRequirementResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IMailService;
+import org.app.autfmi.service.IRequirementConfirmationService;
 import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.ClientS3V2;
 import org.app.autfmi.util.Common;
@@ -56,6 +57,7 @@ public class RequirementService implements IRequirementService {
     private final JwtHelper jwt;
     private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
     private final NotificationService notificationService;
+    private final IRequirementConfirmationService confirmationService;
     private final IMailService mailService;
     private final ClientS3V2 clientS3;
 
@@ -307,49 +309,57 @@ public class RequirementService implements IRequirementService {
         if (!request.getFlagCorreo())
             return baseResponse;
 
-        // Envío de notificaciones de forma asíncrona
+        var entryReportsIds = response.getReportesIngreso();
+
+        // Sin ingresos en esta tanda no hay formularios ni confirmación que pedir.
+        if (entryReportsIds == null || entryReportsIds.isEmpty())
+            return baseResponse;
+
+        // Los formularios ya no salen al finalizar: primero se pide confirmación al
+        // gestor/suplente del cliente y se envían cuando confirman por correo (n8n ->
+        // POST /requirement/confirmation). Excepción: si quien finaliza ya es el
+        // gestor o suplente del cliente, se envían directo (el SP los dejó en 1).
+        IRequirementConfirmationService.ResultadoSolicitud resultado;
         try {
-            this.logger.info("Delegando envío de notificaciones al servicio asíncrono");
+            resultado = confirmationService.requestConfirmation(
+                    request.getIdRequerimiento(), response, user.getIdUsuario());
+        } catch (Exception e) {
+            this.logger.error("Error al solicitar la confirmación del ingreso: {}", e.getMessage(), e);
+            resultado = IRequirementConfirmationService.ResultadoSolicitud.ERROR_ENVIO;
+        }
 
+        if (resultado != IRequirementConfirmationService.ResultadoSolicitud.DIRECTO) {
+            baseResponse.setDetalleMensaje(confirmationService.describeResultado(resultado));
+            return baseResponse;
+        }
+
+        // DIRECTO: envío de notificaciones de forma asíncrona, como antes
+        try {
             var gestorRq = response.getGestorRq();
-            var ccList = response.getCcList();
-            var postulantes = response.getPostulantes();
-            var entryReportsIds = response.getReportesIngreso();
-            var solicitudesEquipo = response.getReportesSolicitudEquipo();
 
-            // Validación básica antes de delegar
             if (gestorRq == null || gestorRq.getCorreo() == null) {
                 this.logger.error("No se encontró el correo del gestor del requerimiento");
                 // El guardado sí ocurrió (idTipoMensaje == 2), pero la notificación no pudo
-                // enviarse. Lo señalamos en detalleMensaje sin degradar el estado de éxito,
-                // para que el frontend pueda advertirlo.
+                // enviarse. Lo señalamos en detalleMensaje sin degradar el estado de éxito.
                 baseResponse.setDetalleMensaje(
                         "No se pudo notificar por correo al usuario que ejecutó la acción: correo no disponible");
                 return baseResponse;
             }
 
-            // Crear una copia del baseRequest para el contexto asíncrono
-            var asyncBaseRequest = Common.createBaseRequest(
-                    user,
-                    baseRequest.getFuncionalidades());
-
-            // Llamada asíncrona
             notificationService.sendRequirementNotifications(
-                gestorRq,
-                ccList != null ? ccList : Collections.emptyList(),
-                postulantes,
-                entryReportsIds,
-                solicitudesEquipo,
-                asyncBaseRequest
-            );
+                    gestorRq,
+                    response.getCcList() != null ? response.getCcList() : Collections.emptyList(),
+                    response.getPostulantes(),
+                    entryReportsIds,
+                    response.getReportesSolicitudEquipo(),
+                    Common.createBaseRequest(user, baseRequest.getFuncionalidades()));
 
             this.logger.info("Notificaciones delegadas al servicio asíncrono");
-
         } catch (Exception e) {
             this.logger.error("Error al delegar notificaciones: {}", e.getMessage(), e);
         }
 
-        return response.getBaseResponse();
+        return baseResponse;
     }
 
     // ---------------------------------------------------------------------------------------------------------

@@ -42,6 +42,21 @@ public class PDFUtils {
             @NonNull String subject,
             @NonNull String text)
             throws MessagingException {
+        enviarCorreoConPDF(lstfiles, to, copyTo, subject, text, false);
+    }
+
+    /**
+     * Igual que {@link #enviarCorreoConPDF(List, String, List, String, String)},
+     * pero con {@code html = true} el cuerpo se envía como HTML (p. ej. con la
+     * tabla de contacto del talento).
+     */
+    public void enviarCorreoConPDF(List<FileDTO> lstfiles,
+            @NonNull String to,
+            @NonNull List<String> copyTo,
+            @NonNull String subject,
+            @NonNull String text,
+            boolean html)
+            throws MessagingException {
 
         String dest = to != null ? to.trim() : null;
 
@@ -56,18 +71,19 @@ public class PDFUtils {
         this.logger.info("CC final ({}): {}", cleanCc.size(), cleanCc);
 
         try {
-            construirYEnviar(dest, cleanCc, subject, text, lstfiles);
+            construirYEnviar(dest, cleanCc, subject, text, lstfiles, html);
             this.logger.info("Correo con PDF enviado a: {} (cc {}: {})", dest, cleanCc.size(), cleanCc);
         } catch (Exception e) {
             // Un CC inválido a nivel SMTP no debe impedir que el destinatario principal lo reciba.
             this.logger.error("Falló el envío con CC ({}); reintentando solo al destinatario principal",
                     e.getMessage());
-            construirYEnviar(dest, List.of(), subject, text, lstfiles);
+            construirYEnviar(dest, List.of(), subject, text, lstfiles, html);
             this.logger.info("Correo con PDF enviado a: {} (sin CC tras reintento)", dest);
         }
     }
 
-    private void construirYEnviar(String to, List<String> cc, String subject, String text, List<FileDTO> lstfiles)
+    private void construirYEnviar(String to, List<String> cc, String subject, String text, List<FileDTO> lstfiles,
+            boolean html)
             throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true);
@@ -75,7 +91,7 @@ public class PDFUtils {
         helper.setFrom(emisorCorreo != null ? emisorCorreo : "");
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(text);
+        helper.setText(text, html);
 
         if (cc != null && !cc.isEmpty()) {
             helper.setCc(cc.toArray(new String[0]));

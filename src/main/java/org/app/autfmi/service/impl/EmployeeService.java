@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FilePDFDTO;
+import org.app.autfmi.model.dto.TipoFormulario;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.report.*;
 import org.app.autfmi.model.request.*;
@@ -16,6 +17,7 @@ import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IEmployeeService;
 import org.app.autfmi.service.IMailService;
+import org.app.autfmi.service.IRequirementConfirmationService;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.JwtHelper;
@@ -41,6 +43,31 @@ public class EmployeeService implements IEmployeeService {
   private final JwtHelper jwt;
   private final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
   private final ReportPDFBuilder reportPDFBuilder;
+  private final IRequirementConfirmationService confirmationService;
+
+  /**
+   * Los formularios esperan la confirmación del gestor/suplente del cliente
+   * (correo -> n8n -> POST /requirement/confirmation). Devuelve {@code true} solo
+   * si hay que enviarlos ya: quien los generó es gestor/suplente del cliente, o
+   * no hay cliente. En otro caso deja el aviso en {@code response.detalleMensaje}.
+   */
+  private boolean enviarDirecto(TipoFormulario tipo, Integer id, Integer idTalento, Integer idCliente,
+      UserDTO user, String talento, BaseResponse response) {
+    IRequirementConfirmationService.ResultadoSolicitud resultado;
+    try {
+      resultado = confirmationService.requestFormConfirmation(tipo, id, idTalento, idCliente,
+          user.getIdUsuario(), talento);
+    } catch (Exception e) {
+      this.logger.error("Error al solicitar la confirmación de {} {}: ", tipo, id, e);
+      resultado = IRequirementConfirmationService.ResultadoSolicitud.ERROR_ENVIO;
+    }
+
+    if (resultado == IRequirementConfirmationService.ResultadoSolicitud.DIRECTO) {
+      return true;
+    }
+    response.setDetalleMensaje(confirmationService.describeResultado(resultado));
+    return false;
+  }
 
   @Override
   public BaseResponse getEmployee(Integer idTalento) {
@@ -65,7 +92,13 @@ public class EmployeeService implements IEmployeeService {
 
     // Envía 2 correos: Formulario de Ingreso (maestro 52) y Solicitud de Creación
     // de Usuario (maestro 51), con copia al usuario generador y al maestro 35.
-    this.mailService.sendEntryReportNotification(report);
+    // Solo directo si lo generó el gestor/suplente del cliente; si no, se pide
+    // confirmación (el SP de ingreso no devuelve el ID del historial: lo resuelve
+    // SP_FORMULARIO_CONFIRMACION_REGISTRAR).
+    if (enviarDirecto(TipoFormulario.INGRESO, null, request.getIdTalento(), request.getIdCliente(), user,
+        report.getNombres() + " " + report.getApellidos(), report.getResponse())) {
+      this.mailService.sendEntryReportNotification(report, request.getIdTalento());
+    }
 
     return report.getResponse();
   }
@@ -107,7 +140,11 @@ public class EmployeeService implements IEmployeeService {
         operationId,
         false);
 
-    this.mailService.sendMovementReportNotification(report);
+    // Confirma el gestor/suplente del cliente de DESTINO del movimiento.
+    if (enviarDirecto(TipoFormulario.MOVIMIENTO, operationId, talentId, request.getIdCliente(), user,
+        report.getNombres() + " " + report.getApellidos(), baseResponse)) {
+      this.mailService.sendMovementReportNotification(report);
+    }
 
     return baseResponse;
   }
@@ -147,8 +184,11 @@ public class EmployeeService implements IEmployeeService {
     CeseReport report = (CeseReport) historyRepository.getHistoryReport(baseRequest, talentId, reportType,
         operationId, false);
 
-    this.logger.info("Generando y enviando correo con reporte de cese");
-    this.mailService.sendCeseReportNotification(report);
+    if (enviarDirecto(TipoFormulario.CESE, operationId, talentId, request.getIdCliente(), user,
+        report.getNombres() + " " + report.getApellidos(), response)) {
+      this.logger.info("Generando y enviando correo con reporte de cese");
+      this.mailService.sendCeseReportNotification(report);
+    }
     return response;
   }
 
@@ -173,8 +213,12 @@ public class EmployeeService implements IEmployeeService {
     SolicitudEquipoReport rp = historyRepository.getSolicitudEquipoReport(baseRequest,
         talentId, operationId, false);
 
-    // Enviar correo con el reporte generado
-    this.mailService.sendEquipmentRequestNotification(rp);
+    // Enviar correo con el reporte generado (directo solo si lo generó el
+    // gestor/suplente del cliente; si no, se pide confirmación)
+    if (enviarDirecto(TipoFormulario.EQUIPO, operationId, talentId, request.getIdCliente(), user,
+        rp.getNombreEmpleado() + " " + rp.getApellidosEmpleado(), response.getBaseResponse())) {
+      this.mailService.sendEquipmentRequestNotification(rp, talentId);
+    }
 
     return response.getBaseResponse();
   }

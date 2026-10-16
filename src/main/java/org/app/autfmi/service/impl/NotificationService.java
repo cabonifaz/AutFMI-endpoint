@@ -2,8 +2,11 @@ package org.app.autfmi.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.app.autfmi.model.dto.ContactoTalentoDTO;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.ParametrosDTO;
@@ -14,6 +17,7 @@ import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.FormularioCorreoUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
 import org.app.autfmi.util.builders.ReportPDFBuilder;
@@ -44,10 +48,31 @@ public class NotificationService {
       List<RequirementTalentsResult.ReporteSolicitudEquipo> solicitudesEquipo,
       BaseRequest baseRequest
     ) {
+    sendRequirementNotificationsSync(gestorRq, ccList, postulantes, entryReportsIds, solicitudesEquipo, baseRequest);
+  }
+
+  /**
+   * Variante SÍNCRONA de {@link #sendRequirementNotifications}: genera los PDFs y
+   * envía los tres correos (ingreso, creación de usuario, equipo) en el hilo que
+   * llama. Se usa al confirmar el gestor, donde hay que saber si todo salió para
+   * marcar a los talentos (o devolverlos a pendientes y reintentar).
+   *
+   * @return {@code true} solo si se enviaron todos los correos que correspondían.
+   */
+  public boolean sendRequirementNotificationsSync(
+      GestorRqDTO gestorRq,
+      List<String> ccList,
+      List<PostulantDTO> postulantes,
+      List<RequirementTalentsResult.ReporteIngreso> entryReportsIds,
+      List<RequirementTalentsResult.ReporteSolicitudEquipo> solicitudesEquipo,
+      BaseRequest baseRequest
+    ) {
+
+    boolean todoEnviado = true;
 
     try {
 
-      this.logger.info("Iniciando envío asíncrono de notificaciones");
+      this.logger.info("Iniciando envío de notificaciones");
 
       var gestorRqEmail = gestorRq.getCorreo();
 
@@ -56,7 +81,7 @@ public class NotificationService {
 
       if (gestorRqEmail == null) {
         this.logger.error("No se encontro el correo del gestor del requerimiento");
-        return;
+        return false;
       }
 
       if (ccList == null) {
@@ -100,20 +125,21 @@ public class NotificationService {
       if (hayPostulantes || !ingresoFiles.isEmpty()) {
         List<String> ccIngreso = new ArrayList<>(baseCc);
         ccIngreso.addAll(resolveMaestroEmails(Constante.MAESTRO_CORREO_TALENTO));
-        this.mailUtils.sendRequirementPostulantMail(
+        todoEnviado &= this.mailUtils.sendRequirementPostulantMailSync(
             gestorRq,
             "Ingreso de nuevo talento",
             postulantes != null ? postulantes : Collections.emptyList(),
             ccIngreso,
             ingresoFiles);
-        this.logger.info("Correo 'Ingreso de nuevo talento' enviado (adjuntos de ingreso: {})", ingresoFiles.size());
+        this.logger.info("Correo 'Ingreso de nuevo talento' procesado (adjuntos de ingreso: {})", ingresoFiles.size());
       }
 
-      /* 2. Solicitud de Creación de Usuario -> maestro 51 (bundle de todos los talentos). */
+      /* 2. Solicitud de Creación de Usuario -> maestro 51 (bundle de todos los talentos).
+       *    El cuerpo lleva la tabla de contacto de los talentos ingresados. */
       if (!usuarioFiles.isEmpty()) {
-        sendBundleToMaestro(usuarioFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
+        todoEnviado &= sendBundleToMaestro(usuarioFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
             "Solicitud de creación de usuario: " + cliente + " - " + codigoRQ,
-            "Estimados,\n\nFavor atender la solicitud de creación de usuario.\nSlds");
+            FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", contactos(postulantes, null)));
       }
 
       /* 3. Solicitudes de equipo -> maestro 51 (bundle de todos los talentos). */
@@ -126,16 +152,38 @@ public class NotificationService {
           equipoFiles.addAll(this.reportPDFBuilder.fEquipoReport(reporte).withFormulario().build());
         });
         if (!equipoFiles.isEmpty()) {
-          sendBundleToMaestro(equipoFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
+          // Tabla de contacto solo de los talentos que tienen solicitud de equipo
+          Set<Integer> conEquipo = new HashSet<>();
+          solicitudesEquipo.forEach(sol -> conEquipo.add(sol.getIdTalento()));
+          todoEnviado &= sendBundleToMaestro(equipoFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
               "Solicitud de equipo: " + cliente + " - " + codigoRQ,
-              "Estimados,\n\nFavor atender la solicitud de equipo.\nSlds");
+              FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", contactos(postulantes, conEquipo)));
         }
       }
 
     } catch (Exception e) {
       this.logger.error("Error al enviar notificaciones: {}", e);
+      return false;
     }
 
+    return todoEnviado;
+  }
+
+  /**
+   * Contactos de los postulantes para la tabla de los correos de solicitud. Con
+   * {@code soloTalentos} se limita a esos talentos (p. ej. los que piden equipo).
+   */
+  private List<ContactoTalentoDTO> contactos(List<PostulantDTO> postulantes, Set<Integer> soloTalentos) {
+    List<ContactoTalentoDTO> contactos = new ArrayList<>();
+    if (postulantes == null) {
+      return contactos;
+    }
+    for (PostulantDTO p : postulantes) {
+      if (soloTalentos == null || soloTalentos.contains(p.getIdTalento())) {
+        contactos.add(ContactoTalentoDTO.from(p));
+      }
+    }
+    return contactos;
   }
 
   /**
@@ -165,8 +213,10 @@ public class NotificationService {
    * Envía un bundle de PDFs a un maestro: TO = primer correo del maestro (si tiene
    * varios, el resto van a CC); si el maestro no resuelve, cae al generador. CC =
    * baseCc + correos extra del maestro.
+   *
+   * @return {@code true} si el correo se envió.
    */
-  private void sendBundleToMaestro(List<FileDTO> files, String maestro, List<String> baseCc,
+  private boolean sendBundleToMaestro(List<FileDTO> files, String maestro, List<String> baseCc,
       String gestorRqEmail, String subject, String message) {
     List<String> toEmails = resolveMaestroEmails(maestro);
     String to = !toEmails.isEmpty()
@@ -174,7 +224,7 @@ public class NotificationService {
         : (gestorRqEmail != null ? gestorRqEmail.trim() : "");
     if (to == null || to.isEmpty()) {
       logger.error("Correo '{}' no enviado: sin destinatario (maestro {} ni gestorRq).", subject, maestro);
-      return;
+      return false;
     }
     List<String> cc = new ArrayList<>(baseCc);
     if (toEmails.size() > 1) {
@@ -182,9 +232,11 @@ public class NotificationService {
     }
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message);
+      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, true);
+      return true;
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
+      return false;
     }
   }
 

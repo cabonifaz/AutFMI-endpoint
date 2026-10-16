@@ -489,7 +489,12 @@ public class RequirementRepository {
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
 
 				// Facturacion asociada a la modalidad de contrato
-				.addValue("LST_FACTURACION", tvpFacturacion);
+				.addValue("LST_FACTURACION", tvpFacturacion)
+
+				// Requisitos de ingreso (0/1)
+				.addValue("EMO", request.getEmo())
+				.addValue("SCTR", request.getSctr())
+				.addValue("ASIGNACION_LAPTOP", request.getAsignacionLaptop());
 
 		var result = simpleJdbcCall.execute(params);
 		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -613,7 +618,11 @@ public class RequirementRepository {
 				.addValue("MODALIDAD_FACT", request.getIdModalidadFact())
 				.addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
-				.addValue("LST_FACTURACION", lstFactuacion);
+				.addValue("LST_FACTURACION", lstFactuacion)
+				// Requisitos de ingreso (0/1); null = no cambia
+				.addValue("EMO", request.getEmo())
+				.addValue("SCTR", request.getSctr())
+				.addValue("ASIGNACION_LAPTOP", request.getAsignacionLaptop());
 
 		var result = simpleJdbcCall.execute(params);
 		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -676,14 +685,30 @@ public class RequirementRepository {
 			return builder.build();
 		}
 
-		// 3. Extracción de ResultSets (Variables independientes para legibilidad)
+		// 3. Result-sets 2 a 6: datos de los formularios (postulantes, CC, reportes y actor)
+		mapNotificationData(result, builder);
+
+		// 4. Result-set 7: gestor y suplente del cliente (destinatarios de la confirmación)
+		builder.gestoresCliente(mapGestoresCliente((List<Map<String, Object>>) result.get("#result-set-7")));
+
+		logger.info("Finished task: saveRequirementTalents");
+		return builder.build();
+
+	}
+
+	/**
+	 * Result-sets 2 a 6 que usan los formularios. Tienen la misma forma en
+	 * SP_REQUERIMIENTO_TALENTO_INS y en SP_REQUERIMIENTO_CONFIRMACION_PROCESAR.
+	 */
+	private void mapNotificationData(Map<String, Object> result,
+			RequirementTalentsResult.RequirementTalentsResultBuilder builder) {
 		var postulantsSet = (List<Map<String, Object>>) result.get("#result-set-2");
 		var notificacionesCc = (List<Map<String, Object>>) result.get("#result-set-3");
 		var entryReportsRs = (List<Map<String, Object>>) result.get("#result-set-4");
 		var solicitudesEquipoRs = (List<Map<String, Object>>) result.get("#result-set-5");
 		var usuarioActuador = (List<Map<String, Object>>) result.get("#result-set-6");
 
-		// 4. Mapeo de Postulantes
+		// Mapeo de Postulantes
 		if (postulantsSet != null && !postulantsSet.isEmpty()) {
 			List<PostulantDTO> postulantList = new ArrayList<>();
 			for (var row : postulantsSet) {
@@ -694,7 +719,7 @@ public class RequirementRepository {
 			this.logger.warn("No hubo respuesta con la lista de postulantes");
 		}
 
-		// 5. Mapeo de Notificaciones
+		// Mapeo de Notificaciones
 		List<String> lstCc = new ArrayList<>();
 		if (notificacionesCc != null && !notificacionesCc.isEmpty()) {
 			notificacionesCc.stream().forEach((n) -> {
@@ -707,7 +732,7 @@ public class RequirementRepository {
 
 		builder.ccList(lstCc);
 
-		// 6. Mapeo de Reportes de Ingreso
+		// Mapeo de Reportes de Ingreso
 		if (entryReportsRs != null && !entryReportsRs.isEmpty()) {
 			List<RequirementTalentsResult.ReporteIngreso> reportesIngreso = new ArrayList<>();
 
@@ -724,7 +749,7 @@ public class RequirementRepository {
 			this.logger.warn("No hubo respuesta para los reportes de ingreso");
 		}
 
-		// 7. Mapeo de Reportes de Solicitud de Equipo
+		// Mapeo de Reportes de Solicitud de Equipo
 		if (solicitudesEquipoRs != null && !solicitudesEquipoRs.isEmpty()) {
 			List<RequirementTalentsResult.ReporteSolicitudEquipo> reportesSolicitudEquipo = new ArrayList<>();
 			solicitudesEquipoRs.stream().forEach((report) -> {
@@ -738,7 +763,7 @@ public class RequirementRepository {
 			this.logger.warn("No hubo respuesta con la lista de solicitudes de equipo");
 		}
 
-		// 8. Mapeao del usuario actuador conocido como (GestorRQ, no siempre lo es)
+		// Mapeo del usuario actuador conocido como (GestorRQ, no siempre lo es)
 		if (usuarioActuador != null && !usuarioActuador.isEmpty()) {
 			var usuario = usuarioActuador.get(0);
 			var gestorRq = new GestorRqDTO();
@@ -747,15 +772,126 @@ public class RequirementRepository {
 			gestorRq.setCorreo((String) usuario.get("CORREO"));
 			gestorRq.setCodigoRQ((String) usuario.get("CODIGO_RQ"));
 			gestorRq.setCliente((String) usuario.getOrDefault("CLIENTE", ""));
+			// Requisitos de ingreso del RQ (0/1)
+			gestorRq.setEmo(toFlag(usuario.get("EMO")));
+			gestorRq.setSctr(toFlag(usuario.get("SCTR")));
+			gestorRq.setAsignacionLaptop(toFlag(usuario.get("ASIGNACION_LAPTOP")));
 
 			builder.gestorRq(gestorRq);
 		} else {
 			this.logger.warn("No hubo respuesta con el gestor del RQ (quien realiza la acción)");
 		}
+	}
 
-		logger.info("Finished task: saveRequirementTalents");
+	private List<GestorClienteDTO> mapGestoresCliente(List<Map<String, Object>> rows) {
+		List<GestorClienteDTO> gestores = new ArrayList<>();
+		if (rows == null) {
+			return gestores;
+		}
+		for (var row : rows) {
+			gestores.add(new GestorClienteDTO(
+					(Integer) row.get("PRIORIDAD"),
+					(Integer) row.get("ID_USUARIO"),
+					(String) row.get("NOMBRES"),
+					(String) row.get("APELLIDOS"),
+					(String) row.get("CORREO")));
+		}
+		return gestores;
+	}
+
+	/**
+	 * Confirmación de ingreso por correo (SP de sistema, sin usuario en sesión).
+	 * Valida RQ + código y que el remitente sea gestor o suplente del cliente, y
+	 * reclama los talentos con formularios pendientes (ESTADO_FORMULARIOS 0 -> 2).
+	 * Si devuelve éxito, los reclamados quedan en 2 hasta llamar a
+	 * {@link #markConfirmation}.
+	 */
+	public RequirementTalentsResult processConfirmation(Integer idRequerimiento, String codigoRq,
+			String emailRemitente) {
+		var builder = RequirementTalentsResult.builder();
+
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_REQUERIMIENTO_CONFIRMACION_PROCESAR");
+
+		var params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO", idRequerimiento)
+				.addValue("CODIGO_RQ", codigoRq)
+				.addValue("EMAIL_REMITENTE", emailRemitente);
+
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+
+		var resultSet1 = (List<Map<String, Object>>) result.get("#result-set-1");
+		if (resultSet1 == null || resultSet1.isEmpty()) {
+			builder.baseResponse(new BaseResponse(3, "No se obtuvo respuesta de la base de datos"));
+			return builder.build();
+		}
+
+		var row = resultSet1.get(0);
+		var messageId = (Integer) row.getOrDefault("ID_TIPO_MENSAJE", 3);
+		builder.baseResponse(new BaseResponse(messageId, (String) row.get("MENSAJE")));
+
+		// 1 = sin pendientes (ya procesado), 3 = rechazado: solo viene el mensaje.
+		if (messageId != 2) {
+			return builder.build();
+		}
+
+		// Result-sets 2 a 6: mismos datos que SP_REQUERIMIENTO_TALENTO_INS
+		mapNotificationData(result, builder);
+
+		// Result-set 6 trae además los datos del usuario que finalizó, para que los
+		// SP de reporte validen sus permisos como cuando se envía al finalizar.
+		var actorRs = (List<Map<String, Object>>) result.get("#result-set-6");
+		if (actorRs != null && !actorRs.isEmpty()) {
+			var actor = actorRs.get(0);
+			builder.baseRequestFinaliza(new BaseRequest(
+					(Integer) actor.get("ID_USUARIO"),
+					(String) actor.get("USUARIO"),
+					(Integer) actor.get("ID_EMPRESA"),
+					(Integer) actor.get("ID_ROL"),
+					Constante.GUARDAR_REQUERIMIENTO));
+		}
+
+		// Result-set 7: talentos reclamados
+		List<Integer> reclamados = new ArrayList<>();
+		var reclamadosRs = (List<Map<String, Object>>) result.get("#result-set-7");
+		if (reclamadosRs != null) {
+			reclamadosRs.forEach(r -> reclamados.add((Integer) r.get("ID_TALENTO")));
+		}
+		builder.talentosReclamados(reclamados);
+
+		// Result-set 8: quien confirmó
+		var confirmadorRs = mapGestoresCliente((List<Map<String, Object>>) result.get("#result-set-8"));
+		if (!confirmadorRs.isEmpty()) {
+			builder.confirmador(confirmadorRs.get(0));
+		}
+
 		return builder.build();
+	}
 
+	/**
+	 * Cierra el reclamo de {@link #processConfirmation}: con éxito los talentos
+	 * pasan a formularios enviados (1); si el envío falló vuelven a pendientes (0)
+	 * para que una nueva confirmación los reintente.
+	 */
+	public BaseResponse markConfirmation(Integer idRequerimiento, List<Integer> idTalentos, boolean exito) {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_REQUERIMIENTO_CONFIRMACION_MARCAR");
+
+		String lstTalentos = idTalentos == null ? ""
+				: idTalentos.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","));
+
+		var params = new MapSqlParameterSource()
+				.addValue("ID_REQUERIMIENTO", idRequerimiento)
+				.addValue("LST_TALENTOS", lstTalentos)
+				.addValue("EXITO", exito);
+
+		Map<String, Object> result = simpleJdbcCall.execute(params);
+		var resultSet1 = (List<Map<String, Object>>) result.get("#result-set-1");
+		if (resultSet1 == null || resultSet1.isEmpty()) {
+			return new BaseResponse(3, "No se obtuvo respuesta de la base de datos");
+		}
+		var row = resultSet1.get(0);
+		return new BaseResponse((Integer) row.getOrDefault("ID_TIPO_MENSAJE", 3), (String) row.get("MENSAJE"));
 	}
 
 	public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {
@@ -1055,7 +1191,10 @@ public class RequirementRepository {
 				lstContactos,
 				(Integer) requerimiento.get("ID_DUR_CONTRATO"),
 				(BigDecimal) requerimiento.get("DURACION_CONTRATO"),
-				lstRQFacturacion);
+				lstRQFacturacion,
+				toFlag(requerimiento.get("EMO")),
+				toFlag(requerimiento.get("SCTR")),
+				toFlag(requerimiento.get("ASIGNACION_LAPTOP")));
 	}
 
 	private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)
@@ -1284,6 +1423,11 @@ public class RequirementRepository {
 		return tvpProductos;
 	}
 
+	/** Requisitos de ingreso (EMO/SCTR/laptop): 0 si la columna no viene o es NULL. */
+	private static Integer toFlag(Object value) {
+		return value instanceof Number n ? n.intValue() : 0;
+	}
+
 	private static PostulantDTO mapListPostulantDTO(Map<String, Object> postulanteRow) {
 		return new PostulantDTO(
 				(String) postulanteRow.get("NOMBRES"),
@@ -1296,7 +1440,8 @@ public class RequirementRepository {
 				(String) postulanteRow.get("CARGO"),
 				(String) postulanteRow.get("REMUNERACION"),
 				(String) postulanteRow.get("MODALIDAD"),
-				(String) postulanteRow.get("TIENE_EQUIPO"));
+				(String) postulanteRow.get("TIENE_EQUIPO"),
+				(Integer) postulanteRow.get("ID_TALENTO"));
 	}
 
 	@Async

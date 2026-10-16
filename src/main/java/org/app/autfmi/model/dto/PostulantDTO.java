@@ -17,4 +17,6 @@ public class PostulantDTO {
     private String remuneracion;
     private String modalidad;
     private String tieneEquipo;
+    // Para cruzar al talento con sus formularios (p. ej. solicitud de equipo).
+    private Integer idTalento;
 }

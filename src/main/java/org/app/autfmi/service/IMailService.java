@@ -19,16 +19,28 @@ public interface IMailService {
 
 	void sendCeseReportNotification(CeseReport report);
 
+	/** Versión síncrona: {@code true} si el correo salió. */
+	boolean sendCeseReportNotificationSync(CeseReport report);
+
 	/**
 	 * Envía los correos del ingreso: Formulario de Ingreso (maestro 52) y Solicitud
 	 * de Creación de Usuario (maestro 51), como dos correos separados, con copia al
 	 * usuario generador y al maestro 35.
 	 */
-	void sendEntryReportNotification(EntryReport report);
+	void sendEntryReportNotification(EntryReport report, Integer idTalento);
+
+	/** Versión síncrona: {@code true} si salieron los dos correos. */
+	boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento);
 
 	void sendMovementReportNotification(MovementReport report);
 
-	void sendEquipmentRequestNotification(SolicitudEquipoReport report);
+	/** Versión síncrona: {@code true} si el correo salió. */
+	boolean sendMovementReportNotificationSync(MovementReport report);
+
+	void sendEquipmentRequestNotification(SolicitudEquipoReport report, Integer idTalento);
+
+	/** Versión síncrona: {@code true} si el correo salió. */
+	boolean sendEquipmentRequestNotificationSync(SolicitudEquipoReport report, Integer idTalento);
 
 	/**
 	 * Notificación de próximo inicio de labores de un talento en outsourcing

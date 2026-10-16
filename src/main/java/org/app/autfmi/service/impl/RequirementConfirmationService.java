@@ -8,7 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
+import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.FormularioConfirmacionDTO;
 import org.app.autfmi.model.dto.GestorClienteDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
@@ -33,6 +35,7 @@ import org.app.autfmi.util.EmailUtils;
 import org.app.autfmi.util.FormularioCorreoUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.SafeValues;
+import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -46,7 +49,8 @@ import lombok.RequiredArgsConstructor;
  * <li>Al generar formularios (Finalizar en Asignar Talento, o ingreso,
  * movimiento, cese y solicitud de equipo en FMI) quedan pendientes y se envía
  * el correo de confirmación al gestor y suplente del cliente, con
- * {@code [TIPO | ID | CODIGO]} en el asunto. Si quien los genera ya es gestor o
+ * {@code [TIPO | ID | CODIGO]} en el asunto y los formularios en PDF adjuntos
+ * (los mismos que saldrán al confirmar). Si quien los genera ya es gestor o
  * suplente del cliente, se envían directo.</li>
  * <li>El gestor/suplente responde; n8n (IMAP + IA) detecta la confirmación y
  * llama a {@link #processEmailConfirmation}.</li>
@@ -71,12 +75,13 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
     private final NotificationService notificationService;
     private final IMailService mailService;
     private final MailUtils mailUtils;
+    private final ReportPDFBuilder reportPDFBuilder;
 
     // ------------------------------------------------------------------ solicitud
 
     @Override
     public ResultadoSolicitud requestConfirmation(Integer idRequerimiento, RequirementTalentsResult result,
-            Integer idUsuarioActor) {
+            Integer idUsuarioActor, BaseRequest baseRequest) {
         List<GestorClienteDTO> gestoresCliente = result.getGestoresCliente() != null
                 ? result.getGestoresCliente()
                 : Collections.emptyList();
@@ -121,12 +126,45 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
                 tipo.getEtiqueta(), cliente, tipo.name(), idRequerimiento, codigoRq);
 
         return sendConfirmationMail(gestoresCliente, actor != null ? actor.getCorreo() : null, subject,
-                Constante.PLANTILLA_CONFIRMACION_INGRESO, variables, "RQ " + idRequerimiento);
+                Constante.PLANTILLA_CONFIRMACION_INGRESO, variables, "RQ " + idRequerimiento,
+                () -> adjuntosRequerimiento(result, baseRequest));
+    }
+
+    /**
+     * Formularios de la tanda de Asignar Talento, generados igual que en
+     * {@link NotificationService#sendRequirementNotificationsSync}: ingreso y
+     * creación de usuario por talento + solicitudes de equipo.
+     */
+    private List<FileDTO> adjuntosRequerimiento(RequirementTalentsResult result, BaseRequest baseRequest) {
+        List<FileDTO> files = new ArrayList<>();
+        if (baseRequest == null) {
+            return files;
+        }
+        if (result.getReportesIngreso() != null) {
+            for (RequirementTalentsResult.ReporteIngreso r : result.getReportesIngreso()) {
+                if (r.getIdTalento() == null) {
+                    continue;
+                }
+                IReport report = historyRepository.getHistoryReport(
+                        baseRequest, r.getIdTalento(), r.getIdTipoHistorial(), r.getIdHistorial(), false);
+                if (report instanceof EntryReport entry) {
+                    files.addAll(reportPDFBuilder.adjuntosIngreso(entry));
+                }
+            }
+        }
+        if (result.getReportesSolicitudEquipo() != null) {
+            for (RequirementTalentsResult.ReporteSolicitudEquipo s : result.getReportesSolicitudEquipo()) {
+                SolicitudEquipoReport report = historyRepository.getSolicitudEquipoReport(
+                        baseRequest, s.getIdTalento(), s.getIdSolicitudEquipo(), false);
+                files.addAll(reportPDFBuilder.adjuntosEquipo(report));
+            }
+        }
+        return files;
     }
 
     @Override
     public ResultadoSolicitud requestFormConfirmation(TipoFormulario tipo, Integer id, Integer idTalento,
-            Integer idCliente, Integer idUsuarioActor, String talento) {
+            Integer idCliente, Integer idUsuarioActor, String talento, Supplier<List<FileDTO>> adjuntos) {
         // Sin cliente (p. ej. ingreso de personal interno) no hay gestor que confirme.
         if (idCliente == null || idCliente <= 0) {
             logger.info("{} del talento {}: sin cliente, formularios directos.", tipo, idTalento);
@@ -167,7 +205,7 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
                 tipo.getEtiqueta(), cliente, tipo.name(), idFormulario, tipo.codigo(idFormulario));
 
         return sendConfirmationMail(registro.getGestores(), registro.getCorreoSolicitante(), subject,
-                Constante.PLANTILLA_CONFIRMACION_FORMULARIO, variables, tipo + " " + idFormulario);
+                Constante.PLANTILLA_CONFIRMACION_FORMULARIO, variables, tipo + " " + idFormulario, adjuntos);
     }
 
     @Override
@@ -192,10 +230,12 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
 
     /**
      * Envía el correo de confirmación: TO = gestor (o el primero con correo
-     * válido); CC = suplente + quien generó el formulario.
+     * válido); CC = suplente + quien generó el formulario. Adjunta los PDFs de
+     * {@code adjuntos}; si no se pueden generar, el correo sale igual sin ellos.
      */
     private ResultadoSolicitud sendConfirmationMail(List<GestorClienteDTO> gestoresCliente, String correoSolicitante,
-            String subject, String plantilla, Map<String, Object> variables, String referencia) {
+            String subject, String plantilla, Map<String, Object> variables, String referencia,
+            Supplier<List<FileDTO>> adjuntos) {
         // Gestor (PRIORIDAD 1) primero, luego suplente; solo correos válidos.
         List<GestorClienteDTO> gestores = new ArrayList<>(
                 gestoresCliente != null ? gestoresCliente : Collections.emptyList());
@@ -218,8 +258,24 @@ public class RequirementConfirmationService implements IRequirementConfirmationS
             cc.add(correoSolicitante.trim());
         }
 
-        logger.info("{}: enviando solicitud de confirmación -> TO: {} | CC: {}", referencia, to, cc);
-        boolean enviado = mailUtils.sendTemplateEmailSync(to, cc, subject, plantilla, variables);
+        // Los PDFs se generan recién aquí: solo cuando de verdad se pide confirmación.
+        List<FileDTO> files = Collections.emptyList();
+        if (adjuntos != null) {
+            try {
+                List<FileDTO> generados = adjuntos.get();
+                if (generados != null) {
+                    files = generados;
+                }
+            } catch (Exception e) {
+                logger.error("{}: no se pudieron generar los formularios para adjuntar; se envía sin adjuntos: ",
+                        referencia, e);
+            }
+        }
+        variables.put("adjuntos", files.size());
+
+        logger.info("{}: enviando solicitud de confirmación -> TO: {} | CC: {} | adjuntos: {}",
+                referencia, to, cc, files.size());
+        boolean enviado = mailUtils.sendTemplateEmailSync(to, cc, subject, plantilla, variables, files);
         return enviado ? ResultadoSolicitud.ENVIADA : ResultadoSolicitud.ERROR_ENVIO;
     }
 

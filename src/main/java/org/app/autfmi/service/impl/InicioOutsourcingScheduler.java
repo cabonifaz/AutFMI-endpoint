@@ -7,6 +7,7 @@ import org.app.autfmi.repository.InicioNotificationRepository;
 import org.app.autfmi.service.IMailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -21,9 +22,18 @@ public class InicioOutsourcingScheduler {
   private final InicioNotificationRepository repository;
   private final IMailService mailService;
 
+  // Interruptor del envío (propiedad notif.inicio.enabled, env NOTIF_INICIO_ENABLED).
+  // Apagado, el job no consulta ni marca nada: los contratos quedan pendientes.
+  @Value("${notif.inicio.enabled:false}")
+  private boolean enabled;
+
   // Cada hora en punto (00 de cada hora), zona America/Lima.
   @Scheduled(cron = "0 0 * * * *", zone = "America/Lima")
   public void notificarInicioLabores() {
+    if (!enabled) {
+      logger.debug("[NotifInicio] Envío desactivado (notif.inicio.enabled=false).");
+      return;
+    }
     logger.info("[NotifInicio] Inicio del job de notificación de inicio de labores (outsourcing).");
 
     List<InicioOutsourcingDTO> pendientes = repository.getPendientes();

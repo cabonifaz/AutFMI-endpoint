@@ -34,7 +34,6 @@ import org.app.autfmi.model.response.SaveRequirementResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
 import org.app.autfmi.repository.RequirementRepository;
 import org.app.autfmi.service.IMailService;
-import org.app.autfmi.service.IRequirementConfirmationService;
 import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.ClientS3V2;
 import org.app.autfmi.util.Common;
@@ -57,7 +56,6 @@ public class RequirementService implements IRequirementService {
     private final JwtHelper jwt;
     private final Logger logger = LoggerFactory.getLogger(RequirementService.class);
     private final NotificationService notificationService;
-    private final IRequirementConfirmationService confirmationService;
     private final IMailService mailService;
     private final ClientS3V2 clientS3;
 
@@ -311,30 +309,7 @@ public class RequirementService implements IRequirementService {
 
         var entryReportsIds = response.getReportesIngreso();
 
-        // Sin ingresos en esta tanda no hay formularios ni confirmación que pedir.
-        if (entryReportsIds == null || entryReportsIds.isEmpty())
-            return baseResponse;
-
-        // Los formularios ya no salen al finalizar: primero se pide confirmación al
-        // gestor/suplente del cliente y se envían cuando confirman por correo (n8n ->
-        // POST /requirement/confirmation). Excepción: si quien finaliza ya es el
-        // gestor o suplente del cliente, se envían directo (el SP los dejó en 1).
-        IRequirementConfirmationService.ResultadoSolicitud resultado;
-        try {
-            resultado = confirmationService.requestConfirmation(
-                    request.getIdRequerimiento(), response, user.getIdUsuario(),
-                    Common.createBaseRequest(user, baseRequest.getFuncionalidades()));
-        } catch (Exception e) {
-            this.logger.error("Error al solicitar la confirmación del ingreso: {}", e.getMessage(), e);
-            resultado = IRequirementConfirmationService.ResultadoSolicitud.ERROR_ENVIO;
-        }
-
-        if (resultado != IRequirementConfirmationService.ResultadoSolicitud.DIRECTO) {
-            baseResponse.setDetalleMensaje(confirmationService.describeResultado(resultado));
-            return baseResponse;
-        }
-
-        // DIRECTO: envío de notificaciones de forma asíncrona, como antes
+        // Envío de notificaciones de forma asíncrona
         try {
             var gestorRq = response.getGestorRq();
 

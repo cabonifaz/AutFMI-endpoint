@@ -23,4 +23,10 @@ public class AgentRQRequest {
   private AgentDuracion duracion;
   private List<AgentVacante> lstVacantes;
 
+  // Requisitos de ingreso extraídos del correo por la IA (n8n): 1 = requiere,
+  // 0 = no requiere, null = el correo no lo menciona. Viajan en AGENT_JSON.
+  private Integer emo;
+  private Integer sctr;
+  private Integer asignacionLaptop;
+
 }

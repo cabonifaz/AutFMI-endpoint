@@ -15,21 +15,21 @@ spring:
         boot:
           allow_jdbc_metadata_access: false
   mail:
-    # Por defecto Microsoft 365 (cuenta corporativa): puerto 587 con STARTTLS.
-    # Para un servidor con SSL directo (p. ej. Gmail 465): MAIL_PORT=465,
-    # MAIL_SSL=true, MAIL_STARTTLS=false.
-    host: ${MAIL_HOST:smtp.office365.com}
-    port: ${MAIL_PORT:587}
+    # Por defecto Gmail (contraseña de aplicación): puerto 465 con SSL directo.
+    # Para Microsoft 365: MAIL_HOST=smtp.office365.com, MAIL_PORT=587,
+    # MAIL_SSL=false, MAIL_STARTTLS=true.
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:465}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
           auth: true
-          starttls.enable: ${MAIL_STARTTLS:true}
-          starttls.required: ${MAIL_STARTTLS:true}
-          ssl.enable: ${MAIL_SSL:false}
-          ssl.trust: ${MAIL_HOST:smtp.office365.com}
+          starttls.enable: ${MAIL_STARTTLS:false}
+          starttls.required: ${MAIL_STARTTLS:false}
+          ssl.enable: ${MAIL_SSL:true}
+          ssl.trust: ${MAIL_HOST:smtp.gmail.com}
           ssl.protocols: TLSv1.2 TLSv1.3
           connectiontimeout: 10000
           timeout: 15000

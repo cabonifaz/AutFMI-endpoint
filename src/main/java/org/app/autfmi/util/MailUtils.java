@@ -213,16 +213,6 @@ public class MailUtils {
      */
     public boolean sendTemplateEmailSync(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables) {
-        return sendTemplateEmailSync(to, cc, subject, templateName, variables, null);
-    }
-
-    /**
-     * Igual que {@link #sendTemplateEmailSync(String, List, String, String, Map)}
-     * pero adjuntando PDFs (p. ej. los formularios en el correo de confirmación).
-     * {@code attachments} null o vacío = sin adjuntos.
-     */
-    public boolean sendTemplateEmailSync(String to, List<String> cc, String subject, String templateName,
-            Map<String, Object> variables, List<FileDTO> attachments) {
         String destino = to != null ? to.trim() : null;
         if (!EmailUtils.isValidEmail(destino)) {
             logger.error("Correo '{}' cancelado: destinatario principal inválido ('{}')", subject, to);
@@ -234,12 +224,12 @@ public class MailUtils {
             String htmlBody = templateEngine.process(templateName, context);
             List<String> cleanCc = EmailUtils.sanitizeRecipients(cc, destino);
             try {
-                enviarMensajeHtml(destino, cleanCc, subject, htmlBody, attachments);
+                enviarMensajeHtml(destino, cleanCc, subject, htmlBody, null);
                 logger.info("Correo '{}' enviado a: {} (cc: {})", subject, destino, cleanCc.size());
             } catch (MessagingException e) {
                 logger.error("Falló el envío de '{}' con CC ({}); reintentando solo al destinatario",
                         subject, e.getMessage());
-                enviarMensajeHtml(destino, List.of(), subject, htmlBody, attachments);
+                enviarMensajeHtml(destino, List.of(), subject, htmlBody, null);
                 logger.info("Correo '{}' enviado a: {} (sin CC tras reintento)", subject, destino);
             }
             return true;

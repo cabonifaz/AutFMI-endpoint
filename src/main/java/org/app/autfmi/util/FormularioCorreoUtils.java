@@ -18,16 +18,27 @@ public final class FormularioCorreoUtils {
     private static final String TH = "style=\"background-color:#2D5294;color:#fff;padding:5px;text-align:center;\"";
     private static final String TD = "style=\"padding:5px;text-align:center;\"";
 
+    // Casillas marcada / vacía como entidades HTML (☑ / ☐) y no <input type="checkbox">:
+    // los clientes de correo (Gmail, Outlook) eliminan los controles de formulario.
+    // En Thymeleaf se pintan con th:utext.
+    private static final String CASILLA_MARCADA = "&#9745;";
+    private static final String CASILLA_VACIA = "&#9744;";
+
     /**
-     * Requisitos de ingreso del RQ, en orden, como pares nombre / "Sí"|"No".
-     * Se usa en la plantilla Thymeleaf del correo de confirmación.
+     * Requisitos de ingreso del RQ, en orden: nombre, "Sí"|"No" y la casilla
+     * (☑ requiere / ☐ no requiere). Se usa en la plantilla rq-details.
      */
     public static List<Map<String, String>> requisitosIngreso(Integer emo, Integer sctr, Integer asignacionLaptop) {
         List<Map<String, String>> requisitos = new ArrayList<>();
-        requisitos.add(Map.of("nombre", "EMO", "valor", siNo(emo)));
-        requisitos.add(Map.of("nombre", "SCTR", "valor", siNo(sctr)));
-        requisitos.add(Map.of("nombre", "Asignación de laptop", "valor", siNo(asignacionLaptop)));
+        requisitos.add(requisito("EMO", emo));
+        requisitos.add(requisito("SCTR", sctr));
+        requisitos.add(requisito("Asignación de laptop", asignacionLaptop));
         return requisitos;
+    }
+
+    private static Map<String, String> requisito(String nombre, Integer valor) {
+        boolean requiere = Integer.valueOf(1).equals(valor);
+        return Map.of("nombre", nombre, "valor", siNo(valor), "casilla", requiere ? CASILLA_MARCADA : CASILLA_VACIA);
     }
 
     /** Bloque HTML con los requisitos de ingreso del RQ (correo "Ingreso de nuevo talento"). */
@@ -37,8 +48,8 @@ public final class FormularioCorreoUtils {
                 .append("<tr><th ").append(TH).append(" colspan=\"2\">Requisitos de ingreso</th></tr>");
         for (Map<String, String> r : requisitosIngreso(emo, sctr, asignacionLaptop)) {
             sb.append("<tr><td style=\"padding:5px;text-align:left;\">").append(HtmlUtils.htmlEscape(r.get("nombre")))
-                    .append("</td><td ").append(TD).append("><strong>")
-                    .append(r.get("valor")).append("</strong></td></tr>");
+                    .append("</td><td style=\"padding:5px;text-align:center;font-size:18px;line-height:1;\">")
+                    .append(r.get("casilla")).append("</td></tr>");
         }
         return sb.append("</table>").toString();
     }

@@ -154,6 +154,8 @@ public class Constante {
                     Comparto sus datos para la elaboración del Formulario de [TIPO_FORMULARIO] y la solicitud de creación de usuario.
                 </div>
                 <br>
+                {{requisitosIngreso}}
+                <br>
                 <br>
 
                 <table border="1">

@@ -114,6 +114,13 @@
             <span style="color: #000000;" th:text="${gestion.modalidad}">Remoto</span>
           </div>
         </div>
+        <!-- Requisitos de ingreso -->
+        <div th:if="${gestion.requisitos != null}" style="display: flex; gap: 16px; margin-bottom: 16px;">
+          <div th:each="req : ${gestion.requisitos}" style="flex: 1; padding: 12px; border: 1px solid #e5e7eb;">
+            <span style="color: #000000; font-size: 18px; line-height: 1; vertical-align: middle;" th:utext="${req.casilla}">&#9744;</span>
+            <strong style="color: #000000; vertical-align: middle; margin-left: 6px;" th:text="${req.nombre}">EMO</strong>
+          </div>
+        </div>
         <div th:if="${gestion.modalidadesFacturacion != null and !gestion.modalidadesFacturacion.isEmpty()}"
           style="padding: 12px; border: 1px solid #e5e7eb;">
           <strong style="color: #000000; display: block; margin-bottom: 8px;">Modalidad de Facturación:</strong>

@@ -307,49 +307,35 @@ public class RequirementService implements IRequirementService {
         if (!request.getFlagCorreo())
             return baseResponse;
 
+        var entryReportsIds = response.getReportesIngreso();
+
         // Envío de notificaciones de forma asíncrona
         try {
-            this.logger.info("Delegando envío de notificaciones al servicio asíncrono");
-
             var gestorRq = response.getGestorRq();
-            var ccList = response.getCcList();
-            var postulantes = response.getPostulantes();
-            var entryReportsIds = response.getReportesIngreso();
-            var solicitudesEquipo = response.getReportesSolicitudEquipo();
 
-            // Validación básica antes de delegar
             if (gestorRq == null || gestorRq.getCorreo() == null) {
                 this.logger.error("No se encontró el correo del gestor del requerimiento");
                 // El guardado sí ocurrió (idTipoMensaje == 2), pero la notificación no pudo
-                // enviarse. Lo señalamos en detalleMensaje sin degradar el estado de éxito,
-                // para que el frontend pueda advertirlo.
+                // enviarse. Lo señalamos en detalleMensaje sin degradar el estado de éxito.
                 baseResponse.setDetalleMensaje(
                         "No se pudo notificar por correo al usuario que ejecutó la acción: correo no disponible");
                 return baseResponse;
             }
 
-            // Crear una copia del baseRequest para el contexto asíncrono
-            var asyncBaseRequest = Common.createBaseRequest(
-                    user,
-                    baseRequest.getFuncionalidades());
-
-            // Llamada asíncrona
             notificationService.sendRequirementNotifications(
-                gestorRq,
-                ccList != null ? ccList : Collections.emptyList(),
-                postulantes,
-                entryReportsIds,
-                solicitudesEquipo,
-                asyncBaseRequest
-            );
+                    gestorRq,
+                    response.getCcList() != null ? response.getCcList() : Collections.emptyList(),
+                    response.getPostulantes(),
+                    entryReportsIds,
+                    response.getReportesSolicitudEquipo(),
+                    Common.createBaseRequest(user, baseRequest.getFuncionalidades()));
 
             this.logger.info("Notificaciones delegadas al servicio asíncrono");
-
         } catch (Exception e) {
             this.logger.error("Error al delegar notificaciones: {}", e.getMessage(), e);
         }
 
-        return response.getBaseResponse();
+        return baseResponse;
     }
 
     // ---------------------------------------------------------------------------------------------------------

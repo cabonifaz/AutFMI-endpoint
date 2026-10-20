@@ -19,21 +19,34 @@ public interface IMailService {
 
 	void sendCeseReportNotification(CeseReport report);
 
+	/** Versión síncrona: {@code true} si el correo salió. */
+	boolean sendCeseReportNotificationSync(CeseReport report);
+
 	/**
 	 * Envía los correos del ingreso: Formulario de Ingreso (maestro 52) y Solicitud
 	 * de Creación de Usuario (maestro 51), como dos correos separados, con copia al
 	 * usuario generador y al maestro 35.
 	 */
-	void sendEntryReportNotification(EntryReport report);
+	void sendEntryReportNotification(EntryReport report, Integer idTalento);
+
+	/** Versión síncrona: {@code true} si salieron los dos correos. */
+	boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento);
 
 	void sendMovementReportNotification(MovementReport report);
 
-	void sendEquipmentRequestNotification(SolicitudEquipoReport report);
+	/** Versión síncrona: {@code true} si el correo salió. */
+	boolean sendMovementReportNotificationSync(MovementReport report);
+
+	void sendEquipmentRequestNotification(SolicitudEquipoReport report, Integer idTalento);
+
+	/** Versión síncrona: {@code true} si el correo salió. */
+	boolean sendEquipmentRequestNotificationSync(SolicitudEquipoReport report, Integer idTalento);
 
 	/**
 	 * Notificación de próximo inicio de labores de un talento en outsourcing
-	 * (faltando 2 días y el día de inicio). TO = contactos del requerimiento;
-	 * CC = gestores del cliente + Selección (maestro 35). Es síncrono: el job
+	 * (faltando 2 días y el día de inicio). Va a los gestores del cliente (si no
+	 * hay, a Selección) con copia a Selección (maestro 35); los contactos del
+	 * requerimiento ya no lo reciben. Es síncrono: el job
 	 * solo marca el contrato como notificado si el correo se envió.
 	 *
 	 * @return {@code true} si el correo se envió (procede marcar el contrato).

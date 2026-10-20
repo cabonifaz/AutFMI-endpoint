@@ -42,6 +42,7 @@ public class EmployeeService implements IEmployeeService {
   private final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
   private final ReportPDFBuilder reportPDFBuilder;
 
+
   @Override
   public BaseResponse getEmployee(Integer idTalento) {
     return employeeRepository.getEmployee(idTalento);
@@ -65,7 +66,7 @@ public class EmployeeService implements IEmployeeService {
 
     // Envía 2 correos: Formulario de Ingreso (maestro 52) y Solicitud de Creación
     // de Usuario (maestro 51), con copia al usuario generador y al maestro 35.
-    this.mailService.sendEntryReportNotification(report);
+    this.mailService.sendEntryReportNotification(report, request.getIdTalento());
 
     return report.getResponse();
   }
@@ -174,7 +175,7 @@ public class EmployeeService implements IEmployeeService {
         talentId, operationId, false);
 
     // Enviar correo con el reporte generado
-    this.mailService.sendEquipmentRequestNotification(rp);
+    this.mailService.sendEquipmentRequestNotification(rp, talentId);
 
     return response.getBaseResponse();
   }

@@ -12,8 +12,9 @@ import lombok.NoArgsConstructor;
  *   <li>{@code tipoHito}: "D2" (faltan 2 días) o "D0" (día de inicio).</li>
  *   <li>{@code nuevoEstado}: valor con el que se marca el contrato al enviar
  *       (1 para D2, 2 para D0).</li>
- *   <li>{@code correosCliente}: CSV de contactos del requerimiento (TO).</li>
- *   <li>{@code correosGestores}: CSV de gestores del cliente (CC).</li>
+ *   <li>{@code correosCliente}: CSV de contactos del requerimiento. Ya no se
+ *       usa como destinatario (el correo va solo a gestores y Selección).</li>
+ *   <li>{@code correosGestores}: CSV de gestores del cliente (TO).</li>
  * </ul>
  */
 @Data

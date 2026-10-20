@@ -88,6 +88,15 @@ public class AuthRepository {
                 }
             }
 
+            // Rutas frontend permitidas (SP_VERIFY_CREDENTIALS #result-set-4)
+            List<Map<String, Object>> resultSet4 = (List<Map<String, Object>>) data.get("#result-set-4");
+            List<String> routes = new ArrayList<>();
+            if (resultSet4 != null && !resultSet4.isEmpty()) {
+                for (Map<String, Object> routeData : resultSet4) {
+                    routes.add((String) routeData.get("RUTA"));
+                }
+            }
+
             return new UserDTO(
                     (Integer) userData.get("ID_USUARIO"), // From result-set-2
                     (Integer) userData.get("ID_EMPRESA"),
@@ -95,7 +104,8 @@ public class AuthRepository {
                     (String) userData.get("NOMBRES"),
                     (String) userData.get("APELLIDOS"),
                     idRoles,
-                    nameRoles);
+                    nameRoles,
+                    routes);
         }
         return null;
     }

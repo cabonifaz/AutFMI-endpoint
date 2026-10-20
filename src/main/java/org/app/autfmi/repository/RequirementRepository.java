@@ -489,7 +489,12 @@ public class RequirementRepository {
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
 
 				// Facturacion asociada a la modalidad de contrato
-				.addValue("LST_FACTURACION", tvpFacturacion);
+				.addValue("LST_FACTURACION", tvpFacturacion)
+
+				// Requisitos de ingreso (0/1)
+				.addValue("EMO", request.getEmo())
+				.addValue("SCTR", request.getSctr())
+				.addValue("ASIGNACION_LAPTOP", request.getAsignacionLaptop());
 
 		var result = simpleJdbcCall.execute(params);
 		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -613,7 +618,11 @@ public class RequirementRepository {
 				.addValue("MODALIDAD_FACT", request.getIdModalidadFact())
 				.addValue("ID_DUR_CONTRATO", request.getIdDuracionContrato())
 				.addValue("DURACION_CONTRATO", request.getDuracionContrato())
-				.addValue("LST_FACTURACION", lstFactuacion);
+				.addValue("LST_FACTURACION", lstFactuacion)
+				// Requisitos de ingreso (0/1); null = no cambia
+				.addValue("EMO", request.getEmo())
+				.addValue("SCTR", request.getSctr())
+				.addValue("ASIGNACION_LAPTOP", request.getAsignacionLaptop());
 
 		var result = simpleJdbcCall.execute(params);
 		var resultSet = (List<Map<String, Object>>) result.get("#result-set-1");
@@ -676,14 +685,24 @@ public class RequirementRepository {
 			return builder.build();
 		}
 
-		// 3. Extracción de ResultSets (Variables independientes para legibilidad)
+		// 3. Result-sets 2 a 6: datos de los formularios (postulantes, CC, reportes y actor)
+		mapNotificationData(result, builder);
+
+		logger.info("Finished task: saveRequirementTalents");
+		return builder.build();
+
+	}
+
+	/** Result-sets 2 a 6 de SP_REQUERIMIENTO_TALENTO_INS que usan los formularios. */
+	private void mapNotificationData(Map<String, Object> result,
+			RequirementTalentsResult.RequirementTalentsResultBuilder builder) {
 		var postulantsSet = (List<Map<String, Object>>) result.get("#result-set-2");
 		var notificacionesCc = (List<Map<String, Object>>) result.get("#result-set-3");
 		var entryReportsRs = (List<Map<String, Object>>) result.get("#result-set-4");
 		var solicitudesEquipoRs = (List<Map<String, Object>>) result.get("#result-set-5");
 		var usuarioActuador = (List<Map<String, Object>>) result.get("#result-set-6");
 
-		// 4. Mapeo de Postulantes
+		// Mapeo de Postulantes
 		if (postulantsSet != null && !postulantsSet.isEmpty()) {
 			List<PostulantDTO> postulantList = new ArrayList<>();
 			for (var row : postulantsSet) {
@@ -694,7 +713,7 @@ public class RequirementRepository {
 			this.logger.warn("No hubo respuesta con la lista de postulantes");
 		}
 
-		// 5. Mapeo de Notificaciones
+		// Mapeo de Notificaciones
 		List<String> lstCc = new ArrayList<>();
 		if (notificacionesCc != null && !notificacionesCc.isEmpty()) {
 			notificacionesCc.stream().forEach((n) -> {
@@ -707,7 +726,7 @@ public class RequirementRepository {
 
 		builder.ccList(lstCc);
 
-		// 6. Mapeo de Reportes de Ingreso
+		// Mapeo de Reportes de Ingreso
 		if (entryReportsRs != null && !entryReportsRs.isEmpty()) {
 			List<RequirementTalentsResult.ReporteIngreso> reportesIngreso = new ArrayList<>();
 
@@ -724,7 +743,7 @@ public class RequirementRepository {
 			this.logger.warn("No hubo respuesta para los reportes de ingreso");
 		}
 
-		// 7. Mapeo de Reportes de Solicitud de Equipo
+		// Mapeo de Reportes de Solicitud de Equipo
 		if (solicitudesEquipoRs != null && !solicitudesEquipoRs.isEmpty()) {
 			List<RequirementTalentsResult.ReporteSolicitudEquipo> reportesSolicitudEquipo = new ArrayList<>();
 			solicitudesEquipoRs.stream().forEach((report) -> {
@@ -738,7 +757,7 @@ public class RequirementRepository {
 			this.logger.warn("No hubo respuesta con la lista de solicitudes de equipo");
 		}
 
-		// 8. Mapeao del usuario actuador conocido como (GestorRQ, no siempre lo es)
+		// Mapeo del usuario actuador conocido como (GestorRQ, no siempre lo es)
 		if (usuarioActuador != null && !usuarioActuador.isEmpty()) {
 			var usuario = usuarioActuador.get(0);
 			var gestorRq = new GestorRqDTO();
@@ -747,15 +766,15 @@ public class RequirementRepository {
 			gestorRq.setCorreo((String) usuario.get("CORREO"));
 			gestorRq.setCodigoRQ((String) usuario.get("CODIGO_RQ"));
 			gestorRq.setCliente((String) usuario.getOrDefault("CLIENTE", ""));
+			// Requisitos de ingreso del RQ (0/1)
+			gestorRq.setEmo(toFlag(usuario.get("EMO")));
+			gestorRq.setSctr(toFlag(usuario.get("SCTR")));
+			gestorRq.setAsignacionLaptop(toFlag(usuario.get("ASIGNACION_LAPTOP")));
 
 			builder.gestorRq(gestorRq);
 		} else {
 			this.logger.warn("No hubo respuesta con el gestor del RQ (quien realiza la acción)");
 		}
-
-		logger.info("Finished task: saveRequirementTalents");
-		return builder.build();
-
 	}
 
 	public BaseResponse getRequirementTalentData(BaseRequest baseRequest, Integer idTalento, Integer idRequerimiento) {
@@ -1055,7 +1074,10 @@ public class RequirementRepository {
 				lstContactos,
 				(Integer) requerimiento.get("ID_DUR_CONTRATO"),
 				(BigDecimal) requerimiento.get("DURACION_CONTRATO"),
-				lstRQFacturacion);
+				lstRQFacturacion,
+				toFlag(requerimiento.get("EMO")),
+				toFlag(requerimiento.get("SCTR")),
+				toFlag(requerimiento.get("ASIGNACION_LAPTOP")));
 	}
 
 	private static SQLServerDataTable loadTvpRequirementFiles(List<FileRequest> lstArchivos, Integer idEmpresa)
@@ -1284,6 +1306,11 @@ public class RequirementRepository {
 		return tvpProductos;
 	}
 
+	/** Requisitos de ingreso (EMO/SCTR/laptop): 0 si la columna no viene o es NULL. */
+	private static Integer toFlag(Object value) {
+		return value instanceof Number n ? n.intValue() : 0;
+	}
+
 	private static PostulantDTO mapListPostulantDTO(Map<String, Object> postulanteRow) {
 		return new PostulantDTO(
 				(String) postulanteRow.get("NOMBRES"),
@@ -1296,7 +1323,8 @@ public class RequirementRepository {
 				(String) postulanteRow.get("CARGO"),
 				(String) postulanteRow.get("REMUNERACION"),
 				(String) postulanteRow.get("MODALIDAD"),
-				(String) postulanteRow.get("TIENE_EQUIPO"));
+				(String) postulanteRow.get("TIENE_EQUIPO"),
+				(Integer) postulanteRow.get("ID_TALENTO"));
 	}
 
 	@Async

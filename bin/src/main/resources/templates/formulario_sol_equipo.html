@@ -1,0 +1,284 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    @page {
+      size: A4;
+      margin-top: 0.5in;
+      margin-bottom: 1in;
+      margin-left: 1.18in;
+      margin-right: 1.18in;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      font-size: 11pt;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    td {
+      border: 0.5pt solid #000;
+      padding: 5px;
+      vertical-align: middle;
+      min-height: 9pt;
+    }
+
+    .header-title {
+      background-color: #fff;
+      color: #000;
+      font-weight: bold;
+      font-size: 11pt;
+      text-align: center;
+    }
+
+    .section-header {
+      background-color: #2f5496;
+      color: #ffffff;
+      font-weight: bold;
+      text-align: center;
+      padding: 5px;
+      font-size: 9pt;
+    }
+
+    .col-header {
+      background-color: #2f5496;
+      color: #ffffff;
+      font-weight: bold;
+      text-align: center;
+      font-size: 8pt;
+    }
+
+    .label {
+      font-weight: bold;
+      font-size: 9pt;
+      white-space: nowrap;
+    }
+
+    .value {
+      color: #000;
+      font-size: 9pt;
+    }
+
+    .checkbox-cell {
+      text-align: left;
+      font-size: 9pt;
+      vertical-align: middle;
+    }
+
+    .custom-check {
+      display: inline-block;
+      width: 10pt;
+      height: 10pt;
+      border: 1px solid #000;
+      text-align: center;
+      line-height: 10pt;
+      font-size: 8pt;
+      margin-right: 3px;
+      vertical-align: middle;
+      font-weight: bold;
+    }
+
+    .data-row td {
+      border: 1px solid #000;
+    }
+
+    .no-border {
+      border: none !important;
+    }
+
+    .footer-sign {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ENCABEZADO -->
+  <table>
+    <tr>
+      <td rowspan="3" style="width: 25%; text-align: center; border: 1px solid #1083C6;">
+        <img th:src="${fractalLogo}" alt="Logo Fractal" style="height: 0.55in; width: 2.16in;" />
+      </td>
+      <td rowspan="3" class="header-title" style="width: 45%; font-size: 10pt; border: 1px solid #1083C6;">
+        SOLICITUD DE INSTALACION DE<br />SOFTWARE Y HARDWARE
+      </td>
+      <td style="width: 10%; font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">Código:</td>
+      <td style="width: 20%; font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">FT-GS-03
+      </td>
+    </tr>
+    <tr>
+      <td style="font-size: 7pt; font-weight: normal; border: 1px solid #1083C6;">Versión:</td>
+      <td style="font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">01</td>
+    </tr>
+    <tr>
+      <td style="font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">Fecha:</td>
+      <td style="font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">02/07/2020</td>
+    </tr>
+  </table>
+
+  <!-- DATOS DEL COLABORADOR -->
+  <table>
+    <tr>
+      <td colspan="4" class="section-header">DATOS DEL COLABORADOR</td>
+    </tr>
+    <tr class="data-row">
+      <td class="label" style="width: 20%;">Nombres y Apellidos:</td>
+      <td colspan="3" class="value" th:text="${apellidosNombres}">Nombre del colaborador</td>
+    </tr>
+    <tr class="data-row">
+      <td class="label">Cliente:</td>
+      <td colspan="3" class="value" th:text="${cliente}">Nombre del cliente</td>
+    </tr>
+    <tr class="data-row">
+      <td class="label">Área:</td>
+      <td class="value" style="width: 30%;" th:text="${area}">Área</td>
+      <td class="label" style="width: 10%;">Cargo:</td>
+      <td class="value" style="width: 30%;" th:text="${cargo}">Cargo</td>
+    </tr>
+    <tr class="data-row">
+      <td class="label">DNI:</td>
+      <td class="value" th:text="${dni}">DNI</td>
+      <td class="label">Teléfono:</td>
+      <td class="value" th:text="${telefono}">Teléfono</td>
+    </tr>
+  </table>
+
+  <!-- FECHAS -->
+  <table style="margin-bottom: 15px;">
+    <tr>
+      <td style="border: none; font-size: 9pt; padding: 5px 0; font-weight: bold;">
+        Fecha de Solicitud: <span th:text="${fechaSolicitud}">__/__/____</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        Fecha de Entrega: <span th:text="${fechaEntrega}">__/__/____</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="border: none; padding: 0;">
+        <div style="border-bottom: 1px solid #1083C6; width: 100%;"></div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- DATOS DE REQUERIMIENTO DE HARDWARE -->
+  <table>
+    <tr>
+      <td colspan="5" class="section-header">DATOS DE REQUERIMIENTO DE HARDWARE</td>
+    </tr>
+    <tr>
+      <td class="col-header" style="width: 30%;">TIPO</td>
+      <td class="col-header" style="width: 25%;">PROCESADOR</td>
+      <td class="col-header" style="width: 25%;">RAM</td>
+      <td class="col-header" style="width: 10%;">HD</td>
+      <td class="col-header" style="width: 10%;">MARCA(*)</td>
+    </tr>
+    <tr class="data-row">
+      <td class="checkbox-cell">
+        <span class="custom-check" th:text="${tipoPC} ? 'X' : ''"></span> PC
+        &nbsp;
+        <span class="custom-check" th:text="${tipoLaptop} ? 'X' : ''"></span> Laptop
+      </td>
+      <td class="value" th:text="${procesador}">Core I7 mínimo</td>
+      <td class="value" th:text="${ram}">12 GB mínimo</td>
+      <td class="value" th:text="${hd}">500 GB</td>
+      <td class="value" th:text="${marca}"></td>
+    </tr>
+  </table>
+
+  <!-- ANEXO / CELULAR / INTERNET MÓVIL -->
+  <table>
+    <tr>
+      <td class="col-header" style="width: 33%;">ANEXO</td>
+      <td class="col-header" style="width: 34%;">CELULAR</td>
+      <td class="col-header" style="width: 33%;">INTERNET MÓVIL</td>
+    </tr>
+    <tr class="data-row">
+      <td class="checkbox-cell">
+        <span class="custom-check" th:text="${anexoFijo} ? 'X' : ''"></span> Fijo
+        &nbsp;&nbsp;
+        <span class="custom-check" th:text="${anexoSoftphone} ? 'X' : ''"></span> Softphone
+      </td>
+      <td class="checkbox-cell">
+        <span class="custom-check" th:text="${celularSi} ? 'X' : ''"></span> Sí
+        &nbsp;&nbsp;
+        <span class="custom-check" th:text="${celularNo} ? 'X' : ''"></span> No
+      </td>
+      <td class="checkbox-cell">
+        <span class="custom-check" th:text="${internetMovilSi} ? 'X' : ''"></span> Sí
+        &nbsp;&nbsp;
+        <span class="custom-check" th:text="${internetMovilNo} ? 'X' : ''"></span> No
+      </td>
+    </tr>
+  </table>
+
+  <!-- ACCESORIOS -->
+  <table style="margin-bottom: 10px;">
+    <tr>
+      <td style="border: none; font-size: 9pt; padding: 4px 0; font-weight: bold;">
+        Accesorios: <span th:text="${accesorios}"></span>
+      </td>
+    </tr>
+  </table>
+
+  <!-- DATOS DE LA INSTALACION DE SOFTWARE -->
+  <table>
+    <tr>
+      <td colspan="3" class="section-header">DATOS DE LA INSTALACION DE SOFTWARE</td>
+    </tr>
+    <tr>
+      <td class="col-header" style="width: 10%;">ITEM</td>
+      <td class="col-header" style="width: 70%;">PRODUCTO</td>
+      <td class="col-header" style="width: 20%;">VERSION</td>
+    </tr>
+    <!-- Filas dinámicas de software -->
+    <tr th:each="sw, stat : ${softwareList}" class="data-row">
+      <td class="value" style="text-align: center;" th:text="${stat.index + 1}">1</td>
+      <td class="value" th:text="${sw.producto}"></td>
+      <td class="value" th:text="${sw.prodVersion}"></td>
+    </tr>
+  </table>
+  <p style="font-size: 8pt; margin: 0; font-weight: bold; margin-bottom: 60px;">(*) Opcional</p>
+
+  <!-- FIRMA -->
+  <div class="footer-sign">
+    <div style="height: 80px; width: 100%; text-align: center;">
+      <img th:if="${firmaGestor != null}" th:src="${firmaGestor}"
+        style="max-height: 80px; max-width: 250px; display: inline-block; vertical-align: bottom;" />
+      <div th:unless="${firmaGestor != null}"
+        style="font-size: 11pt; font-weight: bold; padding-top: 60px; line-height: 1;">
+        <span th:text="${nombreGestor}">Nombre del encargado</span>
+      </div>
+    </div>
+
+    <div style="border-top: 1px solid #1083C6; width: 350px; margin: 0 auto; height: 0; font-size: 0; line-height: 0;">
+    </div>
+
+    <div style="font-size: 9pt; margin-top: 4px; line-height: 1.2;">
+      <span th:text="${nombreGestor}" style="font-weight: bold;">Nombre del encargado</span>
+      <p style="margin: 0; padding: 0;"> Gestor de Servicios</p>
+    </div>
+
+    <p style="font-size: 7pt; font-weight: normal; text-align: center; margin-top: 8px; color: #696969;">
+      Generado con FMI © 2025 — Fecha de emisión:
+      <span th:text="${fechaEmision}">10 de febrero de 2026</span>
+    </p>
+  </div>
+
+</body>
+
+</html>

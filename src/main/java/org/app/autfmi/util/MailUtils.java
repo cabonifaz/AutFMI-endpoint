@@ -7,6 +7,7 @@ import jakarta.mail.util.ByteArrayDataSource;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.GestorRqDTO;
 import org.app.autfmi.model.dto.PostulantDTO;
+import org.app.autfmi.service.impl.NotificacionCorreoSwitch;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,11 @@ public class MailUtils {
     @Autowired
     private TemplateEngine templateEngine;
 
+    // Interruptor global de correos (FTBO-1117): todo método público que llega a
+    // mailSender.send lo consulta antes de armar el mensaje.
+    @Autowired
+    private NotificacionCorreoSwitch correoSwitch;
+
     private static final Logger logger = LoggerFactory.getLogger(MailUtils.class);
 
     @Async("notificationExecutor")
@@ -46,15 +52,12 @@ public class MailUtils {
         sendRequirementPostulantMailSync(gestor, asunto, lstPostulantes, lstEmails, attachments);
     }
 
-    /**
-     * Variante SÍNCRONA de {@link #sendRequirementPostulantMail}: se usa al enviar
-     * los formularios tras la confirmación del gestor, donde hay que saber si el
-     * correo salió para marcar a los talentos.
-     *
-     * @return {@code true} si el correo se envió (con o sin CC).
-     */
+    
     public boolean sendRequirementPostulantMailSync(GestorRqDTO gestor, String asunto,
             List<PostulantDTO> lstPostulantes, List<String> lstEmails, List<FileDTO> attachments) {
+        if (!correoSwitch.envioPermitido(asunto)) {
+            return false;
+        }
         try {
             // lista de talentos al RQ
             List<String> listaTalentosRQ = new ArrayList<>();
@@ -151,20 +154,13 @@ public class MailUtils {
                 .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 
-    /**
-     * Método genérico y de única responsabilidad para enviar correos con plantillas
-     * HTML.
-     *
-     * @param to           El destinatario principal.
-     * @param cc           Lista de destinatarios en copia (puede ser null o vacía).
-     * @param subject      El asunto del correo.
-     * @param templateName El nombre del archivo de la plantilla HTML (ej:
-     *                     "requerimiento-template").
-     * @param variables    Un mapa con las variables que se usarán en la plantilla.
-     */
+
     @Async("notificationExecutor")
     public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables) {
+        if (!correoSwitch.envioPermitido(subject)) {
+            return;
+        }
         try {
             // 1. Crear el contexto de Thymeleaf y cargar las variables
             Context context = new Context();
@@ -202,17 +198,12 @@ public class MailUtils {
         sendEmailWithHtmlTemplate(to, cc, subject, templateName, variables, inlineResources, null, null);
     }
 
-    /**
-     * Variante SÍNCRONA que devuelve si el correo se envió. Se usa desde procesos
-     * batch (p. ej. el job de notificación de inicio de labores) donde hay que
-     * confirmar el envío antes de marcar el registro como notificado. Un CC
-     * inválido a nivel SMTP no bloquea el envío: se reintenta solo al TO.
-     *
-     * @return {@code true} si el correo llegó a enviarse (con o sin CC);
-     *         {@code false} si el destinatario es inválido o el envío falló.
-     */
+    
     public boolean sendTemplateEmailSync(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables) {
+        if (!correoSwitch.envioPermitido(subject)) {
+            return false;
+        }
         String destino = to != null ? to.trim() : null;
         if (!EmailUtils.isValidEmail(destino)) {
             logger.error("Correo '{}' cancelado: destinatario principal inválido ('{}')", subject, to);
@@ -239,13 +230,13 @@ public class MailUtils {
         }
     }
 
-    /**
-     * Variante que además adjunta un archivo (p. ej. el ICS de la entrevista). El
-     * adjunto es opcional: si {@code attachmentBytes} es null/vacío, se envía sin él.
-     */
-    public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
+    
+    public boolean sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
             Map<String, Object> variables, Map<String, Resource> inlineResources,
             String attachmentName, byte[] attachmentBytes) {
+        if (!correoSwitch.envioPermitido(subject)) {
+            return false;
+        }
         try {
             Context context = new Context();
             context.setVariables(variables);
@@ -254,7 +245,7 @@ public class MailUtils {
             String destino = to != null ? to.trim() : null;
             if (!EmailUtils.isValidEmail(destino)) {
                 logger.error("Correo cancelado: destinatario principal inválido ('{}')", to);
-                return;
+                return false;
             }
             List<String> cleanCc = EmailUtils.sanitizeRecipients(cc, destino);
 
@@ -291,9 +282,11 @@ public class MailUtils {
 
             mailSender.send(mimeMessage);
             logger.info("Correo enviado exitosamente a: {}", to);
+            return true;
 
         } catch (MessagingException e) {
             logger.error("Error al enviar correo a {}: {}", to, e.getMessage(), e);
+            return false;
         }
     }
 

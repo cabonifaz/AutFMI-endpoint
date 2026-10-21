@@ -60,23 +60,11 @@ public class MailService implements IMailService {
   @Autowired
   private EmployeeRepository employeeRepository;
 
+  @Autowired
+  private NotificacionCorreoSwitch correoSwitch;
+
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
-  /**
-   * Enviar notificación de una acción sobre requerimiento
-   * Revisar la estructura de datos que retorna el SP SP_REQUERIMIENTO_INS_SMART
-   * Revisar como se mapea el report en
-   * RequirementRepository.saveRequirementByAgent
-   * 
-   * @param report      El objeto RequirementReport que contiene todos los datos
-   *                    del RQ.
-   * @param subject     El asunto del correo electrónico.
-   * @param toAddresses Lista de direcciones de correo electrónico de los
-   *                    destinatarios.
-   * @param ccAddresses Lista de direcciones de correo electrónico para copia.
-   * @param action      La acción que se está realizando (por ejemplo,
-   *                    "CREAR_EDITAR_REQUERIMIENTO_AGENTE").
-   */
   @Async("notificationExecutor")
   @Override
   public void sendRequirementNotificationV2(RequirementReport report, String subject, List<String> toAddresses,
@@ -256,18 +244,11 @@ public class MailService implements IMailService {
           variables);
     }
 
-    logger.info("Notificación V2 completada. Enviado a {} destinatarios.", cleanToAddresses.size());
+    // Cada envío es asíncrono y registra por su cuenta si salió o se omitió.
+    logger.info("Notificación V2 encolada para {} destinatarios.", cleanToAddresses.size());
   }
 
-  /**
-   * Elimina duplicados de una lista de emails manteniendo el orden original.
-   * Normaliza emails a minúsculas para comparación pero mantiene formato
-   * original.
-   * Filtra emails nulos, vacíos y con formato inválido.
-   * 
-   * @param emailList Lista original de emails (puede ser null)
-   * @return Lista limpia sin duplicados
-   */
+  
   private List<String> deduplicateEmailList(List<String> emailList) {
     List<String> cleanList = new ArrayList<>();
 
@@ -294,12 +275,6 @@ public class MailService implements IMailService {
     return cleanList;
   }
 
-  /**
-   * Validación básica de formato de email
-   * 
-   * @param email Email a validar (debe estar en minúsculas y sin espacios)
-   * @return true si el formato es válido
-   */
   private boolean isValidEmailFormat(String email) {
     // Validación simple: contiene @ y al menos un punto después del @
     return email != null &&
@@ -309,10 +284,7 @@ public class MailService implements IMailService {
         email.lastIndexOf(".") > email.indexOf("@");
   }
 
-  /**
-   * Resuelve TODOS los correos (string1) del PARAMETROS del maestro indicado. Un
-   * maestro puede tener varias filas (varios correos); se devuelven todos.
-   */
+  
   private List<String> resolveMaestroEmails(String maestro) {
     List<String> emails = new ArrayList<>();
     try {
@@ -332,7 +304,7 @@ public class MailService implements IMailService {
     return emails;
   }
 
-  /** Separa una lista de correos separados por coma en una lista limpia. */
+  // Separa una lista de correos separados por coma en una lista limpia. 
   private List<String> splitEmails(String csv) {
     List<String> list = new ArrayList<>();
     if (csv == null || csv.trim().isEmpty()) {
@@ -346,11 +318,7 @@ public class MailService implements IMailService {
     return list;
   }
 
-  /**
-   * CC de los formularios individuales: usuario generador (correoGestor) +
-   * selección (maestro 35, todos sus correos) + gestores del cliente (csv del
-   * reporte) + correos extra del maestro TO (cuando el maestro tiene más de uno).
-   */
+  
   private List<String> buildFormularioCcList(String correoGestor, String gestoresCsv, List<String> extraToEmails) {
     List<String> cc = new ArrayList<>();
     if (correoGestor != null && !correoGestor.trim().isEmpty()) {
@@ -364,17 +332,13 @@ public class MailService implements IMailService {
     return deduplicateEmailList(cc);
   }
 
-  /**
-   * Envía un formulario individual: TO = primer correo del maestro (si tiene
-   * varios, el resto van a CC); si el maestro no resuelve, cae al generador. CC =
-   * generador + selección(35) + gestores del cliente + correos extra del maestro.
-   */
+  
   private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
       String gestoresCsv, String subject, String message) {
     return sendFormularioEmail(files, maestro, correoGestor, gestoresCsv, subject, message, false);
   }
 
-  /** Igual que el anterior; con {@code html = true} el cuerpo va en HTML. */
+  /** Igual que el anterior; co {@code html = true} el cuerpo va en HTML. */
   private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
       String gestoresCsv, String subject, String message, boolean html) {
     List<String> toEmails = resolveMaestroEmails(maestro);
@@ -391,20 +355,17 @@ public class MailService implements IMailService {
     List<String> cc = buildFormularioCcList(correoGestor, gestoresCsv, extraTo);
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, html);
-      return true;
+      return pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, html);
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
       return false;
     }
   }
 
-  /** Asunto de un formulario: "Solicitud de &lt;accion&gt;: &lt;Cliente&gt; - &lt;NombreTalento&gt;". */
   private String buildFormularioSubject(String accion, String cliente, String nombre) {
     return "Solicitud de " + accion + ": " + SafeValues.safeString(cliente) + " - " + SafeValues.safeString(nombre);
   }
 
-  /** Cuerpo estándar de los correos de formulario. */
   private String buildFormularioBody(String accion) {
     return "Estimados,\n\nFavor atender la solicitud de " + accion + ".\nSlds";
   }
@@ -421,6 +382,13 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento) {
+    // Una sola consulta al interruptor de correos para los dos envíos.
+    try (var decision = correoSwitch.decisionUnica()) {
+      return enviarFormulariosIngreso(report, idTalento);
+    }
+  }
+
+  private boolean enviarFormulariosIngreso(EntryReport report, Integer idTalento) {
     String fullname = report.getNombres() + " " + report.getApellidos();
     String cliente = report.getCliente();
     String gestores = report.getGestoresCliente();
@@ -624,9 +592,13 @@ public class MailService implements IMailService {
     logger.info("Sending interview notification ({}) to: {} | CC: {} recipients | ICS: {}",
         templateName, talentEmail.trim(), cleanCc.size(),
         (icsAttachment != null && icsAttachment.length > 0));
-    mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName, variables,
-        inlineResources, icsFileName, icsAttachment);
-    logger.info("Interview notification dispatched.");
+    boolean enviado = mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName,
+        variables, inlineResources, icsFileName, icsAttachment);
+    if (enviado) {
+      logger.info("Interview notification dispatched.");
+    } else {
+      logger.info("Interview notification not sent.");
+    }
   }
 
   /** El maestro 47 escribe "TELEFÓNICA" con tilde; la comparación no debe depender de eso. */
@@ -650,15 +622,7 @@ public class MailService implements IMailService {
     return limpio.toString().trim();
   }
 
-  /**
-   * Resuelve el texto del tipo de entrevista (p. ej. "PRESENCIAL", "VIRTUAL" o
-   * "TELEFONICA") a partir de ID_TIPO_ENTREVISTA, reutilizando el mecanismo
-   * centralizado de
-   * parámetros (maestro 47). No hardcodea los IDs de los parámetros.
-   *
-   * @param idTipoEntrevista num1 del tipo de entrevista (o null).
-   * @return el string1 del parámetro correspondiente, o "" si no se resuelve.
-   */
+  
   private String resolveTipoEntrevista(Integer idTipoEntrevista) {
     if (idTipoEntrevista == null) {
       return "";

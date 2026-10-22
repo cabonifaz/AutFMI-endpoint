@@ -21,7 +21,7 @@ spring:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:465}
     username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    password: ${MAIL_PASSWORD:} # solo SMTP; con MAIL_PROVIDER=graph no se usa
     properties:
       mail:
         smtp:

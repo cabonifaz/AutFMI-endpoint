@@ -4,6 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
 import org.app.autfmi.model.dto.FileDTO;
+import org.app.autfmi.service.impl.NotificacionCorreoSwitch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,9 @@ public class PDFUtils {
     @Value("${spring.mail.username}")
     private String emisorCorreo;
 
+    @Autowired
+    private NotificacionCorreoSwitch correoSwitch;
+
     public String filePDFToBase64(byte[] byteArchivo) {
         if (byteArchivo == null || byteArchivo.length == 0) {
             throw new IllegalArgumentException("Archivo nulo");
@@ -36,21 +40,17 @@ public class PDFUtils {
         return Base64.getEncoder().encodeToString(byteArchivo);
     }
 
-    public void enviarCorreoConPDF(List<FileDTO> lstfiles,
+    public boolean enviarCorreoConPDF(List<FileDTO> lstfiles,
             @NonNull String to,
             @NonNull List<String> copyTo,
             @NonNull String subject,
             @NonNull String text)
             throws MessagingException {
-        enviarCorreoConPDF(lstfiles, to, copyTo, subject, text, false);
+        return enviarCorreoConPDF(lstfiles, to, copyTo, subject, text, false);
     }
 
-    /**
-     * Igual que {@link #enviarCorreoConPDF(List, String, List, String, String)},
-     * pero con {@code html = true} el cuerpo se envía como HTML (p. ej. con la
-     * tabla de contacto del talento).
-     */
-    public void enviarCorreoConPDF(List<FileDTO> lstfiles,
+    
+    public boolean enviarCorreoConPDF(List<FileDTO> lstfiles,
             @NonNull String to,
             @NonNull List<String> copyTo,
             @NonNull String subject,
@@ -58,11 +58,16 @@ public class PDFUtils {
             boolean html)
             throws MessagingException {
 
+        // Interruptor global de correos (FTBO-1117).
+        if (!correoSwitch.envioPermitido(subject)) {
+            return false;
+        }
+
         String dest = to != null ? to.trim() : null;
 
         if (!EmailUtils.isValidEmail(dest)) {
             this.logger.error("Correo cancelado porque no hay un destinatario adecuado ('{}')", to);
-            return;
+            return false;
         }
 
         // Filtramos correos nulos, vacíos, con formato inválido, duplicados
@@ -80,6 +85,7 @@ public class PDFUtils {
             construirYEnviar(dest, List.of(), subject, text, lstfiles, html);
             this.logger.info("Correo con PDF enviado a: {} (sin CC tras reintento)", dest);
         }
+        return true;
     }
 
     private void construirYEnviar(String to, List<String> cc, String subject, String text, List<FileDTO> lstfiles,

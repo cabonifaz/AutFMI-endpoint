@@ -38,6 +38,7 @@ public class NotificationService {
   private final ReportPDFBuilder reportPDFBuilder;
   private final HistoryRepository historyRepository;
   private final IParametrosService parametrosService;
+  private final NotificacionCorreoSwitch correoSwitch;
 
   @Async("notificationExecutor")
   public void sendRequirementNotifications(
@@ -70,7 +71,14 @@ public class NotificationService {
 
     boolean todoEnviado = true;
 
-    try {
+    // Una sola consulta al interruptor de correos para los tres envíos.
+    try (var decision = correoSwitch.decisionUnica()) {
+
+      if (!decision.habilitado()) {
+        this.logger.info("Notificaciones de asignación de talentos omitidas: correos desactivados (maestro {}).",
+            Constante.MAESTRO_NOTIFICACION_CORREO);
+        return false;
+      }
 
       this.logger.info("Iniciando envío de notificaciones");
 
@@ -169,10 +177,6 @@ public class NotificationService {
     return todoEnviado;
   }
 
-  /**
-   * Contactos de los postulantes para la tabla de los correos de solicitud. Con
-   * {@code soloTalentos} se limita a esos talentos (p. ej. los que piden equipo).
-   */
   private List<ContactoTalentoDTO> contactos(List<PostulantDTO> postulantes, Set<Integer> soloTalentos) {
     List<ContactoTalentoDTO> contactos = new ArrayList<>();
     if (postulantes == null) {
@@ -186,10 +190,7 @@ public class NotificationService {
     return contactos;
   }
 
-  /**
-   * Resuelve TODOS los correos (string1) del PARAMETROS del maestro indicado. Un
-   * maestro puede tener varias filas (varios correos); se devuelven todos.
-   */
+ 
   private List<String> resolveMaestroEmails(String maestro) {
     List<String> emails = new ArrayList<>();
     try {
@@ -209,13 +210,7 @@ public class NotificationService {
     return emails;
   }
 
-  /**
-   * Envía un bundle de PDFs a un maestro: TO = primer correo del maestro (si tiene
-   * varios, el resto van a CC); si el maestro no resuelve, cae al generador. CC =
-   * baseCc + correos extra del maestro.
-   *
-   * @return {@code true} si el correo se envió.
-   */
+
   private boolean sendBundleToMaestro(List<FileDTO> files, String maestro, List<String> baseCc,
       String gestorRqEmail, String subject, String message) {
     List<String> toEmails = resolveMaestroEmails(maestro);
@@ -232,8 +227,7 @@ public class NotificationService {
     }
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, true);
-      return true;
+      return pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, true);
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
       return false;

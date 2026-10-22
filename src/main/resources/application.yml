@@ -30,3 +30,16 @@ springdoc:
 notif:
   inicio:
     enabled: ${NOTIF_INICIO_ENABLED:false}
+
+# Envío de correo: "smtp" (spring.mail.*, por defecto) o "graph" (Microsoft 365
+# vía Microsoft Graph, app registrada en Entra ID con Mail.Send de aplicación).
+# Con graph, el remitente es MAIL_USERNAME (buzón bdt-fmi@fractal.com.pe).
+mail:
+  provider: ${MAIL_PROVIDER:smtp}
+microsoft:
+  graph:
+    tenant-id: ${MS_TENANT_ID:}
+    client-id: ${MS_CLIENT_ID:}
+    client-secret: ${MS_CLIENT_SECRET:}
+    # Opcional: UPN o Id. de objeto del buzón si su UPN no es MAIL_USERNAME.
+    sender: ${MS_SENDER:}

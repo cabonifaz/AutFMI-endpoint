@@ -40,17 +40,19 @@ public class PDFUtils {
         return Base64.getEncoder().encodeToString(byteArchivo);
     }
 
-    public boolean enviarCorreoConPDF(List<FileDTO> lstfiles,
+    public boolean enviarCorreoConPDF(@NonNull EventoNotificacion evento,
+            List<FileDTO> lstfiles,
             @NonNull String to,
             @NonNull List<String> copyTo,
             @NonNull String subject,
             @NonNull String text)
             throws MessagingException {
-        return enviarCorreoConPDF(lstfiles, to, copyTo, subject, text, false);
+        return enviarCorreoConPDF(evento, lstfiles, to, copyTo, subject, text, false);
     }
 
     
-    public boolean enviarCorreoConPDF(List<FileDTO> lstfiles,
+    public boolean enviarCorreoConPDF(@NonNull EventoNotificacion evento,
+            List<FileDTO> lstfiles,
             @NonNull String to,
             @NonNull List<String> copyTo,
             @NonNull String subject,
@@ -58,8 +60,7 @@ public class PDFUtils {
             boolean html)
             throws MessagingException {
 
-        // Interruptor global de correos (FTBO-1117).
-        if (!correoSwitch.envioPermitido(subject)) {
+        if (!correoSwitch.permitido(evento)) {
             return false;
         }
 

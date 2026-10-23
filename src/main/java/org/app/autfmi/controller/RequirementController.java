@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+import org.app.autfmi.model.dto.TalentApplicationsDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.AgentRQRequest;
@@ -19,6 +20,7 @@ import org.app.autfmi.model.request.RtFileDownloadRequest;
 import org.app.autfmi.model.request.RtFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PostulantFileListResponse;
 import org.app.autfmi.model.response.RqPresignedUrlResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
@@ -49,17 +51,85 @@ public class RequirementController {
             @RequestParam @Nullable String buscar,
             @RequestParam @Nullable Date fechaSolicitud,
             @RequestParam @Nullable Integer estado,
+            // Selección múltiple: ?idContactos=1,2 (o el parámetro repetido)
+            @RequestParam(required = false) List<Integer> idContactos,
+            @RequestParam(required = false) List<Integer> idPerfiles,
+            @RequestParam(required = false) List<Integer> idTalentos,
             HttpServletRequest httpServletRequest) {
         try {
             String token = JwtHelper.extractToken(httpServletRequest);
             BaseResponse response = requirementService.listRequirements(token, nPag, cPag, idCliente, buscar,
-                    fechaSolicitud, estado);
+                    fechaSolicitud, estado, idContactos, idPerfiles, idTalentos);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /** Filtro Contacto del listado: contactos de un cliente. */
+    @GetMapping("/filters/contacts")
+    public ResponseEntity<?> listContactFilterOptions(
+            @RequestParam Integer idCliente,
+            @RequestParam(required = false) String buscar,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return ResponseEntity.ok(requirementService.listContactFilterOptions(token, idCliente, buscar));
+        } catch (Exception e) {
+            return ResponseEntity.ok(
+                    new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
+        }
+    }
+
+    /** Filtro Perfil del listado: perfiles usados en RQ vigentes, con límite. */
+    @GetMapping("/filters/profiles")
+    public ResponseEntity<?> listProfileFilterOptions(
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) Integer top,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return ResponseEntity.ok(requirementService.listProfileFilterOptions(token, buscar, top));
+        } catch (Exception e) {
+            return ResponseEntity.ok(
+                    new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
+        }
+    }
+
+    /** Filtro Postulante del listado: talentos asignados a algún RQ, con límite. */
+    @GetMapping("/filters/talents")
+    public ResponseEntity<?> listTalentFilterOptions(
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) Integer top,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            return ResponseEntity.ok(requirementService.listTalentFilterOptions(token, buscar, top));
+        } catch (Exception e) {
+            return ResponseEntity.ok(
+                    new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
+        }
+    }
+
+    /** Postulaciones de un talento: los RQ a los que fue asignado, paginados. */
+    @GetMapping("/by-talent")
+    public ResponseEntity<?> listTalentApplications(
+            @RequestParam Integer idTalento,
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) Integer estado,
+            @RequestParam(required = false) Integer nPag,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            OperationResult<TalentApplicationsDTO> result =
+                    requirementService.listTalentApplications(token, idTalento, buscar, estado, nPag);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.ok(
+                    new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
         }
     }
 

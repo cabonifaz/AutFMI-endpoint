@@ -107,14 +107,8 @@ public class TalentRepository {
                 .addValue("TELEFONO", talent.getTelefono())
                 .addValue("DNI", talent.getDni())
                 .addValue("EMAIL", talent.getEmail())
-                .addValue("TIEMPO_CONTRATO", talent.getTiempoContrato())
-                .addValue("ID_TIPO_TIEMPO_CONTRATO", talent.getIdTiempoContrato())
-                .addValue("FCH_INICIO_LABORES", talent.getFechaInicioLabores())
-                .addValue("CARGO", "")
-                .addValue("REMUNERACION", talent.getRemuneracion())
-                .addValue("ID_TIPO_MONEDA", talent.getIdMoneda())
-                .addValue("ID_MODALIDAD", talent.getIdModalidad())
                 .addValue("UBICACION", talent.getUbicacion())
+                // El resto de datos de colaborador se completan en el modal de confirmación de AsignarTalento
                 .addValue("ID_ROL", baseRequest.getIdRol())
                 .addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades())
                 .addValue("ID_USUARIO", baseRequest.getIdUsuario());

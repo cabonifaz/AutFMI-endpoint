@@ -20,6 +20,7 @@ import org.app.autfmi.model.dto.ParametrosDTO;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.EventoNotificacion;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
@@ -67,9 +68,8 @@ public class MailService implements IMailService {
 
   @Async("notificationExecutor")
   @Override
-  public void sendRequirementNotificationV2(RequirementReport report, String subject, List<String> toAddresses,
-      List<String> ccAddresses,
-      String action) {
+  public void sendRequirementNotificationV2(EventoNotificacion evento, RequirementReport report, String subject,
+      List<String> toAddresses, List<String> ccAddresses, String action) {
 
     logger.info("Preparing to send requirement notification email...");
     logger.info("Asunto: {}", subject);
@@ -237,6 +237,7 @@ public class MailService implements IMailService {
     for (String destinatario : cleanToAddresses) {
       logger.info("Enviando correo a: {}", destinatario);
       mailUtils.sendEmailWithHtmlTemplate(
+          evento,
           destinatario,
           cleanCcAddresses,
           subject,
@@ -333,14 +334,14 @@ public class MailService implements IMailService {
   }
 
   
-  private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
-      String gestoresCsv, String subject, String message) {
-    return sendFormularioEmail(files, maestro, correoGestor, gestoresCsv, subject, message, false);
+  private boolean sendFormularioEmail(EventoNotificacion evento, List<FileDTO> files, String maestro,
+      String correoGestor, String gestoresCsv, String subject, String message) {
+    return sendFormularioEmail(evento, files, maestro, correoGestor, gestoresCsv, subject, message, false);
   }
 
   /** Igual que el anterior; co {@code html = true} el cuerpo va en HTML. */
-  private boolean sendFormularioEmail(List<FileDTO> files, String maestro, String correoGestor,
-      String gestoresCsv, String subject, String message, boolean html) {
+  private boolean sendFormularioEmail(EventoNotificacion evento, List<FileDTO> files, String maestro,
+      String correoGestor, String gestoresCsv, String subject, String message, boolean html) {
     List<String> toEmails = resolveMaestroEmails(maestro);
     String to = !toEmails.isEmpty()
         ? toEmails.get(0)
@@ -355,7 +356,7 @@ public class MailService implements IMailService {
     List<String> cc = buildFormularioCcList(correoGestor, gestoresCsv, extraTo);
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      return pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, html);
+      return pdfUtils.enviarCorreoConPDF(evento, files, to, cc, subject, message, html);
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
       return false;
@@ -382,9 +383,9 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento) {
-    // Una sola consulta al interruptor de correos para los dos envíos.
-    try (var decision = correoSwitch.decisionUnica()) {
-      return enviarFormulariosIngreso(report, idTalento);
+    // Una sola consulta para los dos correos; sin permiso no se generan los PDFs.
+    try (var decision = correoSwitch.decision(EventoNotificacion.INGRESO)) {
+      return decision.habilitado() && enviarFormulariosIngreso(report, idTalento);
     }
   }
 
@@ -394,7 +395,7 @@ public class MailService implements IMailService {
     String gestores = report.getGestoresCliente();
 
     // Correo 1: Formulario de Ingreso -> maestro 52 (talento)
-    boolean ingreso = sendFormularioEmail(
+    boolean ingreso = sendFormularioEmail(EventoNotificacion.INGRESO,
         this.reportPDFBuilder.forIngreso(report).withFormulario().build(),
         Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(), gestores,
         buildFormularioSubject("ingreso", cliente, fullname),
@@ -403,7 +404,7 @@ public class MailService implements IMailService {
     // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte), con la
     // tabla de contacto del talento en el cuerpo.
     var contacto = contactoTalento(idTalento, report.getNombres(), report.getApellidos(), null);
-    boolean usuario = sendFormularioEmail(
+    boolean usuario = sendFormularioEmail(EventoNotificacion.INGRESO,
         this.reportPDFBuilder.forIngreso(report).withCreateUser().build(),
         Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), gestores,
         buildFormularioSubject("creación de usuario", cliente, fullname),
@@ -420,20 +421,25 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendCeseReportNotificationSync(CeseReport report) {
-    logger.info("Preparing to send cese report notification email...");
-    String fullname = report.getNombres() + " " + report.getApellidos();
+    try (var decision = correoSwitch.decision(EventoNotificacion.CESE)) {
+      if (!decision.habilitado()) {
+        return false;
+      }
+      logger.info("Preparing to send cese report notification email...");
+      String fullname = report.getNombres() + " " + report.getApellidos();
 
-    List<FileDTO> attachments = this.reportPDFBuilder
-        .forCese(report)
-        .withFormularioCese()
-        .withDeactivateRequest()
-        .build();
+      List<FileDTO> attachments = this.reportPDFBuilder
+          .forCese(report)
+          .withFormularioCese()
+          .withDeactivateRequest()
+          .build();
 
-    // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
-    return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
-        report.getGestoresCliente(),
-        buildFormularioSubject("cese", report.getCliente(), fullname),
-        buildFormularioBody("cese"));
+      // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
+      return sendFormularioEmail(EventoNotificacion.CESE, attachments, Constante.MAESTRO_CORREO_TALENTO,
+          report.getCorreoGestor(), report.getGestoresCliente(),
+          buildFormularioSubject("cese", report.getCliente(), fullname),
+          buildFormularioBody("cese"));
+    }
   }
 
   @Override
@@ -443,18 +449,23 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendMovementReportNotificationSync(MovementReport report) {
-    String fullname = report.getNombres() + " " + report.getApellidos();
+    try (var decision = correoSwitch.decision(EventoNotificacion.MOVIMIENTO)) {
+      if (!decision.habilitado()) {
+        return false;
+      }
+      String fullname = report.getNombres() + " " + report.getApellidos();
 
-    List<FileDTO> attachments = this.reportPDFBuilder
-        .forMovimiento(report)
-        .withFormulario()
-        .build();
+      List<FileDTO> attachments = this.reportPDFBuilder
+          .forMovimiento(report)
+          .withFormulario()
+          .build();
 
-    // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
-    return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(),
-        report.getGestoresCliente(),
-        buildFormularioSubject("movimiento", report.getCliente(), fullname),
-        buildFormularioBody("movimiento"));
+      // TO: maestro 52 (talento). CC: generador + selección(35) + gestores del cliente.
+      return sendFormularioEmail(EventoNotificacion.MOVIMIENTO, attachments, Constante.MAESTRO_CORREO_TALENTO,
+          report.getCorreoGestor(), report.getGestoresCliente(),
+          buildFormularioSubject("movimiento", report.getCliente(), fullname),
+          buildFormularioBody("movimiento"));
+    }
   }
 
   @Override
@@ -592,7 +603,8 @@ public class MailService implements IMailService {
     logger.info("Sending interview notification ({}) to: {} | CC: {} recipients | ICS: {}",
         templateName, talentEmail.trim(), cleanCc.size(),
         (icsAttachment != null && icsAttachment.length > 0));
-    boolean enviado = mailUtils.sendEmailWithHtmlTemplate(talentEmail.trim(), cleanCc, subject, templateName,
+    boolean enviado = mailUtils.sendEmailWithHtmlTemplate(EventoNotificacion.ENTREVISTA, talentEmail.trim(),
+        cleanCc, subject, templateName,
         variables, inlineResources, icsFileName, icsAttachment);
     if (enviado) {
       logger.info("Interview notification dispatched.");
@@ -750,7 +762,8 @@ public class MailService implements IMailService {
 
     logger.info("Enviando notif. inicio ({}) contrato {} -> TO: {} | CC: {}",
         dto.getTipoHito(), dto.getIdContrato(), to, cleanCc.size());
-    return mailUtils.sendTemplateEmailSync(to, cleanCc, subject, "inicio-outsourcing", variables);
+    return mailUtils.sendTemplateEmailSync(EventoNotificacion.PRONTO_INICIO, to, cleanCc, subject,
+        "inicio-outsourcing", variables);
   }
 
   @Async("notificationExecutor")
@@ -761,22 +774,27 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendEquipmentRequestNotificationSync(SolicitudEquipoReport report, Integer idTalento) {
-    String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
+    try (var decision = correoSwitch.decision(EventoNotificacion.SOLICITUD_EQUIPO)) {
+      if (!decision.habilitado()) {
+        return false;
+      }
+      String employee = report.getNombreEmpleado() + " " + report.getApellidosEmpleado();
 
-    List<FileDTO> attachments = this.reportPDFBuilder
-        .fEquipoReport(report)
-        .withFormulario()
-        .build();
+      List<FileDTO> attachments = this.reportPDFBuilder
+          .fEquipoReport(report)
+          .withFormulario()
+          .build();
 
-    var contacto = contactoTalento(idTalento, report.getNombreEmpleado(), report.getApellidosEmpleado(),
-        report.getCelularTalento());
+      var contacto = contactoTalento(idTalento, report.getNombreEmpleado(), report.getApellidosEmpleado(),
+          report.getCelularTalento());
 
-    // TO: maestro 51 (soporte). CC: generador + selección(35) + gestores del cliente.
-    // El cuerpo lleva la tabla de contacto del talento.
-    return sendFormularioEmail(attachments, Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(),
-        report.getGestoresCliente(),
-        buildFormularioSubject("equipo", report.getCliente(), employee),
-        FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", List.of(contacto)), true);
+      // TO: maestro 51 (soporte). CC: generador + selección(35) + gestores del cliente.
+      // El cuerpo lleva la tabla de contacto del talento.
+      return sendFormularioEmail(EventoNotificacion.SOLICITUD_EQUIPO, attachments,
+          Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), report.getGestoresCliente(),
+          buildFormularioSubject("equipo", report.getCliente(), employee),
+          FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", List.of(contacto)), true);
+    }
   }
 
   /**

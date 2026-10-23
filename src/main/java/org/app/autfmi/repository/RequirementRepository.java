@@ -49,12 +49,16 @@ public class RequirementRepository {
 	private Logger logger = LoggerFactory.getLogger(RequirementRepository.class);
 
 	public BaseResponse listRequirements(BaseRequest baseRequest, Integer nPag, Integer cPag, Integer idCliente,
-			String buscar, Date fechaSolicitud, Integer estado) {
+			String buscar, Date fechaSolicitud, Integer estado, List<Integer> idContactos, List<Integer> idPerfiles,
+			List<Integer> idTalentos) {
 		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
 				.withProcedureName("SP_REQUERIMIENTO_LST");
 
 		SqlParameterSource params = new MapSqlParameterSource()
 				.addValue("ID_CLIENTE", idCliente)
+				.addValue("LST_CONTACTOS", toIdList(idContactos))
+				.addValue("LST_PERFILES", toIdList(idPerfiles))
+				.addValue("LST_TALENTOS", toIdList(idTalentos))
 				.addValue("BUSCAR", buscar)
 				.addValue("FECHA_SOLICITUD", fechaSolicitud)
 				.addValue("ESTADO", estado)
@@ -172,6 +176,91 @@ public class RequirementRepository {
 			this.logger.error("Error listando postulaciones del talento: ", e);
 			return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
 		}
+	}
+
+	/** Contactos de un cliente para el filtro Contacto (SP_CLIENTE_CONTACTO_FILTRO_LST). */
+	public OperationResult<FilterOptionsDTO> listContactFilterOptions(BaseRequest baseRequest, Integer idCliente,
+			String buscar) {
+		return listFilterOptions("SP_CLIENTE_CONTACTO_FILTRO_LST", baseRequest, new MapSqlParameterSource()
+				.addValue("ID_CLIENTE", idCliente)
+				.addValue("BUSCAR", buscar));
+	}
+
+	/** Perfiles usados en RQ vigentes para el filtro Perfil (SP_PERFIL_FILTRO_LST). */
+	public OperationResult<FilterOptionsDTO> listProfileFilterOptions(BaseRequest baseRequest, String buscar,
+			Integer top) {
+		return listFilterOptions("SP_PERFIL_FILTRO_LST", baseRequest, new MapSqlParameterSource()
+				.addValue("BUSCAR", buscar)
+				.addValue("TOP", top));
+	}
+
+	/** Talentos asignados a algún RQ para el filtro Postulante (SP_TALENTO_RQ_FILTRO_LST). */
+	public OperationResult<FilterOptionsDTO> listTalentFilterOptions(BaseRequest baseRequest, String buscar,
+			Integer top) {
+		return listFilterOptions("SP_TALENTO_RQ_FILTRO_LST", baseRequest, new MapSqlParameterSource()
+				.addValue("BUSCAR", buscar)
+				.addValue("TOP", top));
+	}
+
+	/**
+	 * Los SP *_FILTRO_LST comparten forma: rs1 mensaje + TOTAL, rs2 filas con
+	 * ID, NOMBRE, DETALLE y CANTIDAD.
+	 */
+	private OperationResult<FilterOptionsDTO> listFilterOptions(String procedure, BaseRequest baseRequest,
+			MapSqlParameterSource params) {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate).withProcedureName(procedure);
+
+		try {
+			params.addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+					.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+					.addValue("ID_ROL", baseRequest.getIdRol())
+					.addValue("USUARIO", baseRequest.getUsername())
+					.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+			Map<String, Object> result = simpleJdbcCall.execute(params);
+			List<Map<String, Object>> messageSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+			if (messageSet == null || messageSet.isEmpty()) {
+				return new OperationResult<>(new BaseResponse(3, "La base de datos no retornó información."), null);
+			}
+
+			Map<String, Object> message = messageSet.get(0);
+			BaseResponse baseResponse = new BaseResponse(
+					(Integer) message.get("ID_TIPO_MENSAJE"),
+					(String) message.get("MENSAJE"));
+
+			if (baseResponse.getIdTipoMensaje() != 2) {
+				return new OperationResult<>(baseResponse, null);
+			}
+
+			List<Map<String, Object>> rows = (List<Map<String, Object>>) result
+					.getOrDefault("#result-set-2", new ArrayList<>());
+			List<FilterOptionsDTO.Opcion> opciones = new ArrayList<>();
+			for (Map<String, Object> row : rows) {
+				opciones.add(new FilterOptionsDTO.Opcion(
+						toInteger(row.get("ID")),
+						(String) row.get("NOMBRE"),
+						(String) row.get("DETALLE"),
+						toInteger(row.get("CANTIDAD"))));
+			}
+
+			return new OperationResult<>(baseResponse,
+					new FilterOptionsDTO(opciones, toInteger(message.get("TOTAL"))));
+
+		} catch (Exception e) {
+			this.logger.error("Error en {}: ", procedure, e);
+			return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
+		}
+	}
+
+	/** Lista de ids a '1,2,3' para los SP; vacía o null → null (sin filtro). */
+	private static String toIdList(List<Integer> ids) {
+		if (ids == null) return null;
+		String joined = ids.stream()
+				.filter(java.util.Objects::nonNull)
+				.map(String::valueOf)
+				.collect(java.util.stream.Collectors.joining(","));
+		return joined.isEmpty() ? null : joined;
 	}
 
 	/** INT, BIT o DECIMAL de SQL Server a Integer. */

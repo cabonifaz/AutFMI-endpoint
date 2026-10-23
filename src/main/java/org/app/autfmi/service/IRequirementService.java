@@ -2,6 +2,7 @@ package org.app.autfmi.service;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 
+import org.app.autfmi.model.dto.FilterOptionsDTO;
 import org.app.autfmi.model.dto.TalentApplicationsDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
@@ -23,7 +24,14 @@ import java.util.List;
 public interface IRequirementService {
 
         BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
-                        Date fechaSolicitud, Integer estado);
+                        Date fechaSolicitud, Integer estado, List<Integer> idContactos, List<Integer> idPerfiles,
+                        List<Integer> idTalentos);
+
+        OperationResult<FilterOptionsDTO> listContactFilterOptions(String token, Integer idCliente, String buscar);
+
+        OperationResult<FilterOptionsDTO> listProfileFilterOptions(String token, String buscar, Integer top);
+
+        OperationResult<FilterOptionsDTO> listTalentFilterOptions(String token, String buscar, Integer top);
 
         OperationResult<TalentApplicationsDTO> listTalentApplications(String token, Integer idTalento, String buscar,
                         Integer estado, Integer nPag);

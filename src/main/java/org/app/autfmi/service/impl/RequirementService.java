@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.app.autfmi.model.dto.FilterOptionsDTO;
 import org.app.autfmi.model.dto.RequirementDTO;
 import org.app.autfmi.model.dto.TalentApplicationsDTO;
 import org.app.autfmi.model.dto.UserDTO;
@@ -63,11 +64,34 @@ public class RequirementService implements IRequirementService {
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
-            Date fechaSolicitud, Integer estado) {
+            Date fechaSolicitud, Integer estado, List<Integer> idContactos, List<Integer> idPerfiles,
+            List<Integer> idTalentos) {
         UserDTO user = jwt.decodeToken(token);
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
         return requirementRepository.listRequirements(baseRequest, nPag, cPag, idCliente, buscar, fechaSolicitud,
-                estado);
+                estado, idContactos, idPerfiles, idTalentos);
+    }
+
+    @Override
+    public OperationResult<FilterOptionsDTO> listContactFilterOptions(String token, Integer idCliente,
+            String buscar) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
+        return requirementRepository.listContactFilterOptions(baseRequest, idCliente, buscar);
+    }
+
+    @Override
+    public OperationResult<FilterOptionsDTO> listProfileFilterOptions(String token, String buscar, Integer top) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
+        return requirementRepository.listProfileFilterOptions(baseRequest, buscar, top);
+    }
+
+    @Override
+    public OperationResult<FilterOptionsDTO> listTalentFilterOptions(String token, String buscar, Integer top) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
+        return requirementRepository.listTalentFilterOptions(baseRequest, buscar, top);
     }
 
     @Override

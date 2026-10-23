@@ -38,6 +38,7 @@ import org.app.autfmi.service.IRequirementService;
 import org.app.autfmi.util.ClientS3V2;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.EventoNotificacion;
 import org.app.autfmi.util.FileUtils;
 import org.app.autfmi.util.JwtHelper;
 import org.slf4j.Logger;
@@ -137,6 +138,7 @@ public class RequirementService implements IRequirementService {
             // Enviar notificación por correo electrónico utilizando el servicio de correo
             try {
                 this.mailService.sendRequirementNotificationV2(
+                        EventoNotificacion.RQ_CREACION,
                         report,
                         subject,
                         toAddresses,
@@ -220,6 +222,7 @@ public class RequirementService implements IRequirementService {
 
             // Enviar notificación por correo electrónico utilizando el servicio de correo
             this.mailService.sendRequirementNotificationV2(
+                    EventoNotificacion.RQ_AGENTE,
                     report,
                     subject,
                     toAddresses,
@@ -266,6 +269,7 @@ public class RequirementService implements IRequirementService {
             // Enviar notificación por correo electrónico utilizando el servicio de correo
             try {
                 this.mailService.sendRequirementNotificationV2(
+                        EventoNotificacion.RQ_ACTUALIZACION,
                         report,
                         subject,
                         toAddresses,

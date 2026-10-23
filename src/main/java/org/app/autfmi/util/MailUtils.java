@@ -39,23 +39,22 @@ public class MailUtils {
     @Autowired
     private TemplateEngine templateEngine;
 
-    // Interruptor global de correos (FTBO-1117): todo método público que llega a
-    // mailSender.send lo consulta antes de armar el mensaje.
+    // Todo método público que llega a mailSender.send valida su evento antes de armar el mensaje.
     @Autowired
     private NotificacionCorreoSwitch correoSwitch;
 
     private static final Logger logger = LoggerFactory.getLogger(MailUtils.class);
 
     @Async("notificationExecutor")
-    public void sendRequirementPostulantMail(GestorRqDTO gestor, String asunto, List<PostulantDTO> lstPostulantes,
-            List<String> lstEmails, List<FileDTO> attachments) {
-        sendRequirementPostulantMailSync(gestor, asunto, lstPostulantes, lstEmails, attachments);
+    public void sendRequirementPostulantMail(EventoNotificacion evento, GestorRqDTO gestor, String asunto,
+            List<PostulantDTO> lstPostulantes, List<String> lstEmails, List<FileDTO> attachments) {
+        sendRequirementPostulantMailSync(evento, gestor, asunto, lstPostulantes, lstEmails, attachments);
     }
 
     
-    public boolean sendRequirementPostulantMailSync(GestorRqDTO gestor, String asunto,
+    public boolean sendRequirementPostulantMailSync(EventoNotificacion evento, GestorRqDTO gestor, String asunto,
             List<PostulantDTO> lstPostulantes, List<String> lstEmails, List<FileDTO> attachments) {
-        if (!correoSwitch.envioPermitido(asunto)) {
+        if (!correoSwitch.permitido(evento)) {
             return false;
         }
         try {
@@ -156,9 +155,9 @@ public class MailUtils {
 
 
     @Async("notificationExecutor")
-    public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
-            Map<String, Object> variables) {
-        if (!correoSwitch.envioPermitido(subject)) {
+    public void sendEmailWithHtmlTemplate(EventoNotificacion evento, String to, List<String> cc, String subject,
+            String templateName, Map<String, Object> variables) {
+        if (!correoSwitch.permitido(evento)) {
             return;
         }
         try {
@@ -193,15 +192,15 @@ public class MailUtils {
         }
     }
 
-    public void sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
-            Map<String, Object> variables, Map<String, Resource> inlineResources) {
-        sendEmailWithHtmlTemplate(to, cc, subject, templateName, variables, inlineResources, null, null);
+    public void sendEmailWithHtmlTemplate(EventoNotificacion evento, String to, List<String> cc, String subject,
+            String templateName, Map<String, Object> variables, Map<String, Resource> inlineResources) {
+        sendEmailWithHtmlTemplate(evento, to, cc, subject, templateName, variables, inlineResources, null, null);
     }
 
     
-    public boolean sendTemplateEmailSync(String to, List<String> cc, String subject, String templateName,
-            Map<String, Object> variables) {
-        if (!correoSwitch.envioPermitido(subject)) {
+    public boolean sendTemplateEmailSync(EventoNotificacion evento, String to, List<String> cc, String subject,
+            String templateName, Map<String, Object> variables) {
+        if (!correoSwitch.permitido(evento)) {
             return false;
         }
         String destino = to != null ? to.trim() : null;
@@ -231,10 +230,10 @@ public class MailUtils {
     }
 
     
-    public boolean sendEmailWithHtmlTemplate(String to, List<String> cc, String subject, String templateName,
-            Map<String, Object> variables, Map<String, Resource> inlineResources,
+    public boolean sendEmailWithHtmlTemplate(EventoNotificacion evento, String to, List<String> cc, String subject,
+            String templateName, Map<String, Object> variables, Map<String, Resource> inlineResources,
             String attachmentName, byte[] attachmentBytes) {
-        if (!correoSwitch.envioPermitido(subject)) {
+        if (!correoSwitch.permitido(evento)) {
             return false;
         }
         try {

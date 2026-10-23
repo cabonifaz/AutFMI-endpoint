@@ -5,7 +5,7 @@ import java.util.List;
 import org.app.autfmi.model.dto.InicioOutsourcingDTO;
 import org.app.autfmi.repository.InicioNotificationRepository;
 import org.app.autfmi.service.IMailService;
-import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.EventoNotificacion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,15 +37,14 @@ public class InicioOutsourcingScheduler {
       return;
     }
 
-    // Además del flag propio, manda el interruptor global de correos (FTBO-1117).
-    // Apagado, tampoco se consulta ni se marca nada: los contratos siguen
+    // Además del flag propio, manda el evento CORREO_PRONTO_INICIO del maestro 56.
+    // Desactivado, tampoco se consulta ni se marca nada: los contratos siguen
     // pendientes y, si SP_BT_NOTIF_INICIO_LST todavía los devuelve (hitos D-2/D-0),
     // se notificarán en la primera ejecución tras reactivarlo. La decisión se
     // toma una vez para todo el lote.
-    try (var decision = correoSwitch.decisionUnica()) {
+    try (var decision = correoSwitch.decision(EventoNotificacion.PRONTO_INICIO)) {
       if (!decision.habilitado()) {
-        logger.info("[NotifInicio] Envío omitido: correos desactivados (maestro {}).",
-            Constante.MAESTRO_NOTIFICACION_CORREO);
+        logger.info("[NotifInicio] Envío omitido: {} desactivado.", EventoNotificacion.PRONTO_INICIO.clave());
         return;
       }
       logger.info("[NotifInicio] Inicio del job de notificación de inicio de labores (outsourcing).");

@@ -17,6 +17,7 @@ import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.HistoryRepository;
 import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.util.Constante;
+import org.app.autfmi.util.EventoNotificacion;
 import org.app.autfmi.util.FormularioCorreoUtils;
 import org.app.autfmi.util.MailUtils;
 import org.app.autfmi.util.PDFUtils;
@@ -32,6 +33,9 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class NotificationService {
   private final Logger logger = LoggerFactory.getLogger(NotificationService.class);
+
+  // Los tres correos de la confirmación de talentos son una sola operación.
+  private static final EventoNotificacion EVENTO = EventoNotificacion.RQ_TALENTOS_CONFIRMADOS;
 
   private final MailUtils mailUtils;
   private final PDFUtils pdfUtils;
@@ -71,12 +75,11 @@ public class NotificationService {
 
     boolean todoEnviado = true;
 
-    // Una sola consulta al interruptor de correos para los tres envíos.
-    try (var decision = correoSwitch.decisionUnica()) {
+    // Una sola consulta para los tres correos; sin permiso no se generan los PDFs.
+    try (var decision = correoSwitch.decision(EVENTO)) {
 
       if (!decision.habilitado()) {
-        this.logger.info("Notificaciones de asignación de talentos omitidas: correos desactivados (maestro {}).",
-            Constante.MAESTRO_NOTIFICACION_CORREO);
+        this.logger.info("Notificaciones de asignación de talentos omitidas ({}).", EVENTO.clave());
         return false;
       }
 
@@ -134,6 +137,7 @@ public class NotificationService {
         List<String> ccIngreso = new ArrayList<>(baseCc);
         ccIngreso.addAll(resolveMaestroEmails(Constante.MAESTRO_CORREO_TALENTO));
         todoEnviado &= this.mailUtils.sendRequirementPostulantMailSync(
+            EVENTO,
             gestorRq,
             "Ingreso de nuevo talento",
             postulantes != null ? postulantes : Collections.emptyList(),
@@ -227,7 +231,7 @@ public class NotificationService {
     }
     try {
       logger.info("Enviando '{}' -> TO: {} | CC: {}", subject, to, cc);
-      return pdfUtils.enviarCorreoConPDF(files, to, cc, subject, message, true);
+      return pdfUtils.enviarCorreoConPDF(EVENTO, files, to, cc, subject, message, true);
     } catch (Exception e) {
       logger.error("Error enviando '{}': ", subject, e);
       return false;

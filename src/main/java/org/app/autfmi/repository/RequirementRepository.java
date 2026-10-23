@@ -13,6 +13,7 @@ import org.app.autfmi.model.report.RequirementReportMapper;
 import org.app.autfmi.model.request.*;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PostulantFileListResponse;
 import org.app.autfmi.model.response.RequirementListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
@@ -89,6 +90,95 @@ public class RequirementRepository {
 			return new BaseResponse(idTipoMensaje, mensaje);
 		}
 		return null;
+	}
+
+	/**
+	 * Postulaciones de un talento para el modal del detalle del talento, vía
+	 * SP_TALENTO_POSTULACIONES_LST: búsqueda por nombre/código/cliente, filtro
+	 * por estado del RQ y paginación.
+	 */
+	public OperationResult<TalentApplicationsDTO> listTalentApplications(BaseRequest baseRequest, Integer idTalento,
+			String buscar, Integer estado, Integer nPag) {
+		SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
+				.withProcedureName("SP_TALENTO_POSTULACIONES_LST");
+
+		try {
+			SqlParameterSource params = new MapSqlParameterSource()
+					.addValue("ID_TALENTO", idTalento)
+					.addValue("BUSCAR", buscar)
+					.addValue("ESTADO", estado)
+					.addValue("N_PAG", nPag)
+					.addValue("ID_EMPRESA", baseRequest.getIdEmpresa())
+					.addValue("ID_USUARIO", baseRequest.getIdUsuario())
+					.addValue("ID_ROL", baseRequest.getIdRol())
+					.addValue("USUARIO", baseRequest.getUsername())
+					.addValue("ID_FUNCIONALIDADES", baseRequest.getFuncionalidades());
+
+			Map<String, Object> result = simpleJdbcCall.execute(params);
+			List<Map<String, Object>> messageSet = (List<Map<String, Object>>) result.get("#result-set-1");
+
+			if (messageSet == null || messageSet.isEmpty()) {
+				return new OperationResult<>(new BaseResponse(3, "La base de datos no retornó información."), null);
+			}
+
+			Map<String, Object> message = messageSet.get(0);
+			BaseResponse baseResponse = new BaseResponse(
+					(Integer) message.get("ID_TIPO_MENSAJE"),
+					(String) message.get("MENSAJE"));
+
+			if (baseResponse.getIdTipoMensaje() != 2) {
+				return new OperationResult<>(baseResponse, null);
+			}
+
+			List<Map<String, Object>> rows = (List<Map<String, Object>>) result
+					.getOrDefault("#result-set-2", new ArrayList<>());
+			List<TalentApplicationDTO> postulaciones = new ArrayList<>();
+			for (Map<String, Object> row : rows) {
+				postulaciones.add(new TalentApplicationDTO(
+						toInteger(row.get("ID_REQUERIMIENTO")),
+						(String) row.get("CODIGO_RQ"),
+						(String) row.get("TITULO"),
+						(String) row.get("CLIENTE"),
+						(String) row.get("FECHA_SOLICITUD"),
+						toInteger(row.get("ID_ESTADO_RQ")),
+						(String) row.get("ESTADO_RQ"),
+						toInteger(row.get("ID_ESTADO_TALENTO")),
+						(String) row.get("ESTADO_TALENTO"),
+						Integer.valueOf(1).equals(toInteger(row.get("INGRESO"))),
+						toInteger(row.get("ID_PERFIL")),
+						(String) row.get("VACANTE"),
+						toInteger(row.get("POSTULANTES"))));
+			}
+
+			List<Map<String, Object>> stateRows = (List<Map<String, Object>>) result
+					.getOrDefault("#result-set-3", new ArrayList<>());
+			List<TalentApplicationsDTO.EstadoCantidad> estados = new ArrayList<>();
+			for (Map<String, Object> row : stateRows) {
+				estados.add(new TalentApplicationsDTO.EstadoCantidad(
+						toInteger(row.get("ID_ESTADO")),
+						(String) row.get("ESTADO"),
+						toInteger(row.get("CANTIDAD"))));
+			}
+
+			return new OperationResult<>(baseResponse, new TalentApplicationsDTO(
+					postulaciones,
+					toInteger(message.get("TOTAL_LISTA")),
+					toInteger(message.get("TOTAL_PAGINAS")),
+					toInteger(message.get("TAMANIO_PAGINA")),
+					toInteger(message.get("TOTAL_POSTULACIONES")),
+					estados));
+
+		} catch (Exception e) {
+			this.logger.error("Error listando postulaciones del talento: ", e);
+			return new OperationResult<>(new BaseResponse(3, "Error interno: " + e.getMessage()), null);
+		}
+	}
+
+	/** INT, BIT o DECIMAL de SQL Server a Integer. */
+	private static Integer toInteger(Object value) {
+		if (value == null) return null;
+		if (value instanceof Boolean b) return b ? 1 : 0;
+		return ((Number) value).intValue();
 	}
 
 	public BaseResponse getRequirementById(

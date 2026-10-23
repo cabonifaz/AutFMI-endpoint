@@ -5,6 +5,7 @@ import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
+import org.app.autfmi.model.dto.TalentApplicationsDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.AgentRQRequest;
@@ -19,6 +20,7 @@ import org.app.autfmi.model.request.RtFileDownloadRequest;
 import org.app.autfmi.model.request.RtFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PostulantFileListResponse;
 import org.app.autfmi.model.response.RqPresignedUrlResponse;
 import org.app.autfmi.model.response.VacanteSkillsResponse;
@@ -60,6 +62,25 @@ public class RequirementController {
             return new ResponseEntity<>(
                     new BaseResponse(3, e.getMessage()),
                     HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /** Postulaciones de un talento: los RQ a los que fue asignado, paginados. */
+    @GetMapping("/by-talent")
+    public ResponseEntity<?> listTalentApplications(
+            @RequestParam Integer idTalento,
+            @RequestParam(required = false) String buscar,
+            @RequestParam(required = false) Integer estado,
+            @RequestParam(required = false) Integer nPag,
+            HttpServletRequest httpServletRequest) {
+        try {
+            String token = JwtHelper.extractToken(httpServletRequest);
+            OperationResult<TalentApplicationsDTO> result =
+                    requirementService.listTalentApplications(token, idTalento, buscar, estado, nPag);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.ok(
+                    new OperationResult<>(new BaseResponse(3, "Error al obtener el token"), null));
         }
     }
 

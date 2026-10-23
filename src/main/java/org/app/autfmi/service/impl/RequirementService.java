@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.app.autfmi.model.dto.RequirementDTO;
+import org.app.autfmi.model.dto.TalentApplicationsDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
@@ -25,6 +26,7 @@ import org.app.autfmi.model.request.RtFileUploadUrlRequest;
 import org.app.autfmi.model.dto.PostulantFileDTO;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.PostulantFileListResponse;
 import org.app.autfmi.model.response.RequirementResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
@@ -66,6 +68,14 @@ public class RequirementService implements IRequirementService {
         BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
         return requirementRepository.listRequirements(baseRequest, nPag, cPag, idCliente, buscar, fechaSolicitud,
                 estado);
+    }
+
+    @Override
+    public OperationResult<TalentApplicationsDTO> listTalentApplications(String token, Integer idTalento,
+            String buscar, Integer estado, Integer nPag) {
+        UserDTO user = jwt.decodeToken(token);
+        BaseRequest baseRequest = Common.createBaseRequest(user, Constante.LISTAR_REQUERIMIENTOS);
+        return requirementRepository.listTalentApplications(baseRequest, idTalento, buscar, estado, nPag);
     }
 
     @Override

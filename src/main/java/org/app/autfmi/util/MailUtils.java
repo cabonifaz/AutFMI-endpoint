@@ -119,7 +119,7 @@ public class MailUtils {
             List<FileDTO> attachments)
             throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom(emisorCorreo);
         helper.setTo(to);

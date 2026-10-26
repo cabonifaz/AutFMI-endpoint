@@ -47,10 +47,9 @@ public class Constante {
     public static final String MAESTRO_CORREO_TALENTO = "52";
     public static final String MAESTRO_CORREO_SELECCION = "35";
 
-    // INTERRUPTOR GLOBAL DE CORREOS (FTBO-1117): maestro y clave (STRING1) de la
-    // fila que activa o desactiva los envíos. Ver NotificacionCorreoSwitch.
+    // CONTROL DE CORREOS POR EVENTO: una fila por EventoNotificacion (STRING1).
+    // Ver NotificacionCorreoSwitch.
     public static final String MAESTRO_NOTIFICACION_CORREO = "56";
-    public static final String PARAM_CORREO_GLOBAL = "CORREO_GLOBAL";
 
     // FUNCIONALIDADES
     public static final String LISTAR_TALENTOS = "1";

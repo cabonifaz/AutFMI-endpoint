@@ -2,6 +2,8 @@ package org.app.autfmi.service;
 
 import com.microsoft.sqlserver.jdbc.SQLServerException;
 
+import org.app.autfmi.model.dto.FilterOptionsDTO;
+import org.app.autfmi.model.dto.TalentApplicationsDTO;
 import org.app.autfmi.model.dto.VacanteCarreraDTO;
 import org.app.autfmi.model.dto.VacanteSkillDTO;
 import org.app.autfmi.model.request.AgentRQRequest;
@@ -13,6 +15,7 @@ import org.app.autfmi.model.request.RqFileDownloadRequest;
 import org.app.autfmi.model.request.RqFileUploadUrlRequest;
 import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.FileResponse;
+import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.model.response.RqPresignedUrlResponse;
 
 import java.util.Date;
@@ -21,7 +24,17 @@ import java.util.List;
 public interface IRequirementService {
 
         BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
-                        Date fechaSolicitud, Integer estado);
+                        Date fechaSolicitud, Integer estado, List<Integer> idContactos, List<Integer> idPerfiles,
+                        List<Integer> idTalentos);
+
+        OperationResult<FilterOptionsDTO> listContactFilterOptions(String token, Integer idCliente, String buscar);
+
+        OperationResult<FilterOptionsDTO> listProfileFilterOptions(String token, String buscar, Integer top);
+
+        OperationResult<FilterOptionsDTO> listTalentFilterOptions(String token, String buscar, Integer top);
+
+        OperationResult<TalentApplicationsDTO> listTalentApplications(String token, Integer idTalento, String buscar,
+                        Integer estado, Integer nPag);
 
         BaseResponse getRequirement(String token, Integer idRequerimiento, Boolean showfiles, Boolean showVacantesList,
                         Boolean showContactList);

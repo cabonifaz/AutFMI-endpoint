@@ -11,11 +11,12 @@ import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.model.response.InterviewDetailResponseDTO;
+import org.app.autfmi.util.EventoNotificacion;
 
 public interface IMailService {
 
-	void sendRequirementNotificationV2(RequirementReport report, String subject, List<String> toAddresses,
-			List<String> ccAddresses, String action);
+	void sendRequirementNotificationV2(EventoNotificacion evento, RequirementReport report, String subject,
+			List<String> toAddresses, List<String> ccAddresses, String action);
 
 	void sendCeseReportNotification(CeseReport report);
 

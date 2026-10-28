@@ -66,7 +66,7 @@ public class ApprovalController {
     }
   }
 
-  private static String bearerToken(HttpServletRequest http) {
+  static String bearerToken(HttpServletRequest http) {
     String header = http.getHeader("Authorization");
     if (header == null || !header.startsWith("Bearer ")) {
       return null;
@@ -74,11 +74,11 @@ public class ApprovalController {
     return header.substring("Bearer ".length()).trim();
   }
 
-  private static <T> ResponseEntity<OperationResult<T>> toResponse(ApprovalResult<T> result) {
+  static <T> ResponseEntity<OperationResult<T>> toResponse(ApprovalResult<T> result) {
     return ResponseEntity.status(result.outcome().httpStatus()).body(result.body());
   }
 
-  private static <T> ResponseEntity<OperationResult<T>> unauthorized(InvalidSessionException e) {
+  static <T> ResponseEntity<OperationResult<T>> unauthorized(InvalidSessionException e) {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .body(new OperationResult<>(new BaseResponse(3, e.getMessage()), null));
   }

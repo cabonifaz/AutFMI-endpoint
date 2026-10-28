@@ -18,6 +18,7 @@ import org.app.autfmi.model.response.TalentEmployeeList.EmployeeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,10 +42,7 @@ public class EmployeeRepository {
 
   private Logger logger = LoggerFactory.getLogger(EmployeeRepository.class);
 
-  /**
-   * Datos de contacto del talento (SP_BT_TALENTO_CONTACTO_SEL) para la tabla de los
-   * correos de solicitud de creación de usuario y de equipo. null si no existe.
-   */
+
   public ContactoTalentoDTO getContactoTalento(Integer idTalento) {
     if (idTalento == null) {
       return null;
@@ -235,11 +234,30 @@ public class EmployeeRepository {
     return new EmployeeItem(talentId, names, fullname);
   }
 
-  /**
-   * @param baseRequest
-   * @param talentId
-   * @return
-   */
+
+  public Map<Integer, Integer> getContractClients(Integer talentId) {
+    var clientes = new HashMap<Integer, Integer>();
+    jdbcTemplate.query("""
+        SELECT T.ID_CONTRATO, R.ID_CLIENTE
+        FROM dbo.TALENTO_CONTRATO T
+        OUTER APPLY (
+          SELECT TOP 1 HX.ID_RQ
+          FROM dbo.HISTORIAL HX
+          WHERE HX.ID_CONTRATO = T.ID_CONTRATO AND HX.ID_ESTADO_REGISTRO = 1
+          ORDER BY CASE WHEN HX.ID_RQ IS NOT NULL THEN 0 ELSE 1 END,
+                   CASE WHEN HX.ID_TIPO_HISTORIAL = 1 THEN 0 ELSE 1 END,
+                   HX.ID_HISTORIAL
+        ) HC
+        LEFT JOIN dbo.REQUERIMIENTO R
+          ON R.ID_REQUERIMIENTO = COALESCE(T.ID_RQ, HC.ID_RQ)
+        WHERE T.ID_TALENTO = ? AND T.ID_ESTADO_REGISTRO = 1
+        """, (RowCallbackHandler) rs -> {
+          Integer cliente = rs.getObject("ID_CLIENTE", Integer.class);
+          if (cliente != null) clientes.put(rs.getInt("ID_CONTRATO"), cliente);
+        }, talentId);
+    return clientes;
+  }
+
   public EmployeeFullHistoryDTO getEmployeeFullHistory(BaseRequest baseRequest, Integer talentId) {
 
     SimpleJdbcCall jdbcCall = new SimpleJdbcCall(jdbcTemplate)
@@ -301,6 +319,7 @@ public class EmployeeRepository {
     List<Map<String, Object>> rsContratos = (List<Map<String, Object>>) result.get("#result-set-3");
 
     if (rsContratos != null) {
+      Map<Integer, Integer> clientes = getContractClients(talentId);
       List<EmployeeFullHistoryDTO.ContractDTO> contractList = rsContratos.stream().map(r -> {
         var dto = new EmployeeFullHistoryDTO.ContractDTO();
         dto.setContractId((Integer) r.get("ID_CONTRATO"));
@@ -312,6 +331,7 @@ public class EmployeeRepository {
         dto.setTalentName((String) r.get("NOMBRES_TALENTO"));
         dto.setArea((String) r.get("AREA"));
         dto.setAreaId((Integer) r.get("ID_AREA"));
+        dto.setClientId(clientes.get(dto.getContractId()));
         dto.setClient((String) r.get("CLIENTE"));
         dto.setRqCode((String) r.get("CODIGO_RQ"));
         dto.setRqTitle((String) r.get("TITULO_RQ"));

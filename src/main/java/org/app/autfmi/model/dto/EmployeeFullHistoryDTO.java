@@ -57,6 +57,7 @@ public class EmployeeFullHistoryDTO extends BaseResponse {
         private String contractObject;
         private Integer areaId;
         private String area;
+        private Integer clientId;
         private String client;
         private String rqCode;
         private String rqTitle;

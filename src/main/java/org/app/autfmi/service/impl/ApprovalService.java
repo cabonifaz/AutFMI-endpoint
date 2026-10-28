@@ -64,6 +64,11 @@ public class ApprovalService {
     return approvalRepository.getRequest(idSolicitud, user, rolesCsv(user));
   }
 
+  /** Usuario del token, validado igual que en la bandeja. Lanza InvalidSessionException. */
+  public UserDTO authenticate(String token) {
+    return authenticatedUser(token);
+  }
+
   private UserDTO authenticatedUser(String token) {
     if (token == null || token.isBlank()) {
       throw new InvalidSessionException("Sesión no iniciada");

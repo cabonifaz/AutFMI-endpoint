@@ -31,15 +31,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/**
- * Flujo de aprobación de ingresos, movimientos y ceses (FTBO-1124).
- *
- * Con approval.flow.enabled = true (APPROVAL_FLOW_ENABLED), el formulario no se
- * ejecuta al enviarlo: queda como solicitud PENDIENTE en la bandeja de los
- * gestores del cliente. Al aprobarla, un gestor asignado ejecuta la operación
- * con los SP de siempre y salen los correos de siempre a las áreas. Apagado
- * (por defecto), todo funciona como antes.
- */
+
 @Service
 public class ApprovalWorkflowService {
 
@@ -55,7 +47,7 @@ public class ApprovalWorkflowService {
 
   public ApprovalWorkflowService(ApprovalRepository approvalRepository, ApprovalService approvalService,
       EmployeeOperationExecutor operationExecutor, ApprovalNotifier notifier, EmployeeRepository employeeRepository,
-      ObjectMapper objectMapper, @Value("${approval.flow.enabled:false}") boolean flujoActivo) {
+      ObjectMapper objectMapper, @Value("${approval.flow.enabled:true}") boolean flujoActivo) {
     this.approvalRepository = approvalRepository;
     this.approvalService = approvalService;
     this.operationExecutor = operationExecutor;
@@ -68,11 +60,6 @@ public class ApprovalWorkflowService {
 
   // ------------------------------------------------------------ Registro
 
-  /**
-   * Alta que viene de Selección: la que está asociada a un requerimiento (el
-   * RQ lo atiende Selección) y a un cliente con gestores. Un alta sin RQ sigue
-   * el camino directo.
-   */
   public boolean requiresApproval(EmployeeEntryRequest request) {
     return flujoActivo && request.getIdRequerimiento() != null && request.getIdCliente() != null;
   }

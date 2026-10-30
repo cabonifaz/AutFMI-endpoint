@@ -3,14 +3,11 @@ package org.app.autfmi.service;
 import java.util.List;
 
 import org.app.autfmi.model.dto.InicioOutsourcingDTO;
-import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.MovementReport;
 import org.app.autfmi.model.report.RequirementReport;
 import org.app.autfmi.model.report.SolicitudEquipoReport;
-import org.app.autfmi.model.request.BaseRequest;
-import org.app.autfmi.model.response.InterviewDetailResponseDTO;
 import org.app.autfmi.util.EventoNotificacion;
 
 public interface IMailService {
@@ -52,17 +49,5 @@ public interface IMailService {
 	 * @return {@code true} si el correo se envió (procede marcar el contrato).
 	 */
 	boolean sendInicioOutsourcingNotification(InicioOutsourcingDTO dto);
-
-	void sendInterviewUnifiedNotification(InterviewDetailResponseDTO detail, String talentEmail, String talentFullName,
-			BaseRequest actionUser, UserContactInfoDTO actionUserInfo, String actionType);
-
-	/**
-	 * Igual que {@link #sendInterviewUnifiedNotification}, pero adjunta el ICS de la
-	 * entrevista. El adjunto es opcional: si {@code icsAttachment} es null/vacío, el
-	 * correo se envía igualmente sin adjunto.
-	 */
-	void sendInterviewUnifiedNotification(InterviewDetailResponseDTO detail, String talentEmail, String talentFullName,
-			BaseRequest actionUser, UserContactInfoDTO actionUserInfo, String actionType,
-			byte[] icsAttachment, String icsFileName);
 
 }

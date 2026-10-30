@@ -236,9 +236,15 @@ public class EmployeeRepository {
 
 
   public Map<Integer, Integer> getContractClients(Integer talentId) {
-    var clientes = new HashMap<Integer, Integer>();
+    return getContractDetails(talentId).entrySet().stream()
+        .filter(entry -> entry.getValue().getClientId() != null)
+        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getClientId()));
+  }
+
+  private Map<Integer, EmployeeFullHistoryDTO.ContractDTO> getContractDetails(Integer talentId) {
+    var contratos = new HashMap<Integer, EmployeeFullHistoryDTO.ContractDTO>();
     jdbcTemplate.query("""
-        SELECT T.ID_CONTRATO, R.ID_CLIENTE
+        SELECT T.ID_CONTRATO, R.ID_CLIENTE, R.SCTR, R.EMO
         FROM dbo.TALENTO_CONTRATO T
         OUTER APPLY (
           SELECT TOP 1 HX.ID_RQ
@@ -252,10 +258,13 @@ public class EmployeeRepository {
           ON R.ID_REQUERIMIENTO = COALESCE(T.ID_RQ, HC.ID_RQ)
         WHERE T.ID_TALENTO = ? AND T.ID_ESTADO_REGISTRO = 1
         """, (RowCallbackHandler) rs -> {
-          Integer cliente = rs.getObject("ID_CLIENTE", Integer.class);
-          if (cliente != null) clientes.put(rs.getInt("ID_CONTRATO"), cliente);
+          var contrato = new EmployeeFullHistoryDTO.ContractDTO();
+          contrato.setClientId(rs.getObject("ID_CLIENTE", Integer.class));
+          contrato.setSctr(rs.getObject("SCTR", Integer.class));
+          contrato.setEmo(rs.getObject("EMO", Integer.class));
+          contratos.put(rs.getInt("ID_CONTRATO"), contrato);
         }, talentId);
-    return clientes;
+    return contratos;
   }
 
   public EmployeeFullHistoryDTO getEmployeeFullHistory(BaseRequest baseRequest, Integer talentId) {
@@ -319,7 +328,7 @@ public class EmployeeRepository {
     List<Map<String, Object>> rsContratos = (List<Map<String, Object>>) result.get("#result-set-3");
 
     if (rsContratos != null) {
-      Map<Integer, Integer> clientes = getContractClients(talentId);
+      var contratos = getContractDetails(talentId);
       List<EmployeeFullHistoryDTO.ContractDTO> contractList = rsContratos.stream().map(r -> {
         var dto = new EmployeeFullHistoryDTO.ContractDTO();
         dto.setContractId((Integer) r.get("ID_CONTRATO"));
@@ -331,7 +340,12 @@ public class EmployeeRepository {
         dto.setTalentName((String) r.get("NOMBRES_TALENTO"));
         dto.setArea((String) r.get("AREA"));
         dto.setAreaId((Integer) r.get("ID_AREA"));
-        dto.setClientId(clientes.get(dto.getContractId()));
+        var contrato = contratos.get(dto.getContractId());
+        if (contrato != null) {
+          dto.setClientId(contrato.getClientId());
+          dto.setSctr(contrato.getSctr());
+          dto.setEmo(contrato.getEmo());
+        }
         dto.setClient((String) r.get("CLIENTE"));
         dto.setRqCode((String) r.get("CODIGO_RQ"));
         dto.setRqTitle((String) r.get("TITULO_RQ"));

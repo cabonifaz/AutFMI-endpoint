@@ -6,17 +6,6 @@ public class Constante {
 
     // ID_MAESTROS
     public static final String NOTIFICACION_RQ_EMAILS = "42";
-    public static final String TIPO_ENTREVISTA = "47";
-
-    // TIPO DE ENTREVISTA (valores string1 del maestro 47)
-    public static final String TIPO_ENTREVISTA_PRESENCIAL = "PRESENCIAL";
-    public static final String TIPO_ENTREVISTA_VIRTUAL = "VIRTUAL";
-    // Sin tilde a propósito: la comparación normaliza el texto del maestro, que
-    // puede venir como "TELEFÓNICA".
-    public static final String TIPO_ENTREVISTA_TELEFONICA = "TELEFONICA";
-
-    // TIPO DE ARCHIVO DE ENTREVISTA (maestro 45). El ICS es generado por el sistema.
-    public static final int TIPO_ARCHIVO_ENTREVISTA_ICS = 4;
 
     // REPOSITORIO
     public static final String RUTA_REPOSITORIO = "repositorio/";
@@ -28,7 +17,6 @@ public class Constante {
             "pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg", "webp", "zip");
     public static final long MAX_TAMANIO_ARCHIVO_POSTULANTE = 10L * 1024 * 1024; // 10 MB
     public static final String RUTA_FIRMAS = "/firmas/[ID_USUARIO]/";
-    public static final String RUTA_INTERVIEW = "/interviews/[ID_INTERVIEW]/archivos/";
 
     // TIPO REPORTES
 
@@ -81,24 +69,9 @@ public class Constante {
     public static final int ROL_RECLUTADOR = 4;
 
     public static final String DOMINIO_CORREO = "@fractalservicios.pe";
-    public static final String GUARDAR_INTERVIEW = "27";
-
-    // Interviews
-    public static final String CREATE_INTERVIEW = "1030";
-    public static final String UPDATE_INTERVIEW = "1031";
-    public static final String VIEW_INTERVIEW = "1032";
-    public static final String LIST_INTERVIEW = "1033";
-    public static final String UPLOAD_DOWNLOAD_INTERVIEW_FILE = "1034";
 
     // Deshacer el último movimiento (Cese / Solicitud de equipo). Solo SUPERADMIN.
     public static final String DESHACER_MOVIMIENTO = "2048";
-
-    // Módulo Selección (estadísticas de entrevistas/ingresos). AJUSTAR: reemplazar
-    // por el id real de la funcionalidad creada en BD para /dashboard/seleccion.
-    public static final String SELECCION_ESTADISTICAS = "2049";
-    // Búsqueda de usuarios de selección (desglose por-usuario). Solo Admin (rol 1):
-    // se otorga esta funcionalidad únicamente a ese rol.
-    public static final String SELECCION_USUARIOS = "2050";
 
     // Bandeja de aprobaciones (FTBO-1118). El permiso no va por ID: los SP lo
     // resuelven por la funcionalidad RF = 'FTBO-1118' del módulo FMI.

@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class EmployeeOperationExecutor {
 
   private final HistoryRepository historyRepository;
+  private final SelectionEntryExecutor selectionEntryExecutor;
   private final Logger logger = LoggerFactory.getLogger(EmployeeOperationExecutor.class);
 
   /** Respuesta del SP y, si se pudo obtener, el reporte para los correos. */
@@ -38,6 +39,13 @@ public class EmployeeOperationExecutor {
   }
 
   public Execution executeEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
+    if (request.getSeleccion() != null) {
+      try {
+        return selectionEntryExecutor.execute(baseRequest, request);
+      } catch (com.microsoft.sqlserver.jdbc.SQLServerException e) {
+        throw new IllegalStateException("No se pudo registrar la selección aprobada.", e);
+      }
+    }
     EntryReport report = historyRepository.registerEntry(baseRequest, request);
 
     if (report == null)

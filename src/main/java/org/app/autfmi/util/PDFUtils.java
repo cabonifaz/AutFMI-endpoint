@@ -98,7 +98,7 @@ public class PDFUtils {
         helper.setFrom(emisorCorreo != null ? emisorCorreo : "");
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(text, html);
+        MailBranding.apply(helper, text, html);
 
         if (cc != null && !cc.isEmpty()) {
             helper.setCc(cc.toArray(new String[0]));

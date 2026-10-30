@@ -127,7 +127,7 @@ public class MailUtils {
             helper.setCc(cc.toArray(new String[0]));
         }
         helper.setSubject(subject);
-        helper.setText(htmlBody, true);
+        MailBranding.apply(helper, htmlBody, true);
 
         if (attachments != null) {
             for (FileDTO objfile : attachments) {
@@ -254,7 +254,7 @@ public class MailUtils {
             helper.setFrom(emisorCorreo);
             helper.setTo(destino);
             helper.setSubject(subject);
-            helper.setText(htmlBody, true);
+            MailBranding.apply(helper, htmlBody, true);
 
             if (!cleanCc.isEmpty()) {
                 helper.setCc(cleanCc.toArray(new String[0]));

@@ -55,9 +55,10 @@ public class ApprovalNotifier {
   private final NotificacionCorreoSwitch correoSwitch;
   private final ObjectMapper objectMapper;
   private final String frontendUrl;
+  private final NotificationService notificationService;
 
   public ApprovalNotifier(ApprovalRepository approvalRepository, UserRepository userRepository, MailUtils mailUtils,
-      IMailService mailService, NotificacionCorreoSwitch correoSwitch, ObjectMapper objectMapper,
+      IMailService mailService, NotificacionCorreoSwitch correoSwitch, ObjectMapper objectMapper, NotificationService notificationService,
       @Value("${approval.frontend.url:http://localhost:3000}") String frontendUrl) {
     this.approvalRepository = approvalRepository;
     this.userRepository = userRepository;
@@ -65,6 +66,7 @@ public class ApprovalNotifier {
     this.mailService = mailService;
     this.correoSwitch = correoSwitch;
     this.objectMapper = objectMapper;
+    this.notificationService = notificationService;
     this.frontendUrl = frontendUrl.endsWith("/") ? frontendUrl.substring(0, frontendUrl.length() - 1) : frontendUrl;
   }
 
@@ -151,6 +153,9 @@ public class ApprovalNotifier {
         case "MOVIMIENTO" -> EventoNotificacion.MOVIMIENTO;
         default -> EventoNotificacion.CESE;
       };
+      if (report instanceof org.app.autfmi.model.report.SelectionEntryReport) {
+        evento = EventoNotificacion.RQ_TALENTOS_CONFIRMADOS;
+      }
       if (report == null) {
         estado = OMITIDO;
         detalle = "la operación se registró sin reporte para los formularios";
@@ -158,11 +163,18 @@ public class ApprovalNotifier {
         estado = OMITIDO;
         detalle = "interruptor " + evento.clave() + " desactivado (maestro 56)";
       } else {
-        boolean ok = switch (tipo) {
+        boolean ok;
+        if (report instanceof org.app.autfmi.model.report.SelectionEntryReport selection) {
+          var result = selection.getResult();
+          ok = notificationService.sendRequirementNotificationsSync(result.getGestorRq(), result.getCcList(),
+              result.getPostulantes(), result.getReportesIngreso(), result.getReportesSolicitudEquipo(), selection.getActor());
+        } else {
+          ok = switch (tipo) {
           case "INGRESO" -> mailService.sendEntryReportNotificationSync((EntryReport) report, idTalento);
           case "MOVIMIENTO" -> mailService.sendMovementReportNotificationSync((MovementReport) report);
           default -> mailService.sendCeseReportNotificationSync((CeseReport) report);
         };
+        }
         estado = ok ? ENVIADO : FALLIDO;
         detalle = "INGRESO".equals(tipo)
             ? "Talento (formulario de ingreso) y Soporte (creación de usuario), gestores en copia"

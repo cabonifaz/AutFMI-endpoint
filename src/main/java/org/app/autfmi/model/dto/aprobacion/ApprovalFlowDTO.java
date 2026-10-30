@@ -13,9 +13,21 @@ public record ApprovalFlowDTO(
     /** Versión leída; se devuelve al guardar o aprobar para detectar cambios ajenos. */
     Long version,
     List<ApprovalEditableFieldDTO> camposEditables,
-    List<ApprovalTimelineEntryDTO> historial) {
+    List<ApprovalTimelineEntryDTO> historial,
+    boolean prontoInicioDisponible,
+    int notificarProntoInicio) {
+
+  public ApprovalFlowDTO(String tipoSolicitud, String estado, boolean esGestor, boolean puedeGestionar,
+      Long version, List<ApprovalEditableFieldDTO> camposEditables, List<ApprovalTimelineEntryDTO> historial) {
+    this(tipoSolicitud, estado, esGestor, puedeGestionar, version, camposEditables, historial, false, 0);
+  }
+
+  public ApprovalFlowDTO withInicioPreference(boolean disponible, int notificar) {
+    return new ApprovalFlowDTO(tipoSolicitud, estado, esGestor, puedeGestionar, version, camposEditables,
+        historial, disponible, notificar);
+  }
 
   public ApprovalFlowDTO withCamposEditables(List<ApprovalEditableFieldDTO> campos) {
-    return new ApprovalFlowDTO(tipoSolicitud, estado, esGestor, puedeGestionar, version, campos, historial);
+    return new ApprovalFlowDTO(tipoSolicitud, estado, esGestor, puedeGestionar, version, campos, historial, prontoInicioDisponible, notificarProntoInicio);
   }
 }

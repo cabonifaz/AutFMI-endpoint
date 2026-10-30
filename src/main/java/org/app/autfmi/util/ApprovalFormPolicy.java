@@ -36,6 +36,7 @@ public final class ApprovalFormPolicy {
   private static final Map<String, String> ETIQUETAS = new LinkedHashMap<>();
 
   static {
+    ETIQUETAS.put("notificarProntoInicio", "Enviar aviso de pronto inicio");
     ETIQUETAS.put("nombres", "Nombres");
     ETIQUETAS.put("apellidoPaterno", "Apellido paterno");
     ETIQUETAS.put("apellidoMaterno", "Apellido materno");
@@ -65,7 +66,7 @@ public final class ApprovalFormPolicy {
 
   private static final Map<String, Map<String, String>> EDITABLES = Map.of(
       "INGRESO", campos(
-          "cargo", TEXTO, "horario", TEXTO, "ubicacion", TEXTO,
+          "notificarProntoInicio", SI_NO, "cargo", TEXTO, "horario", TEXTO, "ubicacion", TEXTO,
           "fchInicioContrato", FECHA, "fchTerminoContrato", FECHA,
           "proyectoServicio", TEXTO, "objetoContrato", TEXTO,
           "remuneracion", NUMERO, "montoBase", NUMERO, "montoMovilidad", NUMERO,
@@ -254,7 +255,7 @@ public final class ApprovalFormPolicy {
   }
 
   private static String texto(String campo, JsonNode node) {
-    if ("tieneEquipo".equals(campo) || "declararSunat".equals(campo)) {
+    if ("notificarProntoInicio".equals(campo) || "tieneEquipo".equals(campo) || "declararSunat".equals(campo)) {
       return node.asInt() == 1 ? "Sí" : "No";
     }
     if (node.isNumber() && node.doubleValue() == Math.rint(node.doubleValue())) {

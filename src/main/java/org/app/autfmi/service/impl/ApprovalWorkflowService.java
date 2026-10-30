@@ -21,6 +21,7 @@ import org.app.autfmi.model.response.BaseResponse;
 import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.repository.ApprovalRepository;
 import org.app.autfmi.repository.EmployeeRepository;
+import org.app.autfmi.repository.InicioPreferenceRepository;
 import org.app.autfmi.util.ApprovalFormPolicy;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
@@ -44,16 +45,18 @@ public class ApprovalWorkflowService {
   private final EmployeeRepository employeeRepository;
   private final ObjectMapper objectMapper;
   private final boolean flujoActivo;
+  private final InicioPreferenceRepository inicioPreferenceRepository;
 
   public ApprovalWorkflowService(ApprovalRepository approvalRepository, ApprovalService approvalService,
       EmployeeOperationExecutor operationExecutor, ApprovalNotifier notifier, EmployeeRepository employeeRepository,
-      ObjectMapper objectMapper, @Value("${approval.flow.enabled:true}") boolean flujoActivo) {
+      ObjectMapper objectMapper, InicioPreferenceRepository inicioPreferenceRepository, @Value("${approval.flow.enabled:true}") boolean flujoActivo) {
     this.approvalRepository = approvalRepository;
     this.approvalService = approvalService;
     this.operationExecutor = operationExecutor;
     this.notifier = notifier;
     this.employeeRepository = employeeRepository;
     this.objectMapper = objectMapper;
+    this.inicioPreferenceRepository = inicioPreferenceRepository;
     this.flujoActivo = flujoActivo;
     logger.info("Flujo de aprobaciones FTBO-1124 {}.", flujoActivo ? "ACTIVO" : "desactivado");
   }
@@ -126,8 +129,16 @@ public class ApprovalWorkflowService {
 
     logger.info("Solicitud {} N° {} registrada por {} para {} gestores.", tipo, registro.idSolicitud(),
         user.getUsuario(), registro.gestores().size());
-    notifier.notifyGestores(new ApprovalNotifier.GestorNotice(registro.idSolicitud(), tipo, registro.cliente(),
-        nombreTalento, resumen, datos, registro.gestores(), user));
+    var notice = new ApprovalNotifier.GestorNotice(registro.idSolicitud(), tipo, registro.cliente(),
+        nombreTalento, resumen, datos, registro.gestores(), user);
+    if (org.springframework.transaction.support.TransactionSynchronizationManager.isActualTransactionActive()) {
+      org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+          new org.springframework.transaction.support.TransactionSynchronization() {
+            @Override public void afterCommit() { notifier.notifyGestores(notice); }
+          });
+    } else {
+      notifier.notifyGestores(notice);
+    }
 
     String detalle = registro.gestores().isEmpty()
         ? "El cliente no tiene gestores activos asignados: revise CLIENTE_GESTOR."
@@ -148,6 +159,15 @@ public class ApprovalWorkflowService {
     ApprovalFlowDTO flow = result.body().getData();
     if (result.outcome() != ApprovalOutcome.OK || flow == null || !flow.puedeGestionar()) {
       return result;
+    }
+    if ("INGRESO".equals(flow.tipoSolicitud())) {
+      var detail = approvalRepository.getRequest(idSolicitud, user, ApprovalService.rolesCsv(user));
+      if (detail.outcome() != ApprovalOutcome.OK || detail.body().getData() == null) return detail.withoutData();
+      var preference = inicioPreference(detail.body().getData().getDatosFormulario());
+      var fields = ApprovalFormPolicy.editableFields(flow.tipoSolicitud()).stream()
+          .filter(f -> preference.disponible() || !"notificarProntoInicio".equals(f.campo())).toList();
+      return new ApprovalResult<>(result.outcome(), new OperationResult<>(result.body().getBaseResponse(),
+          flow.withCamposEditables(fields).withInicioPreference(preference.disponible(), preference.notificar())));
     }
     return new ApprovalResult<>(result.outcome(), new OperationResult<>(
         result.body().getBaseResponse(),
@@ -172,6 +192,11 @@ public class ApprovalWorkflowService {
       return ApprovalResult.of(ApprovalOutcome.CONFLICTO, 1, "La solicitud ya no está pendiente: no se puede editar.", null);
     }
 
+    if (request.getCambios() != null && request.getCambios().containsKey("notificarProntoInicio")
+        && (!"INGRESO".equals(actual.getTipoSolicitud())
+            || !inicioPreference(actual.getDatosFormulario()).disponible())) {
+      return invalido("El preaviso no está disponible para este ingreso.");
+    }
     ApprovalFormPolicy.AppliedChanges cambios;
     try {
       cambios = ApprovalFormPolicy.apply(objectMapper, actual.getTipoSolicitud(), actual.getDatosFormulario(),
@@ -245,6 +270,14 @@ public class ApprovalWorkflowService {
     return ApprovalResult.of(ApprovalOutcome.OK, 2,
         "Solicitud N° " + idSolicitud + " aprobada y " + operacion + " registrado.",
         new ApprovalDecisionDTO(idSolicitud, "APROBADA", null));
+  }
+
+  private InicioPreferenceRepository.Preference inicioPreference(String json) {
+    try {
+      return inicioPreferenceRepository.get(objectMapper.readValue(json, EmployeeEntryRequest.class));
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      throw new IllegalArgumentException("El formulario guardado no es válido.", e);
+    }
   }
 
   private <T> ApprovalResult<T> rechazada(Integer idSolicitud, String operacion, String mensaje, UserDTO user) {

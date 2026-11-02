@@ -41,7 +41,9 @@ public abstract class BaseReportBuilder<T> {
       var document = Jsoup.parse(html);
       document.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
 
-      var xhtml = document.html();
+      // Compose combining accents after Jsoup decodes HTML entities. The default
+      // PDF fonts support Latin letters, but not their separate combining marks.
+      var xhtml = Normalizer.normalize(document.html(), Normalizer.Form.NFC);
       var builder = new PdfRendererBuilder();
 
       builder.useFastMode();

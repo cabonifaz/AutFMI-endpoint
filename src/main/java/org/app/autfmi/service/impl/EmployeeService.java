@@ -41,6 +41,8 @@ public class EmployeeService implements IEmployeeService {
   private final JwtHelper jwt;
   private final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
   private final ReportPDFBuilder reportPDFBuilder;
+  private final EmployeeOperationExecutor operationExecutor;
+  private final ApprovalWorkflowService approvalWorkflowService;
 
 
   @Override
@@ -52,23 +54,23 @@ public class EmployeeService implements IEmployeeService {
   public BaseResponse saveEmployeeEntry(String token, EmployeeEntryRequest request) throws MessagingException {
     this.logger.info("Processing employee entry");
     UserDTO user = jwt.decodeToken(token);
+
+    // FTBO-1124: el alta que viene de Selección pasa antes por los gestores.
+    if (approvalWorkflowService.requiresApproval(request))
+      return approvalWorkflowService.submitEntry(user, request);
+
     String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
     BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
-    EntryReport report = historyRepository.registerEntry(baseRequest, request);
+    EmployeeOperationExecutor.Execution execution = operationExecutor.executeEntry(baseRequest, request);
 
-    if (report == null)
-      throw new IllegalArgumentException("El reporte no puede ser nulo");
-
-    var messageId = report.getResponse().getIdTipoMensaje();
-
-    if (messageId != 2)
-      return report.getResponse();
+    if (execution.report() == null)
+      return execution.response();
 
     // Envía 2 correos: Formulario de Ingreso (maestro 52) y Solicitud de Creación
     // de Usuario (maestro 51), con copia al usuario generador y al maestro 35.
-    this.mailService.sendEntryReportNotification(report, request.getIdTalento());
+    this.mailService.sendEntryReportNotification((EntryReport) execution.report(), request.getIdTalento());
 
-    return report.getResponse();
+    return execution.response();
   }
 
   /**
@@ -82,75 +84,40 @@ public class EmployeeService implements IEmployeeService {
   @Override
   public BaseResponse saveEmployeeMovement(String token, EmployeeMovementRequest request) {
     UserDTO user = jwt.decodeToken(token);
+
+    // FTBO-1124: con el flujo activo, el movimiento queda pendiente de aprobación.
+    if (approvalWorkflowService.requiresApproval(request))
+      return approvalWorkflowService.submitMovement(user, request);
+
     BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
+    EmployeeOperationExecutor.Execution execution = operationExecutor.executeMovement(baseRequest, request);
 
-    OperationResult<Integer> operationResult = historyRepository.registerMovement(baseRequest, request);
-    BaseResponse baseResponse = operationResult.getBaseResponse();
-    Integer operationId = operationResult.getData();
+    if (execution.report() == null)
+      return execution.response();
 
-    if (baseResponse.getIdTipoMensaje() != 2)
-      return baseResponse;
+    this.mailService.sendMovementReportNotification((MovementReport) execution.report());
 
-    if (baseResponse.getIdTipoMensaje() == 2 && operationId == null)
-      return new BaseResponse(2,
-          "Movimiento confirmado, pero no se pudo generar el reporte por falta de ID de movimiento",
-          "No se obtuvo ID de operación");
-
-    // Obtener reporte de movimiento usando el ID de la operación
-    this.logger.info("Obteniendo reporte de movimiento para ID de operación: {}", operationId);
-    Integer reportType = Constante.TIPO_REPORTE_MOVIMIENTO;
-    Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
-
-    MovementReport report = (MovementReport) historyRepository.getHistoryReport(
-        baseRequest,
-        talentId,
-        reportType,
-        operationId,
-        false);
-
-    this.mailService.sendMovementReportNotification(report);
-
-    return baseResponse;
+    return execution.response();
   }
 
-  /**
-   * Saves employee contract termination and sends notification email with the
-   * termination report.
-   * 
-   * @param token   JWT token for authentication
-   * @param request EmployeeContractEndRequest containing termination details
-   * @return BaseResponse indicating the result of the operation
-   */
+
   @Override
   public BaseResponse saveEmployeeContractEnd(String token, EmployeeContractEndRequest request) {
     UserDTO user = jwt.decodeToken(token);
+
+    // FTBO-1124: con el flujo activo, el cese queda pendiente de aprobación.
+    if (approvalWorkflowService.requiresApproval(request))
+      return approvalWorkflowService.submitContractEnd(user, request);
+
     BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_CESE);
+    EmployeeOperationExecutor.Execution execution = operationExecutor.executeContractEnd(baseRequest, request);
 
-    OperationResult<Integer> operationResult = historyRepository.registerContractTermination(baseRequest,
-        request);
-    BaseResponse response = operationResult.getBaseResponse();
-    Integer operationId = operationResult.getData();
-
-    if (response.getIdTipoMensaje() != 2)
-      return response;
-
-    if (response.getIdTipoMensaje() == 2 && operationId == null) {
-      String msg = "Cese confirmado, pero no se pudo generar el reporte por falta de ID de cese";
-      String detail = "No se obtuvo ID de operación";
-      this.logger.error("No se pudo generar  el reporte de cese: {} - {}", msg, detail);
-      return new BaseResponse(2, msg, detail);
-    }
-
-    // Obtener reporte de cese usando el ID de la operación
-    this.logger.info("Obteniendo reporte de cese para ID de operación: {}", operationId);
-    Integer reportType = Constante.TIPO_REPORTE_CESE;
-    Integer talentId = request.getIdTalento() == null ? 0 : request.getIdTalento();
-    CeseReport report = (CeseReport) historyRepository.getHistoryReport(baseRequest, talentId, reportType,
-        operationId, false);
+    if (execution.report() == null)
+      return execution.response();
 
     this.logger.info("Generando y enviando correo con reporte de cese");
-    this.mailService.sendCeseReportNotification(report);
-    return response;
+    this.mailService.sendCeseReportNotification((CeseReport) execution.report());
+    return execution.response();
   }
 
   @Override

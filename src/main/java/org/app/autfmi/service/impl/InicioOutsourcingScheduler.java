@@ -26,7 +26,7 @@ public class InicioOutsourcingScheduler {
 
   // Interruptor del envío (propiedad notif.inicio.enabled, env NOTIF_INICIO_ENABLED).
   // Apagado, el job no consulta ni marca nada: los contratos quedan pendientes.
-  @Value("${notif.inicio.enabled:false}")
+  @Value("${notif.inicio.enabled:true}")
   private boolean enabled;
 
   // Cada hora en punto (00 de cada hora), zona America/Lima.

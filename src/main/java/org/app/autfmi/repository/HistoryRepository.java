@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.simple.SimpleJdbcCall;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class HistoryRepository {
     @NonNull
     private final JdbcTemplate jdbcTemplate;
+    private final InicioPreferenceRepository inicioPreferenceRepository;
     private final Logger logger = LoggerFactory.getLogger(HistoryRepository.class);
 
     private Map<String, Object> executeProcedure(BaseRequest baseRequest, @NonNull String SP,
@@ -301,6 +303,7 @@ public class HistoryRepository {
                 (String) report.get("CLIENTE"));
     }
 
+    @Transactional
     public EntryReport registerEntry(BaseRequest baseRequest, EmployeeEntryRequest request) {
         SimpleJdbcCall simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)
                 .withProcedureName("SP_TALENTO_EMPLEADO_INGRESO");
@@ -357,6 +360,7 @@ public class HistoryRepository {
                 List<Map<String, Object>> report = (List<Map<String, Object>>) result.get("#result-set-3");
                 Map<String, Object> reportRow = report.get(0);
 
+                inicioPreferenceRepository.apply(request);
                 EntryReport entryReport = mapToEntryReport(new BaseResponse(idTipoMensaje, mensaje), reportRow);
                 // El result-set del INS no expone CLIENTE; se toma del request, que es
                 // el mismo valor que se persiste en HISTORIAL.CLIENTE. Necesario para

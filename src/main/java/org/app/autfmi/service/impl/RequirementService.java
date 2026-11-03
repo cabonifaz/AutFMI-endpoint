@@ -62,6 +62,7 @@ public class RequirementService implements IRequirementService {
     private final NotificationService notificationService;
     private final IMailService mailService;
     private final ClientS3V2 clientS3;
+    private final SelectionApprovalService selectionApprovalService;
 
     @Override
     public BaseResponse listRequirements(String token, Integer nPag, Integer cPag, Integer idCliente, String buscar,
@@ -333,6 +334,11 @@ public class RequirementService implements IRequirementService {
         var user = jwt.decodeToken(token);
         var funcionalidades = Constante.GUARDAR_REQUERIMIENTO;
         BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+        // Clientes nuevos envían finalizar; el cliente BDT anterior indica Finalizar con flagCorreo.
+        if (selectionApprovalService.enabled() && (Boolean.TRUE.equals(request.getFinalizar())
+                || (request.getFinalizar() == null && Boolean.TRUE.equals(request.getFlagCorreo())))) {
+            return selectionApprovalService.submit(user, request);
+        }
         var response = requirementRepository.saveRequirementTalents(request, baseRequest);
         var baseResponse = response.getBaseResponse();
 

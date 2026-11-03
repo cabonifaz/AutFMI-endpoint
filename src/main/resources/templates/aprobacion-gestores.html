@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitud de aprobación</title>
+</head>
+
+<body style="margin: 0; padding: 16px; background-color: #ffffff; font-family: Arial, sans-serif; color: #000000;">
+
+  <div style="max-width: 720px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb;">
+
+    <!-- Header -->
+    <div style="padding: 20px 24px; background-color: #2D5294;">
+      <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #ffffff;"
+        th:text="|Solicitud de aprobación N° ${idSolicitud} - ${tipo}|">
+        Solicitud de aprobación
+      </h1>
+    </div>
+
+    <!-- Content -->
+    <div style="padding: 24px;">
+
+      <p style="margin: 0 0 16px 0; font-size: 15px;">Estimados,</p>
+
+      <p style="margin: 0 0 16px 0; font-size: 15px;">
+        <strong th:text="${solicitante}">usuario</strong> registró una solicitud de
+        <strong th:text="${tipo}">tipo</strong> para <strong th:text="${talento}">Talento</strong>
+        en <strong th:text="${cliente}">Cliente</strong>. Como gestores del cliente, revisen los
+        formularios y, si todo es correcto, aprueben el flujo completo desde la bandeja de aprobaciones.
+        Basta con que uno de ustedes la apruebe.
+      </p>
+
+      <table width="100%" cellpadding="8" cellspacing="0"
+        style="border: 1px solid #e5e7eb; border-collapse: collapse; font-size: 14px;">
+        <tr>
+          <td width="35%"
+            style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">N° de solicitud</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${idSolicitud}">0</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Tipo</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${tipo}">Tipo</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Cliente</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${cliente}">Cliente</td>
+        </tr>
+        <tr>
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Talento</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${talento}">Talento</td>
+        </tr>
+        <tr th:if="${resumen != ''}">
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;">Resumen</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${resumen}">Resumen</td>
+        </tr>
+        <tr th:each="fila : ${filas}">
+          <td style="font-weight: 600; border: 1px solid #e5e7eb; background-color: #f3f4f6;"
+            th:text="${fila.etiqueta}">Campo</td>
+          <td style="border: 1px solid #e5e7eb;" th:text="${fila.valor}">Valor</td>
+        </tr>
+      </table>
+
+      <p style="margin: 24px 0; text-align: center;">
+        <a th:href="${enlace}"
+          style="display: inline-block; padding: 12px 24px; background-color: #2D5294; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+          Revisar la solicitud en la bandeja
+        </a>
+      </p>
+      <p style="margin: 0 0 16px 0; font-size: 12px; color: #6b7280;">
+        Si el botón no funciona, copie este enlace: <span th:text="${enlace}">enlace</span>
+      </p>
+
+      <p style="margin: 20px 0 0 0; font-size: 15px;">Saludos cordiales.</p>
+
+    </div>
+  </div>
+
+</body>
+
+</html>

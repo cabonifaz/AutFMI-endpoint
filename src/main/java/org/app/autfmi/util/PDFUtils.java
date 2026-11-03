@@ -93,12 +93,12 @@ public class PDFUtils {
             boolean html)
             throws MessagingException {
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         helper.setFrom(emisorCorreo != null ? emisorCorreo : "");
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(text, html);
+        MailBranding.apply(helper, text, html);
 
         if (cc != null && !cc.isEmpty()) {
             helper.setCc(cc.toArray(new String[0]));

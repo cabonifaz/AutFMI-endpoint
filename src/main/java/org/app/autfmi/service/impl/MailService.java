@@ -57,6 +57,40 @@ public class MailService implements IMailService {
 
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
+  public List<String> approvalRecipients(String area) {
+    return resolveMaestroEmails("FMI".equals(area)?Constante.MAESTRO_CORREO_TALENTO:Constante.MAESTRO_CORREO_SOPORTE);
+  }
+  public List<String> approvalSelectionRecipients(){return resolveMaestroEmails(Constante.MAESTRO_CORREO_SELECCION);}
+
+  public boolean sendApprovalArea(EventoNotificacion event, org.app.autfmi.model.dto.aprobacion.ApprovalDetailDTO detail,
+      String area,String status,String reason,Object report,List<String> to,List<String> cc) throws Exception {
+    if(to==null||to.isEmpty())return false;
+    boolean rejected="RECHAZADA".equals(status);
+    List<FileDTO> files=new ArrayList<>();
+    if(!rejected&&"FMI".equals(area)) {
+      if(report instanceof EntryReport entry)files=reportPDFBuilder.forIngreso(entry).withFormulario().build();
+      else if(report instanceof MovementReport movement)files=reportPDFBuilder.forMovimiento(movement).withFormulario().build();
+      else if(report instanceof CeseReport cese)files=reportPDFBuilder.forCese(cese).withFormularioCese().build();
+    }
+    if(!rejected&&"EQUIPO".equals(area)&&report instanceof SolicitudEquipoReport equipo)files=reportPDFBuilder.fEquipoReport(equipo).withFormulario().build();
+    String action=rejected?"Desaprobada":"Aprobada";
+    String subject=action+" · "+area+" · Solicitud N° "+detail.getIdSolicitud()+" · "+SafeValues.safeString(detail.getNombreTalento());
+    java.util.function.Function<String,String> escape=v->org.springframework.web.util.HtmlUtils.htmlEscape(SafeValues.safeString(v));
+    String body="<p>"+action+" la solicitud del área <strong>"+escape.apply(area)+"</strong>.</p>"
+      +"<p>Talento: "+escape.apply(detail.getNombreTalento())+"<br>Cliente: "+escape.apply(detail.getCliente())+"</p>";
+    if(rejected)body+="<p>Motivo: "+escape.apply(reason)+"</p>";
+    else {
+      if("CESE".equals(detail.getTipoSolicitud())&&!"FMI".equals(area))body+="<p>Favor atender la "+("EQUIPO".equals(area)?"devolución de equipo":"baja de credenciales")+".</p>";
+      var values=org.app.autfmi.util.ApprovalAreaPolicy.data(new com.fasterxml.jackson.databind.ObjectMapper(),detail.getTipoSolicitud(),new com.fasterxml.jackson.databind.ObjectMapper().readTree(detail.getDatosFormulario()),area);
+      var labels=org.app.autfmi.util.ApprovalAreaPolicy.fields(detail.getTipoSolicitud(),area).stream().collect(java.util.stream.Collectors.toMap(org.app.autfmi.model.dto.aprobacion.ApprovalEditableFieldDTO::campo,org.app.autfmi.model.dto.aprobacion.ApprovalEditableFieldDTO::etiqueta));
+      body+="<table>";for(var field:values.entrySet())body+="<tr><th>"+escape.apply(labels.getOrDefault(field.getKey(),org.app.autfmi.util.ApprovalFormPolicy.etiqueta(field.getKey())))+"</th><td>"+escape.apply(String.valueOf(field.getValue()))+"</td></tr>";body+="</table>";
+    }
+    String target=to.get(0);List<String> copies=rejected?List.of():new ArrayList<>(cc);
+    if(!rejected&&to.size()>1)copies.addAll(to.subList(1,to.size()));
+    copies=rejected?new ArrayList<>():deduplicateEmailList(copies);copies.removeIf(v->v.equalsIgnoreCase(target));
+    return pdfUtils.enviarCorreoConPDF(event,files,target,copies,subject,body,true);
+  }
+
   @Async("notificationExecutor")
   @Override
   public void sendRequirementNotificationV2(EventoNotificacion evento, RequirementReport report, String subject,

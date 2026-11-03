@@ -340,6 +340,7 @@ public class ApprovalRepository {
             .resumen((String) row.get("RESUMEN"))
             .usuarioSolicitante((String) row.get("USUARIO_SOLICITANTE"))
             .fechaSolicitud((String) row.get("FECHA_SOLICITUD"))
+            .fechaResolucion((String) row.get("FECHA_RESOLUCION"))
             .build());
       }
     }

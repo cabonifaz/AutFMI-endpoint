@@ -78,7 +78,10 @@ public class ApprovalFlowController {
       @RequestBody(required = false) ApprovalApproveRequest request,
       HttpServletRequest http) {
     try {
-      return toResponse(workflowService.approve(bearerToken(http), idSolicitud, request));
+      workflowService.getFlow(bearerToken(http), idSolicitud); // Valida la sesión antes de responder.
+      return toResponse(org.app.autfmi.model.dto.aprobacion.ApprovalResult.of(
+          org.app.autfmi.model.dto.aprobacion.ApprovalOutcome.PARAMETRO_INVALIDO, 1,
+          "Revise y confirme las áreas desde la nueva bandeja de aprobaciones.", null));
     } catch (InvalidSessionException e) {
       return unauthorized(e);
     } catch (Exception e) {

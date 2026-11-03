@@ -52,6 +52,7 @@ public class ApprovalService {
       return ApprovalResult.of(ApprovalOutcome.PARAMETRO_INVALIDO, 1, "Los filtros de la bandeja no son válidos.", null);
     }
 
+    if (busqueda == null) estado = "PENDIENTE";
     ApprovalListRequest filters = new ApprovalListRequest(request.getIdCliente(), tipo, estado, busqueda, nPag, cPag);
     return approvalRepository.listRequests(filters, user, rolesCsv(user));
   }

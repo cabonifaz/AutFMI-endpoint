@@ -93,20 +93,27 @@ public class ApprovalAreaService {
             : "PENDIENTE".equals(c.detail.getEstado())
               ? "PENDIENTE"
               : c.detail.getEstado();
+      var data = applies
+        ? ApprovalAreaPolicy.data(mapper, c.detail.getTipoSolicitud(), c.form, name)
+        : Map.<String, Object>of();
+      if (applies && "FMI".equals(name) && "INGRESO".equals(c.detail.getTipoSolicitud())
+          && c.detail.getIdTalento() != null) {
+        // Compatibilidad con solicitudes anteriores que no guardaban estos textos.
+        boolean missing = List.of("nombres", "apellidoPaterno", "apellidoMaterno", "area")
+          .stream().anyMatch(key -> !data.containsKey(key) || data.get(key).toString().isBlank());
+        if (missing) requests.getTalentGeneral(c.detail.getIdTalento(),
+          c.form.path("idArea").isInt() ? c.form.path("idArea").asInt() : null)
+          .forEach((key, value) -> {
+            if (value != null && (!data.containsKey(key) || data.get(key).toString().isBlank())) data.put(key, value);
+          });
+      }
       result.add(
         new ApprovalAreaDTO(
           name,
           status,
           row == null ? null : (String) row.get("FECHA"),
           row == null ? null : (String) row.get("USUARIO"),
-          applies
-            ? ApprovalAreaPolicy.data(
-                mapper,
-                c.detail.getTipoSolicitud(),
-                c.form,
-                name
-              )
-            : Map.of(),
+          data,
           c.flow.puedeGestionar() && "PENDIENTE".equals(status)
             // La preferencia se edita en la solicitud antes de ejecutar el ingreso.
             // La disponibilidad real del aviso se valida al ejecutar la operación.

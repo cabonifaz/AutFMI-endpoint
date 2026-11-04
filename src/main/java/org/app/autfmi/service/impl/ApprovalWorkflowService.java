@@ -78,6 +78,11 @@ public class ApprovalWorkflowService {
   }
 
   public BaseResponse submitEntry(UserDTO user, EmployeeEntryRequest request) {
+    var general = approvalRepository.getTalentGeneral(request.getIdTalento(), request.getIdArea());
+    request.setNombres((String) general.get("nombres"));
+    request.setApellidoPaterno((String) general.get("apellidoPaterno"));
+    request.setApellidoMaterno((String) general.get("apellidoMaterno"));
+    request.setArea((String) general.get("area"));
     String resumen = "Ingreso: desde Selección (RQ " + request.getIdRequerimiento() + ")"
         + texto(", cargo ", request.getCargo()) + texto(", inicio ", request.getFchInicioContrato());
     return submit(user, "INGRESO", request.getIdCliente(), request.getIdTalento(),

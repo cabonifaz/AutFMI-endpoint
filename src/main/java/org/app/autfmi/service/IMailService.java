@@ -11,6 +11,12 @@ import org.app.autfmi.model.report.SolicitudEquipoReport;
 import org.app.autfmi.util.EventoNotificacion;
 
 public interface IMailService {
+  java.util.List<String> approvalRecipients(String area);
+  java.util.List<String> approvalSelectionRecipients();
+  boolean sendApprovalArea(org.app.autfmi.util.EventoNotificacion event,
+      org.app.autfmi.model.dto.aprobacion.ApprovalDetailDTO detail,String area,String status,String reason,
+      Object report,java.util.List<String> to,java.util.List<String> cc) throws Exception;
+
 
 	void sendRequirementNotificationV2(EventoNotificacion evento, RequirementReport report, String subject,
 			List<String> toAddresses, List<String> ccAddresses, String action);

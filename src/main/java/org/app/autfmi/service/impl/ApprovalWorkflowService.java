@@ -107,6 +107,15 @@ public class ApprovalWorkflowService {
     return submit(user, "CESE", request.getIdCliente(), request.getIdTalento(), nombre, resumen, request);
   }
 
+  public boolean requiresEquipmentApproval() { return flujoActivo; }
+
+  public BaseResponse submitEquipment(UserDTO user, org.app.autfmi.model.request.SolicitudEquipoRequest request) {
+    if(request==null||request.getIdTalento()==null||request.getIdCliente()==null
+        ||!employeeRepository.getContractClients(request.getIdTalento()).containsValue(request.getIdCliente()))
+      return new BaseResponse(1,"El talento no tiene un contrato para el cliente indicado.");
+    return submit(user,"ASIGNACION_EQUIPO",request.getIdCliente(),request.getIdTalento(),nombreTalento(request.getIdTalento()),"Asignación de equipo",request);
+  }
+
   private BaseResponse submit(UserDTO user, String tipo, Integer idCliente, Integer idTalento, String nombreTalento,
       String resumen, Object formulario) {
     String datos;
@@ -290,7 +299,7 @@ public class ApprovalWorkflowService {
   static String funcionalidades(String tipo) {
     return switch (tipo) {
       case "INGRESO" -> String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
-      case "MOVIMIENTO" -> Constante.REALIZAR_MOVIMIENTO;
+      case "MOVIMIENTO", "ASIGNACION_EQUIPO", "CREDENCIALES" -> Constante.REALIZAR_MOVIMIENTO;
       case "CESE" -> Constante.REALIZAR_CESE;
       default -> throw new IllegalArgumentException("Tipo de solicitud no válido: " + tipo);
     };

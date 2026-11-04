@@ -40,16 +40,8 @@ public class ApprovalRepository {
   private final Logger logger = LoggerFactory.getLogger(ApprovalRepository.class);
 
   public ApprovalResult<ApprovalInboxDTO> listRequests(ApprovalListRequest request, UserDTO user, String idRoles) {
-    SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_FMI_SOLICITUD_APROBACION_LST");
     try {
-      MapSqlParameterSource params = identityParams(user, idRoles)
-          .addValue("ID_CLIENTE", request.getIdCliente())
-          .addValue("TIPO_SOLICITUD", request.getTipoSolicitud())
-          .addValue("ESTADO", request.getEstado())
-          .addValue("BUSQUEDA", request.getBusqueda())
-          .addValue("NUM_PAG", request.getNPag())
-          .addValue("CANT_PAG", request.getCPag());
-      return mapInbox(call.execute(params), request.getNPag());
+      return mapInbox(new ApprovalInboxQuery(jdbcTemplate).list(request, user, idRoles), request.getNPag());
     } catch (Exception e) {
       this.logger.error("Error en listRequests: ", e);
       return ApprovalResult.error(MENSAJE_ERROR);

@@ -108,13 +108,9 @@ public class ApprovalAreaService {
               )
             : Map.of(),
           c.flow.puedeGestionar() && "PENDIENTE".equals(status)
-            ? "FMI".equals(name)
-              ? c.flow
-                  .camposEditables()
-                  .stream()
-                  .filter(f -> !"fchDevolucionEquipo".equals(f.campo()))
-                  .toList()
-              : ApprovalAreaPolicy.fields(c.detail.getTipoSolicitud(), name)
+            // La preferencia se edita en la solicitud antes de ejecutar el ingreso.
+            // La disponibilidad real del aviso se valida al ejecutar la operación.
+            ? ApprovalAreaPolicy.fields(c.detail.getTipoSolicitud(), name)
             : List.of()
         )
       );

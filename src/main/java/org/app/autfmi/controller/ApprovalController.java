@@ -38,11 +38,13 @@ public class ApprovalController {
       @RequestParam(required = false) String tipoSolicitud,
       @RequestParam(required = false) String estado,
       @RequestParam(required = false) String busqueda,
+      @RequestParam(required = false) String fechaDesde,
+      @RequestParam(required = false) String fechaHasta,
       @RequestParam(required = false) Integer nPag,
       @RequestParam(required = false) Integer cPag,
       HttpServletRequest http) {
     try {
-      ApprovalListRequest request = new ApprovalListRequest(idCliente, tipoSolicitud, estado, busqueda, nPag, cPag);
+      ApprovalListRequest request = new ApprovalListRequest(idCliente, tipoSolicitud, estado, busqueda, fechaDesde, fechaHasta, nPag, cPag);
       return toResponse(approvalService.listRequests(bearerToken(http), request));
     } catch (InvalidSessionException e) {
       return unauthorized(e);

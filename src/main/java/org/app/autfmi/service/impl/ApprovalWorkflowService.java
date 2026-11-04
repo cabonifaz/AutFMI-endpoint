@@ -78,15 +78,15 @@ public class ApprovalWorkflowService {
   }
 
   public BaseResponse submitEntry(UserDTO user, EmployeeEntryRequest request) {
-    String resumen = "Ingreso desde Selección (RQ " + request.getIdRequerimiento() + ")"
-        + texto(": ", request.getCargo()) + texto(", inicio ", request.getFchInicioContrato());
+    String resumen = "Ingreso: desde Selección (RQ " + request.getIdRequerimiento() + ")"
+        + texto(", cargo ", request.getCargo()) + texto(", inicio ", request.getFchInicioContrato());
     return submit(user, "INGRESO", request.getIdCliente(), request.getIdTalento(),
         nombreTalento(request.getIdTalento()), resumen, request);
   }
 
   public BaseResponse submitMovement(UserDTO user, EmployeeMovementRequest request) {
     String nombre = unir(request.getNombres(), request.getApellidoPaterno(), request.getApellidoMaterno());
-    String resumen = "Movimiento" + texto(": ", request.getPuesto()) + texto(", desde ", request.getFchMovimiento());
+    String resumen = "Movimiento: cambio de puesto" + texto(" a ", request.getPuesto()) + texto(", desde ", request.getFchMovimiento());
     return submit(user, "MOVIMIENTO", request.getIdCliente(), request.getIdTalento(), nombre, resumen, request);
   }
 
@@ -103,7 +103,7 @@ public class ApprovalWorkflowService {
     }
     request.setIdCliente(clienteContrato);
     String nombre = unir(request.getNombres(), request.getApellidoPaterno(), request.getApellidoMaterno());
-    String resumen = "Cese" + texto(" al ", request.getFchCese());
+    String resumen = "Cese: fin de contrato" + texto(" al ", request.getFchCese());
     return submit(user, "CESE", request.getIdCliente(), request.getIdTalento(), nombre, resumen, request);
   }
 

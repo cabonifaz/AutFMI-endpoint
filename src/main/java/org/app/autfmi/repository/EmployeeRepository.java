@@ -18,7 +18,6 @@ import org.app.autfmi.model.response.TalentEmployeeList.EmployeeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcCall;
@@ -27,9 +26,10 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
@@ -42,7 +42,10 @@ public class EmployeeRepository {
 
   private Logger logger = LoggerFactory.getLogger(EmployeeRepository.class);
 
-
+  /**
+   * Datos de contacto del talento (SP_BT_TALENTO_CONTACTO_SEL) para la tabla de los
+   * correos de solicitud de creación de usuario y de equipo. null si no existe.
+   */
   public ContactoTalentoDTO getContactoTalento(Integer idTalento) {
     if (idTalento == null) {
       return null;
@@ -235,11 +238,6 @@ public class EmployeeRepository {
   }
 
 
-  public Map<Integer, Integer> getContractClients(Integer talentId) {
-    return getContractDetails(talentId).entrySet().stream()
-        .filter(entry -> entry.getValue().getClientId() != null)
-        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().getClientId()));
-  }
 
   private Map<Integer, EmployeeFullHistoryDTO.ContractDTO> getContractDetails(Integer talentId) {
     var contratos = new HashMap<Integer, EmployeeFullHistoryDTO.ContractDTO>();

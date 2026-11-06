@@ -41,6 +41,8 @@ public class EmployeeService implements IEmployeeService {
   private final JwtHelper jwt;
   private final Logger logger = LoggerFactory.getLogger(EmployeeService.class);
   private final ReportPDFBuilder reportPDFBuilder;
+  private final SelectionEntryExecutor selectionEntryExecutor;
+  private final NotificationService notificationService;
 
 
   @Override
@@ -54,6 +56,21 @@ public class EmployeeService implements IEmployeeService {
     UserDTO user = jwt.decodeToken(token);
     String funcionalidades = String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
     BaseRequest baseRequest = Common.createBaseRequest(user, funcionalidades);
+    // Preserve FTBO-1129 selection registration and notifications without approval.
+    if (request.getSeleccion() != null) {
+      SelectionEntryExecutor.Execution execution;
+      try {
+        execution = selectionEntryExecutor.execute(baseRequest, request);
+      } catch (SQLServerException e) {
+        throw new IllegalStateException("No se pudo registrar el ingreso de selección.", e);
+      }
+      if (execution.ok() && execution.report() instanceof SelectionEntryReport selection) {
+        var result = selection.getResult();
+        notificationService.sendRequirementNotifications(result.getGestorRq(), result.getCcList(),
+            result.getPostulantes(), result.getReportesIngreso(), result.getReportesSolicitudEquipo(), selection.getActor());
+      }
+      return execution.response();
+    }
     EntryReport report = historyRepository.registerEntry(baseRequest, request);
 
     if (report == null)

@@ -11,7 +11,6 @@ import java.util.TimeZone;
 import java.util.concurrent.ScheduledFuture;
 
 @Service
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name="fmi.jobs.enabled",havingValue="true",matchIfMissing=true)
 @RequiredArgsConstructor
 public class ScheduledJobService {
     private final TaskScheduler taskSchedulerAsyncJob;

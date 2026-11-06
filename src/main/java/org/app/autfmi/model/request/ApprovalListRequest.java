@@ -15,12 +15,6 @@ public class ApprovalListRequest {
   private String estado;
   /** Número exacto de solicitud, o texto del nombre del talento o del resumen. */
   private String busqueda;
-  /** Fecha de solicitud, yyyy-MM-dd, extremos inclusivos. */
-  private String fechaDesde;
-  private String fechaHasta;
-  public ApprovalListRequest(Integer idCliente, String tipoSolicitud, String estado, String busqueda, Integer nPag, Integer cPag) {
-    this(idCliente, tipoSolicitud, estado, busqueda, null, null, nPag, cPag);
-  }
   private Integer nPag;
   private Integer cPag;
 }

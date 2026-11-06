@@ -32,7 +32,15 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
+/**
+ * Flujo de aprobación de ingresos, movimientos y ceses (FTBO-1124).
+ *
+ * Con approval.flow.enabled = true (APPROVAL_FLOW_ENABLED), el formulario no se
+ * ejecuta al enviarlo: queda como solicitud PENDIENTE en la bandeja de los
+ * gestores del cliente. Al aprobarla, un gestor asignado ejecuta la operación
+ * con los SP de siempre y salen los correos de siempre a las áreas. Apagado
+ * (por defecto), todo funciona como antes.
+ */
 @Service
 public class ApprovalWorkflowService {
 
@@ -49,7 +57,7 @@ public class ApprovalWorkflowService {
 
   public ApprovalWorkflowService(ApprovalRepository approvalRepository, ApprovalService approvalService,
       EmployeeOperationExecutor operationExecutor, ApprovalNotifier notifier, EmployeeRepository employeeRepository,
-      ObjectMapper objectMapper, InicioPreferenceRepository inicioPreferenceRepository, @Value("${approval.flow.enabled:true}") boolean flujoActivo) {
+      ObjectMapper objectMapper, InicioPreferenceRepository inicioPreferenceRepository, @Value("${approval.flow.enabled:false}") boolean flujoActivo) {
     this.approvalRepository = approvalRepository;
     this.approvalService = approvalService;
     this.operationExecutor = operationExecutor;
@@ -63,6 +71,11 @@ public class ApprovalWorkflowService {
 
   // ------------------------------------------------------------ Registro
 
+  /**
+   * Alta que viene de Selección: la que está asociada a un requerimiento (el
+   * RQ lo atiende Selección) y a un cliente con gestores. Un alta sin RQ sigue
+   * el camino directo.
+   */
   public boolean requiresApproval(EmployeeEntryRequest request) {
     return flujoActivo && request.getIdRequerimiento() != null && request.getIdCliente() != null;
   }
@@ -78,20 +91,15 @@ public class ApprovalWorkflowService {
   }
 
   public BaseResponse submitEntry(UserDTO user, EmployeeEntryRequest request) {
-    var general = approvalRepository.getTalentGeneral(request.getIdTalento(), request.getIdArea());
-    request.setNombres((String) general.get("nombres"));
-    request.setApellidoPaterno((String) general.get("apellidoPaterno"));
-    request.setApellidoMaterno((String) general.get("apellidoMaterno"));
-    request.setArea((String) general.get("area"));
-    String resumen = "Ingreso: desde Selección (RQ " + request.getIdRequerimiento() + ")"
-        + texto(", cargo ", request.getCargo()) + texto(", inicio ", request.getFchInicioContrato());
+    String resumen = "Ingreso desde Selección (RQ " + request.getIdRequerimiento() + ")"
+        + texto(": ", request.getCargo()) + texto(", inicio ", request.getFchInicioContrato());
     return submit(user, "INGRESO", request.getIdCliente(), request.getIdTalento(),
         nombreTalento(request.getIdTalento()), resumen, request);
   }
 
   public BaseResponse submitMovement(UserDTO user, EmployeeMovementRequest request) {
     String nombre = unir(request.getNombres(), request.getApellidoPaterno(), request.getApellidoMaterno());
-    String resumen = "Movimiento: cambio de puesto" + texto(" a ", request.getPuesto()) + texto(", desde ", request.getFchMovimiento());
+    String resumen = "Movimiento" + texto(": ", request.getPuesto()) + texto(", desde ", request.getFchMovimiento());
     return submit(user, "MOVIMIENTO", request.getIdCliente(), request.getIdTalento(), nombre, resumen, request);
   }
 
@@ -108,17 +116,8 @@ public class ApprovalWorkflowService {
     }
     request.setIdCliente(clienteContrato);
     String nombre = unir(request.getNombres(), request.getApellidoPaterno(), request.getApellidoMaterno());
-    String resumen = "Cese: fin de contrato" + texto(" al ", request.getFchCese());
+    String resumen = "Cese" + texto(" al ", request.getFchCese());
     return submit(user, "CESE", request.getIdCliente(), request.getIdTalento(), nombre, resumen, request);
-  }
-
-  public boolean requiresEquipmentApproval() { return flujoActivo; }
-
-  public BaseResponse submitEquipment(UserDTO user, org.app.autfmi.model.request.SolicitudEquipoRequest request) {
-    if(request==null||request.getIdTalento()==null||request.getIdCliente()==null
-        ||!employeeRepository.getContractClients(request.getIdTalento()).containsValue(request.getIdCliente()))
-      return new BaseResponse(1,"El talento no tiene un contrato para el cliente indicado.");
-    return submit(user,"ASIGNACION_EQUIPO",request.getIdCliente(),request.getIdTalento(),nombreTalento(request.getIdTalento()),"Asignación de equipo",request);
   }
 
   private BaseResponse submit(UserDTO user, String tipo, Integer idCliente, Integer idTalento, String nombreTalento,
@@ -304,7 +303,7 @@ public class ApprovalWorkflowService {
   static String funcionalidades(String tipo) {
     return switch (tipo) {
       case "INGRESO" -> String.join(",", Constante.INSERTAR_TALENTO, Constante.REALIZAR_INGRESO);
-      case "MOVIMIENTO", "ASIGNACION_EQUIPO", "CREDENCIALES" -> Constante.REALIZAR_MOVIMIENTO;
+      case "MOVIMIENTO" -> Constante.REALIZAR_MOVIMIENTO;
       case "CESE" -> Constante.REALIZAR_CESE;
       default -> throw new IllegalArgumentException("Tipo de solicitud no válido: " + tipo);
     };

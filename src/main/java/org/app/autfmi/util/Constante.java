@@ -75,7 +75,7 @@ public class Constante {
 
     // Bandeja de aprobaciones (FTBO-1118). El permiso no va por ID: los SP lo
     // resuelven por la funcionalidad RF = 'FTBO-1118' del módulo FMI.
-    public static final Set<String> TIPOS_SOLICITUD_APROBACION = Set.of("INGRESO", "MOVIMIENTO", "CESE", "ASIGNACION_EQUIPO", "CREDENCIALES");
+    public static final Set<String> TIPOS_SOLICITUD_APROBACION = Set.of("INGRESO", "MOVIMIENTO", "CESE");
     public static final Set<String> ESTADOS_SOLICITUD_APROBACION = Set.of("PENDIENTE", "APROBADA", "RECHAZADA", "ANULADA");
     public static final int TAMANIO_PAGINA_APROBACIONES = 10;
     public static final int MAX_TAMANIO_PAGINA_APROBACIONES = 50;

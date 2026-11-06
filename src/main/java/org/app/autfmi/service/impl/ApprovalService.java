@@ -52,16 +52,7 @@ public class ApprovalService {
       return ApprovalResult.of(ApprovalOutcome.PARAMETRO_INVALIDO, 1, "Los filtros de la bandeja no son válidos.", null);
     }
 
-    try {
-      java.time.LocalDate desde = parseDate(request.getFechaDesde());
-      java.time.LocalDate hasta = parseDate(request.getFechaHasta());
-      if (desde != null && hasta != null && desde.isAfter(hasta)) throw new IllegalArgumentException();
-    } catch (IllegalArgumentException | java.time.DateTimeException ex) {
-      return ApprovalResult.of(ApprovalOutcome.PARAMETRO_INVALIDO, 1, "El rango de fechas no es válido. Usa fechas desde y hasta en formato yyyy-MM-dd.", null);
-    }
     ApprovalListRequest filters = new ApprovalListRequest(request.getIdCliente(), tipo, estado, busqueda, nPag, cPag);
-    filters.setFechaDesde(request.getFechaDesde());
-    filters.setFechaHasta(request.getFechaHasta());
     return approvalRepository.listRequests(filters, user, rolesCsv(user));
   }
 
@@ -107,14 +98,6 @@ public class ApprovalService {
         .map(r -> String.valueOf(((Number) r).intValue()))
         .distinct()
         .collect(Collectors.joining(","));
-  }
-
-  private static java.time.LocalDate parseDate(String value) {
-    if (value == null || value.isBlank()) return null;
-    if (!value.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) throw new IllegalArgumentException();
-    java.time.LocalDate date = java.time.LocalDate.parse(value);
-    if (date.getYear() < 1753 || date.getYear() > 9998) throw new IllegalArgumentException();
-    return date;
   }
 
   private static String normalize(String value) {

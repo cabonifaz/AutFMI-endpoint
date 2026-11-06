@@ -39,21 +39,17 @@ public class ApprovalRepository {
   private final JdbcTemplate jdbcTemplate;
   private final Logger logger = LoggerFactory.getLogger(ApprovalRepository.class);
 
-  /** Solo para completar datos de presentación de una solicitud ya autorizada. */
-  public Map<String, Object> getTalentGeneral(Integer talent, Integer area) {
-    var rows = jdbcTemplate.queryForList("""
-        SELECT T.NOMBRES AS nombres, T.APELLIDO_PATERNO AS apellidoPaterno,
-        T.APELLIDO_MATERNO AS apellidoMaterno,
-        (SELECT MAX(P.STRING1) FROM dbo.PARAMETROS P WHERE P.ID_MAESTRO=7
-         AND P.NUM1=? AND P.ID_ESTADO_REGISTRO=1) AS area
-        FROM dbo.BT_TALENTO T WHERE T.ID_TALENTO=?
-        """, area, talent);
-    return rows.isEmpty() ? Map.of() : rows.get(0);
-  }
-
   public ApprovalResult<ApprovalInboxDTO> listRequests(ApprovalListRequest request, UserDTO user, String idRoles) {
+    SimpleJdbcCall call = new SimpleJdbcCall(jdbcTemplate).withProcedureName("SP_FMI_SOLICITUD_APROBACION_LST");
     try {
-      return mapInbox(new ApprovalInboxQuery(jdbcTemplate).list(request, user, idRoles), request.getNPag());
+      MapSqlParameterSource params = identityParams(user, idRoles)
+          .addValue("ID_CLIENTE", request.getIdCliente())
+          .addValue("TIPO_SOLICITUD", request.getTipoSolicitud())
+          .addValue("ESTADO", request.getEstado())
+          .addValue("BUSQUEDA", request.getBusqueda())
+          .addValue("NUM_PAG", request.getNPag())
+          .addValue("CANT_PAG", request.getCPag());
+      return mapInbox(call.execute(params), request.getNPag());
     } catch (Exception e) {
       this.logger.error("Error en listRequests: ", e);
       return ApprovalResult.error(MENSAJE_ERROR);
@@ -344,7 +340,6 @@ public class ApprovalRepository {
             .resumen((String) row.get("RESUMEN"))
             .usuarioSolicitante((String) row.get("USUARIO_SOLICITANTE"))
             .fechaSolicitud((String) row.get("FECHA_SOLICITUD"))
-            .fechaResolucion((String) row.get("FECHA_RESOLUCION"))
             .build());
       }
     }

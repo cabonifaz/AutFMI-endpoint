@@ -123,7 +123,6 @@ public class EmployeeService implements IEmployeeService {
   @Override
   public BaseResponse solicitudEquipo(String token, SolicitudEquipoRequest request) throws SQLServerException {
     UserDTO user = jwt.decodeToken(token);
-    if(approvalWorkflowService.requiresEquipmentApproval())return approvalWorkflowService.submitEquipment(user,request);
     BaseRequest baseRequest = Common.createBaseRequest(user, Constante.REALIZAR_MOVIMIENTO);
     OperationResult<Integer> response = employeeRepository.insertSolicitudEquipo(baseRequest,
         request);

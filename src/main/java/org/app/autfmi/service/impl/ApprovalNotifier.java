@@ -192,7 +192,7 @@ public class ApprovalNotifier {
     return estado;
   }
 
-  List<String> correosGestores(List<ApprovalGestorDTO> gestores, Integer idEmpresa) {
+  private List<String> correosGestores(List<ApprovalGestorDTO> gestores, Integer idEmpresa) {
     Set<String> correos = new LinkedHashSet<>();
     if (gestores == null) {
       return new ArrayList<>();
@@ -232,8 +232,6 @@ public class ApprovalNotifier {
       case "INGRESO" -> "Ingreso";
       case "MOVIMIENTO" -> "Movimiento";
       case "CESE" -> "Cese";
-      case "ASIGNACION_EQUIPO" -> "Asignación de equipo";
-      case "CREDENCIALES" -> "Creación / cambio de credenciales";
       default -> SafeValues.safeString(tipo);
     };
   }

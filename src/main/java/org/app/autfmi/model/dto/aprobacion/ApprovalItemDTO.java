@@ -23,5 +23,4 @@ public class ApprovalItemDTO {
   private String usuarioSolicitante;
   /** yyyy-MM-dd HH:mm */
   private String fechaSolicitud;
-  private String fechaResolucion;
 }

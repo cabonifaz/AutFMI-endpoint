@@ -52,7 +52,6 @@ public class ApprovalService {
       return ApprovalResult.of(ApprovalOutcome.PARAMETRO_INVALIDO, 1, "Los filtros de la bandeja no son válidos.", null);
     }
 
-    if (busqueda == null) estado = "PENDIENTE";
     ApprovalListRequest filters = new ApprovalListRequest(request.getIdCliente(), tipo, estado, busqueda, nPag, cPag);
     return approvalRepository.listRequests(filters, user, rolesCsv(user));
   }
@@ -63,11 +62,6 @@ public class ApprovalService {
       return ApprovalResult.of(ApprovalOutcome.PARAMETRO_INVALIDO, 1, "El identificador de la solicitud no es válido.", null);
     }
     return approvalRepository.getRequest(idSolicitud, user, rolesCsv(user));
-  }
-
-  /** Usuario del token, validado igual que en la bandeja. Lanza InvalidSessionException. */
-  public UserDTO authenticate(String token) {
-    return authenticatedUser(token);
   }
 
   private UserDTO authenticatedUser(String token) {

@@ -38,11 +38,13 @@ public class ApprovalController {
       @RequestParam(required = false) String tipoSolicitud,
       @RequestParam(required = false) String estado,
       @RequestParam(required = false) String busqueda,
+      @RequestParam(required = false) String fechaDesde,
+      @RequestParam(required = false) String fechaHasta,
       @RequestParam(required = false) Integer nPag,
       @RequestParam(required = false) Integer cPag,
       HttpServletRequest http) {
     try {
-      ApprovalListRequest request = new ApprovalListRequest(idCliente, tipoSolicitud, estado, busqueda, nPag, cPag);
+      ApprovalListRequest request = new ApprovalListRequest(idCliente, tipoSolicitud, estado, busqueda, fechaDesde, fechaHasta, nPag, cPag);
       return toResponse(approvalService.listRequests(bearerToken(http), request));
     } catch (InvalidSessionException e) {
       return unauthorized(e);
@@ -66,7 +68,7 @@ public class ApprovalController {
     }
   }
 
-  private static String bearerToken(HttpServletRequest http) {
+  static String bearerToken(HttpServletRequest http) {
     String header = http.getHeader("Authorization");
     if (header == null || !header.startsWith("Bearer ")) {
       return null;
@@ -74,11 +76,11 @@ public class ApprovalController {
     return header.substring("Bearer ".length()).trim();
   }
 
-  private static <T> ResponseEntity<OperationResult<T>> toResponse(ApprovalResult<T> result) {
+  static <T> ResponseEntity<OperationResult<T>> toResponse(ApprovalResult<T> result) {
     return ResponseEntity.status(result.outcome().httpStatus()).body(result.body());
   }
 
-  private static <T> ResponseEntity<OperationResult<T>> unauthorized(InvalidSessionException e) {
+  static <T> ResponseEntity<OperationResult<T>> unauthorized(InvalidSessionException e) {
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .body(new OperationResult<>(new BaseResponse(3, e.getMessage()), null));
   }

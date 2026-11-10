@@ -15,6 +15,10 @@ public class EmployeeEntryRequest {
     private RequirementTalentRequestDTO seleccion;
     // Employee record
     private Integer idTalento;
+    private String nombres;
+    private String apellidoPaterno;
+    private String apellidoMaterno;
+    private String area;
     private Integer idArea;
     private String cargo;
     private String horario;

@@ -23,12 +23,20 @@ public final class ApprovalAreaPolicy {
       case "EQUIPO" -> "ASIGNACION_EQUIPO".equals(type) ||
         ("CESE".equals(type) &&
           !form.path("fchDevolucionEquipo").asText("").isBlank()) ||
-        ("INGRESO".equals(type) && equipment(form).isObject());
-      case "CREDENCIALES" -> Set.of("INGRESO", "CESE", "CREDENCIALES").contains(
+        ("INGRESO".equals(type) && needsEquipment(form));
+      case "CREDENCIALES" -> Set.of("INGRESO", "CESE", "CREDENCIALES", "ASIGNACION_EQUIPO").contains(
         type
       );
       default -> false;
     };
+  }
+
+  public static boolean needsEquipment(JsonNode form) {
+    var own = form.path("tieneEquipo");
+    // Los ingresos antiguos podían guardar solo la solicitud de equipo.
+    return own.isMissingNode() || own.isNull()
+      ? equipment(form).isObject()
+      : own.asInt(-1) == 0;
   }
 
   public static JsonNode equipment(JsonNode form) {
@@ -59,9 +67,39 @@ public final class ApprovalAreaPolicy {
       "apellidoMaterno",
       "cliente",
       "area",
-      "movArea"
+      "movArea",
+      "idModalidadContrato",
+      "idMotivo",
+      "idMoneda"
     )) {
-      if (form.hasNonNull(key)) values.putIfAbsent(key, form.get(key).asText());
+      if (form.hasNonNull(key)) values.putIfAbsent(key, mapper.convertValue(form.get(key), Object.class));
+    }
+    if ("INGRESO".equals(type) && "FMI".equals(area)) {
+      for (String key : List.of("tipoIngreso", "fechaIngresoAnterior", "clienteAnterior", "cargoAnterior")) {
+        if (form.hasNonNull(key)) values.put(key, form.get(key).asText());
+      }
+      var selection = form.path("seleccion");
+      for (String key : List.of("correoPersonal", "celularPersonal", "idMoneda", "declararSunat", "sedeDeclarar")) {
+        String sourceKey = switch (key) {
+          case "correoPersonal" -> "email";
+          case "celularPersonal" -> "celular";
+          default -> key;
+        };
+        if (selection.hasNonNull(sourceKey)) values.putIfAbsent(key, mapper.convertValue(selection.get(sourceKey), Object.class));
+      }
+      for (String key : List.of("correoPersonal", "celularPersonal")) {
+        if (form.hasNonNull(key)) values.put(key, form.get(key).asText());
+      }
+      var monthly = form.path("seleccion").path("montoMensual");
+      if (monthly.isNumber()) values.put("montoMensual", monthly.decimalValue());
+      values.put("bonoEquipo", form.path("tieneEquipo").asInt(-1) == 1);
+    }
+    if ("INGRESO".equals(type) && "EQUIPO".equals(area)
+        && !values.containsKey("fechaEntrega") && form.hasNonNull("fchInicioContrato")) {
+      values.put("fechaEntrega", form.get("fchInicioContrato").asText());
+    }
+    if ("EQUIPO".equals(area) && source.hasNonNull("idTipoEquipo")) {
+      values.put("idTipoEquipo", source.get("idTipoEquipo").asInt());
     }
     if ("EQUIPO".equals(area) && source.hasNonNull("tipoEquipo")) values.put(
       "tipoEquipo",
@@ -84,12 +122,11 @@ public final class ApprovalAreaPolicy {
         for (JsonNode item : source.path("lstSoftware"))
           software.add(
             item.path("producto").asText("") +
-              " " +
-              item.path("prodVersion").asText("")
+              (item.path("prodVersion").asText("").isBlank() ? "" : " | " + item.path("prodVersion").asText())
           );
         if (!software.isEmpty()) values.put(
           "software",
-          String.join(", ", software)
+          String.join("\n", software)
         );
       }
     }
@@ -97,6 +134,10 @@ public final class ApprovalAreaPolicy {
       "accion",
       "CESE".equals(type) ? "Baja de credenciales" : "Creación de credenciales"
     );
+    if ("CREDENCIALES".equals(area) && "INGRESO".equals(type)) {
+      if (form.hasNonNull("fchInicioContrato")) values.putIfAbsent("fecha", form.get("fchInicioContrato").asText());
+      if (form.hasNonNull("cargo")) values.putIfAbsent("detalle", "Creación de credenciales para " + form.get("cargo").asText());
+    }
     if("CREDENCIALES".equals(area)&&"CREDENCIALES".equals(type))values.put("accion","CAMBIO".equals(form.path("accion").asText())?"Cambio de credenciales":"Creación de credenciales");
     return values;
   }
@@ -127,6 +168,8 @@ public final class ApprovalAreaPolicy {
       );
       return List.of(
         f("fechaEntrega", "Fecha de entrega", "FECHA"),
+        f("tipoEquipo", "Tipo de equipo", "TEXTO"),
+        f("software", "Software solicitado", "TEXTO"),
         f("procesador", "Procesador", "TEXTO"),
         f("ram", "Memoria RAM", "TEXTO"),
         f("hd", "Disco", "TEXTO"),
@@ -169,6 +212,7 @@ public final class ApprovalAreaPolicy {
       try {
         ObjectNode form = (ObjectNode) mapper.readTree(json);
         JsonNode credentials = form.remove("credenciales");
+        JsonNode standaloneEquipment = "INGRESO".equals(type) ? form.remove("solicitudEquipo") : null;
         ObjectNode updated = (ObjectNode) mapper.readTree(
           ApprovalFormPolicy.apply(
             mapper,
@@ -178,6 +222,7 @@ public final class ApprovalAreaPolicy {
           ).datosFormulario()
         );
         if (credentials != null) updated.set("credenciales", credentials);
+        if (standaloneEquipment != null) updated.set("solicitudEquipo", standaloneEquipment);
         return mapper.writeValueAsString(updated);
       } catch (java.io.IOException e) {
         throw new IllegalArgumentException(
@@ -193,6 +238,12 @@ public final class ApprovalAreaPolicy {
         !"CREDENCIALES".equals(type) &&
         !dest.isObject()
       ) dest = form.putObject("credenciales");
+      if ("EQUIPO".equals(area) && "INGRESO".equals(type) && needsEquipment(form) && !dest.isObject()) {
+        ObjectNode container = form.path("seleccion") instanceof ObjectNode selection ? selection : form;
+        ObjectNode equipment = container.putObject("solicitudEquipo");
+        if (form.hasNonNull("fchInicioContrato")) equipment.set("fechaEntrega", form.get("fchInicioContrato"));
+        dest = equipment;
+      }
       if (
         !(dest instanceof ObjectNode target)
       ) throw new IllegalArgumentException(
@@ -224,7 +275,21 @@ public final class ApprovalAreaPolicy {
         ) throw new IllegalArgumentException(
           "Indique la fecha de devolución del equipo."
         );
-        target.put(change.getKey(), value);
+        if ("software".equals(field.campo())) {
+          var software = target.putArray("lstSoftware");
+          for (String line : value.split("\\R")) {
+            if (line.isBlank()) continue;
+            String[] parts = line.split("\\|", 2);
+            String product = parts[0].trim();
+            if (product.isEmpty()) throw new IllegalArgumentException("Indique el nombre del software.");
+            var item = software.addObject();
+            item.put("idItem", software.size());
+            item.put("producto", product);
+            item.put("prodVersion", parts.length == 2 ? parts[1].trim() : "");
+          }
+        } else {
+          target.put(change.getKey(), value);
+        }
       }
       return mapper.writeValueAsString(form);
     } catch (java.io.IOException | java.time.DateTimeException e) {

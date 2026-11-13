@@ -75,7 +75,7 @@ public class ApprovalAreaService {
     }
   }
 
-  private List<ApprovalAreaDTO> state(Context c) {
+  private List<ApprovalAreaDTO> state(Context c, boolean populateForm) {
     var saved = areas.states(c.detail.getIdSolicitud());
     var result = new ArrayList<ApprovalAreaDTO>();
     for (String name : ApprovalAreaPolicy.AREAS) {
@@ -93,10 +93,22 @@ public class ApprovalAreaService {
             : "PENDIENTE".equals(c.detail.getEstado())
               ? "PENDIENTE"
               : c.detail.getEstado();
+      if ("INGRESO".equals(c.detail.getTipoSolicitud()) && "EQUIPO".equals(name)
+          && "PENDIENTE".equals(c.detail.getEstado()) && Set.of("PENDIENTE", "NO_APLICA").contains(status)) {
+        status = applies ? "PENDIENTE" : "NO_APLICA";
+      }
+      if ("ANULADA".equals(c.detail.getEstado()) && "PENDIENTE".equals(status)) status = "ANULADA";
       var data = applies
         ? ApprovalAreaPolicy.data(mapper, c.detail.getTipoSolicitud(), c.form, name)
         : Map.<String, Object>of();
-      if (applies && "FMI".equals(name) && "INGRESO".equals(c.detail.getTipoSolicitud())
+      if (populateForm && applies && "EQUIPO".equals(name) && "PENDIENTE".equals(status)
+          && !"CESE".equals(c.detail.getTipoSolicitud())) {
+        var source = ApprovalAreaPolicy.source(c.detail.getTipoSolicitud(), c.form, name);
+        if (!source.hasNonNull("lstSoftware") && Set.of(1, 2).contains(source.path("idTipoEquipo").asInt())) {
+          data.put("software", defaultSoftwareText());
+        }
+      }
+      if (populateForm && applies && "FMI".equals(name) && "INGRESO".equals(c.detail.getTipoSolicitud())
           && c.detail.getIdTalento() != null) {
         // Compatibilidad con solicitudes anteriores que no guardaban estos textos.
         boolean missing = List.of("nombres", "apellidoPaterno", "apellidoMaterno", "area")
@@ -106,6 +118,37 @@ public class ApprovalAreaService {
           .forEach((key, value) -> {
             if (value != null && (!data.containsKey(key) || data.get(key).toString().isBlank())) data.put(key, value);
           });
+      }
+      if (populateForm && applies && "FMI".equals(name) && "INGRESO".equals(c.detail.getTipoSolicitud())
+          && c.detail.getIdTalento() != null) {
+        var selection = c.form.path("seleccion");
+        if (!c.form.hasNonNull("correoPersonal") && selection.hasNonNull("email"))
+          data.put("correoPersonal", selection.get("email").asText());
+        if (!c.form.hasNonNull("celularPersonal") && selection.hasNonNull("celular"))
+          data.put("celularPersonal", selection.get("celular").asText());
+        if (!data.containsKey("correoPersonal") || !data.containsKey("celularPersonal")) {
+          var contact = employees.getContactoTalento(c.detail.getIdTalento());
+          if (contact != null) {
+            if (contact.getCorreo() != null) data.putIfAbsent("correoPersonal", contact.getCorreo());
+            if (contact.getCelular() != null) data.putIfAbsent("celularPersonal", contact.getCelular());
+          }
+        }
+        if (!data.containsKey("tipoIngreso") && "PENDIENTE".equals(c.detail.getEstado())) {
+          var entry = new EmployeeEntryRequest();
+          entry.setIdTalento(c.detail.getIdTalento());
+          workflow.populatePreviousEntry(c.user, entry);
+          if (entry.getTipoIngreso() != null) data.put("tipoIngreso", entry.getTipoIngreso());
+          if (entry.getFechaIngresoAnterior() != null) data.put("fechaIngresoAnterior", entry.getFechaIngresoAnterior());
+          if (entry.getClienteAnterior() != null) data.put("clienteAnterior", entry.getClienteAnterior());
+          if (entry.getCargoAnterior() != null) data.put("cargoAnterior", entry.getCargoAnterior());
+        }
+      }
+      if (populateForm && applies && "CREDENCIALES".equals(name)) {
+        var account = requests.getCorporateCredentials(c.detail.getIdTalento());
+        if (account != null) {
+          data.put("usuarioCorporativo", account.username());
+          data.put("correoCorporativo", account.email());
+        }
       }
       result.add(
         new ApprovalAreaDTO(
@@ -131,7 +174,7 @@ public class ApprovalAreaService {
     return new ApprovalAreasDTO(
       c.flow.version(),
       c.flow.puedeGestionar(),
-      state(c),
+      state(c, true),
       areas.reviewed(id, c.user, c.flow.version())
     );
   }
@@ -158,12 +201,64 @@ public class ApprovalAreaService {
     );
   }
 
+  private ApprovalDecisionDTO cancel(String token, Integer id, ApprovalAreaDecisionRequest request) {
+    String reason = Objects.toString(request.motivo(), "").trim();
+    if (reason.isEmpty() || reason.length() > 500) throw bad("Indique el motivo de la anulación (máximo 500 caracteres).");
+    areas.lock(id);
+    var c = context(token, id);
+    check(c, request.version());
+    if (!"PENDIENTE".equals(c.detail.getEstado())) throw bad("Solo puede anular una solicitud pendiente.");
+    boolean executed = state(c, false).stream().anyMatch(area -> "APROBADA".equals(area.estado()))
+        || c.flow.historial().stream().anyMatch(event -> Set.of("EJECUTADA", "EJECUCION_INCIERTA", "AREA_APROBADA").contains(event.accion()));
+    if (executed) throw bad("Ya se ejecutó un área o su ejecución está por confirmar. Derive la solicitud a revisión.");
+    return areas.cancel(id, c.user, reason);
+  }
+
+  private String defaultSoftwareText() {
+    return areas.defaultSoftware().stream().map(item -> item.getProducto()
+        + (item.getProdVersion() == null || item.getProdVersion().isBlank() ? "" : " | " + item.getProdVersion()))
+        .collect(java.util.stream.Collectors.joining("\n"));
+  }
+
+  private ApprovalDecisionDTO rejectAll(String token, Integer id, ApprovalAreaDecisionRequest request) {
+    String reason = Objects.toString(request.motivo(), "").trim();
+    if (reason.isEmpty() || reason.length() > 450) throw bad("Indique un motivo de hasta 450 caracteres.");
+    areas.lock(id);
+    var c = context(token, id);
+    if (!c.flow.esGestor()) throw new DecisionException(ApprovalOutcome.SIN_PERMISO,
+        "Solo un gestor del cliente puede desaprobar la solicitud.");
+    if (!Objects.equals(request.version(), c.flow.version()) || request.version() == null)
+      throw new DecisionException(ApprovalOutcome.CONFLICTO, "La solicitud cambió. Recargue y revise nuevamente.");
+    if (!Set.of("PENDIENTE", "APROBADA").contains(c.detail.getEstado()))
+      throw bad("La solicitud ya está cerrada.");
+    var current = state(c, false);
+    if (current.stream().anyMatch(a -> "FMI".equals(a.area()) && "APROBADA".equals(a.estado()))
+        || c.flow.historial().stream().anyMatch(event ->
+          Set.of("EJECUTADA", "EJECUCION_INCIERTA").contains(event.accion()))) {
+      throw bad("La operación de FMI ya se ejecutó o está por confirmar. Derive el caso a revisión.");
+    }
+    boolean equipment = !"CESE".equals(c.detail.getTipoSolicitud()) && current.stream()
+        .anyMatch(a -> "EQUIPO".equals(a.area()) && "APROBADA".equals(a.estado()));
+    areas.initialize(id, current);
+    areas.rejectAll(id, c.user, reason);
+    var decision = areas.finish(id, c.user);
+    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+      @Override public void afterCommit() {
+        notifier.notifyArea(c.detail, "SOLICITUD", "RECHAZADA", reason, null, c.user);
+        if (equipment) notifier.notifyArea(c.detail, "EQUIPO", "DEVOLUCION", reason, null, c.user);
+      }
+    });
+    return decision;
+  }
+
   @Transactional(rollbackFor = Exception.class)
   public ApprovalDecisionDTO decide(
     String token,
     Integer id,
     ApprovalAreaDecisionRequest request
   ) {
+    if (request != null && "RECHAZAR_TODO".equals(request.accion())) return rejectAll(token, id, request);
+    if (request != null && "ANULAR".equals(request.accion())) return cancel(token, id, request);
     if (
       request == null ||
       request.areas() == null ||
@@ -190,7 +285,7 @@ public class ApprovalAreaService {
     areas.lock(id);
     var c = context(token, id);
     check(c, request.version());
-    var current = state(c);
+    var current = state(c, false);
     var reviewed = areas.reviewed(id, c.user, request.version());
     var pending = current
       .stream()
@@ -201,6 +296,11 @@ public class ApprovalAreaService {
       ApprovalOutcome.CONFLICTO,
       "Alguna de las áreas ya fue resuelta o no aplica."
     );
+    if ("APROBAR".equals(request.accion()) && selected.contains("EQUIPO")
+        && !selected.contains("CREDENCIALES")
+        && current.stream().noneMatch(a -> "CREDENCIALES".equals(a.area()) && "APROBADA".equals(a.estado()))) {
+      throw bad("Para aprobar Equipo, apruebe también Credenciales.");
+    }
     if (!reviewed.containsAll(selected)) throw bad(
       "Revise los detalles de cada área seleccionada antes de confirmar."
     );
@@ -218,6 +318,9 @@ public class ApprovalAreaService {
       "Debe revisar las áreas de esta solicitud antes de confirmar todo."
     );
     areas.initialize(id, current);
+    if ("INGRESO".equals(c.detail.getTipoSolicitud())) {
+      areas.syncEquipment(id, ApprovalAreaPolicy.needsEquipment(c.form));
+    }
     String status = "APROBAR".equals(request.accion())
       ? "APROBADA"
       : "RECHAZADA";
@@ -251,7 +354,7 @@ public class ApprovalAreaService {
     areas.lock(id);
     var c = context(token, id);
     check(c, request.getVersion());
-    var current = state(c);
+    var current = state(c, false);
     if (
       current
         .stream()
@@ -270,15 +373,37 @@ public class ApprovalAreaService {
       !allowed.containsAll(request.getCambios().keySet())
     ) throw bad("Uno de los campos no es editable en esta área.");
     final String json;
+    boolean equipmentApplies;
     try {
-      json = ApprovalAreaPolicy.update(
+      String updated = ApprovalAreaPolicy.update(
         mapper,
         c.detail.getTipoSolicitud(),
         c.detail.getDatosFormulario(),
         area,
         request.getCambios()
       );
-    } catch (IllegalArgumentException e) {
+      var form = (ObjectNode) mapper.readTree(updated);
+      equipmentApplies = ApprovalAreaPolicy.needsEquipment(form);
+      if ("FMI".equals(area) && "INGRESO".equals(c.detail.getTipoSolicitud())
+          && request.getCambios().containsKey("tieneEquipo")
+          && equipmentApplies != ApprovalAreaPolicy.needsEquipment(c.form)
+          && current.stream().anyMatch(a -> "EQUIPO".equals(a.area())
+            && Set.of("APROBADA", "RECHAZADA").contains(a.estado()))) {
+        throw bad("El área de equipo ya se resolvió. No se puede cambiar si tiene equipo propio.");
+      }
+      if ("EQUIPO".equals(area) && request.getCambios().containsKey("tipoEquipo")) {
+        Object value = request.getCambios().get("tipoEquipo");
+        if (!(value instanceof String selectedType) || selectedType.isBlank())
+          throw bad("Seleccione un tipo de equipo válido.");
+        int typeId = Integer.parseInt(selectedType);
+        String label = areas.equipmentType(typeId);
+        if (label == null) throw bad("Seleccione un tipo de equipo válido.");
+        var equipment = (ObjectNode) ApprovalAreaPolicy.source(c.detail.getTipoSolicitud(), form, area);
+        equipment.put("idTipoEquipo", typeId);
+        equipment.put("tipoEquipo", label);
+      }
+      json = mapper.writeValueAsString(form);
+    } catch (IllegalArgumentException | java.io.IOException e) {
       throw bad(e.getMessage());
     }
     if (c.detail.getDatosFormulario().equals(json)) throw bad(
@@ -286,6 +411,9 @@ public class ApprovalAreaService {
     );
     areas.initialize(id, current);
     areas.update(id, json, c.user, area);
+    if ("FMI".equals(area) && "INGRESO".equals(c.detail.getTipoSolicitud())) {
+      areas.syncEquipment(id, equipmentApplies);
+    }
     return new ApprovalDecisionDTO(id, "PENDIENTE", areas.lock(id));
   }
 
@@ -306,7 +434,7 @@ public class ApprovalAreaService {
         );
 
         ObjectNode clean = ((ObjectNode) c.form).deepCopy();
-        clean.remove("credenciales");
+        clean.remove(List.of("credenciales", "solicitudEquipo"));
         // El ingreso registra solo FMI. El equipo se registra al aprobar SU pestaña.
         if (
           clean.path("seleccion") instanceof ObjectNode selection
@@ -358,7 +486,14 @@ public class ApprovalAreaService {
         JsonNode equipment = "INGRESO".equals(type)
           ? ApprovalAreaPolicy.equipment(c.form)
           : c.form;
+        if (!equipment.isObject() || equipment.path("idTipoEquipo").asInt(0) < 1
+            || equipment.path("fechaEntrega").asText("").isBlank()) {
+          throw bad("Complete el tipo de equipo y la fecha de entrega antes de enviar formularios.");
+        }
         ObjectNode equipmentForm = ((ObjectNode) equipment).deepCopy();
+        if (!equipmentForm.hasNonNull("fechaSolicitud")) {
+          equipmentForm.put("fechaSolicitud", java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
+        }
         equipmentForm.remove(
           java.util.List.of("bitCelular", "bitInternetMovil")
         );
@@ -369,7 +504,8 @@ public class ApprovalAreaService {
         request.setIdCliente(c.detail.getIdCliente());
         request.setCliente(c.detail.getCliente());
         request.setIdTalento(c.detail.getIdTalento());
-        if (request.getLstSoftware() == null) request.setLstSoftware(List.of());
+        if (request.getLstSoftware() == null) request.setLstSoftware(
+            Set.of(1, 2).contains(request.getIdTipoEquipo()) ? areas.defaultSoftware() : List.of());
         if ("INGRESO".equals(type)) {
           request.setIdArea(
             c.form.path("idArea").isInt() ? c.form.path("idArea").asInt() : null
@@ -397,12 +533,10 @@ public class ApprovalAreaService {
           "No se pudo registrar la solicitud de equipo."
         );
         try {
-          return history.getSolicitudEquipoReport(
-            actor,
-            c.detail.getIdTalento(),
-            result.getData(),
-            false
-          );
+          var report = history.getSolicitudEquipoReport(actor, c.detail.getIdTalento(), result.getData(), false);
+          if (report != null && (report.getLstSoftware() == null || report.getLstSoftware().isEmpty()))
+            report.setLstSoftware(request.getLstSoftware());
+          return report;
         } catch (RuntimeException e) {
           return null;
         }

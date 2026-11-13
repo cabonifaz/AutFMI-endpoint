@@ -141,6 +141,7 @@ public class Constante {
                 </div>
                 <br>
                 {{requisitosIngreso}}
+                {{formulariosIngreso}}
                 <br>
                 <br>
 

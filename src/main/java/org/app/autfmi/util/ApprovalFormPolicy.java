@@ -38,6 +38,8 @@ public final class ApprovalFormPolicy {
   static {
     ETIQUETAS.put("notificarProntoInicio", "Enviar aviso de pronto inicio");
     ETIQUETAS.put("nombres", "Nombres");
+    ETIQUETAS.put("correoPersonal", "Correo personal");
+    ETIQUETAS.put("celularPersonal", "Número de celular");
     ETIQUETAS.put("apellidoPaterno", "Apellido paterno");
     ETIQUETAS.put("apellidoMaterno", "Apellido materno");
     ETIQUETAS.put("cliente", "Cliente");
@@ -61,6 +63,8 @@ public final class ApprovalFormPolicy {
     ETIQUETAS.put("montoTrimestral", "Bono trimestral");
     ETIQUETAS.put("montoSemestral", "Bono semestral");
     ETIQUETAS.put("tieneEquipo", "Equipo propio");
+    ETIQUETAS.put("idMoneda", "Moneda");
+    ETIQUETAS.put("declararSunat", "Declarar en SUNAT");
     ETIQUETAS.put("sedeDeclarar", "Sede a declarar");
   }
 
@@ -70,6 +74,7 @@ public final class ApprovalFormPolicy {
           "fchInicioContrato", FECHA, "fchTerminoContrato", FECHA,
           "proyectoServicio", TEXTO, "objetoContrato", TEXTO,
           "remuneracion", NUMERO, "montoBase", NUMERO, "montoMovilidad", NUMERO,
+          "idMoneda", "MONEDA", "declararSunat", "SUNAT", "sedeDeclarar", TEXTO,
           "montoTrimestral", NUMERO, "montoSemestral", NUMERO, "tieneEquipo", SI_NO),
       "MOVIMIENTO", campos(
           "puesto", TEXTO, "horario", TEXTO, "fchMovimiento", FECHA,
@@ -112,12 +117,13 @@ public final class ApprovalFormPolicy {
     List<Map<String, String>> filas = new ArrayList<>();
     try {
       JsonNode node = mapper.readTree(datosFormulario);
-      ETIQUETAS.forEach((campo, etiqueta) -> {
+      for (String campo : List.of("nombres", "correoPersonal", "celularPersonal", "apellidoPaterno")) {
+        String etiqueta = etiqueta(campo);
         JsonNode valor = node.get(campo);
         if (valor != null && !valor.isNull() && !valor.asText().isBlank()) {
           filas.add(Map.of("etiqueta", etiqueta, "valor", texto(campo, valor)));
         }
-      });
+      }
     } catch (Exception e) {
       // Sin tabla: el correo igual lleva el enlace a la solicitud.
     }
@@ -183,7 +189,7 @@ public final class ApprovalFormPolicy {
   private static JsonNode validar(ObjectMapper mapper, String campo, String tipoCampo, Object valor) {
     String etiqueta = etiqueta(campo);
     if (valor == null) {
-      if (SI_NO.equals(tipoCampo)) {
+      if (List.of(SI_NO, "SUNAT", "MONEDA").contains(tipoCampo)) {
         throw new IllegalArgumentException("Indique Sí o No en '" + etiqueta + "'.");
       }
       return mapper.nullNode();
@@ -216,6 +222,13 @@ public final class ApprovalFormPolicy {
           throw new IllegalArgumentException("'" + etiqueta + "' debe tener el formato aaaa-mm-dd.");
         }
         return mapper.getNodeFactory().textNode(fecha.trim());
+      }
+      case "SUNAT", "MONEDA" -> {
+        if (!(valor instanceof Number numero) || numero.doubleValue() != numero.intValue()
+            || numero.intValue() < 1 || ("SUNAT".equals(tipoCampo) && numero.intValue() > 2)) {
+          throw new IllegalArgumentException("Seleccione una opción válida para '" + etiqueta + "'.");
+        }
+        return mapper.getNodeFactory().numberNode(numero.intValue());
       }
       case SI_NO -> {
         if (!(valor instanceof Number numero) || (numero.intValue() != 0 && numero.intValue() != 1)

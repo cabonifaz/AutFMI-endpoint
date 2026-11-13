@@ -46,6 +46,7 @@ public class SelectionApprovalService {
             var copy = mapper.convertValue(talent, RequirementTalentRequestDTO.class);
             copy.setIdCliente(client);
             copy.setCliente(clientName);
+            if (Integer.valueOf(1).equals(copy.getTieneEquipo())) copy.setSolicitudEquipo(null);
             var registered = jdbc.queryForList("SELECT INGRESO FROM dbo.REQUERIMIENTO_TALENTO "
                     + "WHERE ID_REQUERIMIENTO=? AND ID_TALENTO=? AND ID_ESTADO_REGISTRO=1",
                     request.getIdRequerimiento(), copy.getIdTalento());
@@ -82,6 +83,8 @@ public class SelectionApprovalService {
         BeanUtils.copyProperties(talent, form);
         form.setIdRequerimiento(requirement);
         form.setSeleccion(talent);
+        form.setCorreoPersonal(talent.getEmail());
+        form.setCelularPersonal(talent.getCelular());
         form.setMontoBase(amount(talent.getMontoBase()));
         form.setMontoMovilidad(amount(talent.getMontoMovilidad()));
         form.setMontoTrimestral(amount(talent.getMontoTrimestral()));

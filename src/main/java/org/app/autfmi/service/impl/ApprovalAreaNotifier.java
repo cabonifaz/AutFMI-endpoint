@@ -45,7 +45,10 @@ public class ApprovalAreaNotifier {
     UserDTO actor
   ) {
     boolean rejected = "RECHAZADA".equals(status);
-    String key = (rejected ? "RECHAZO_" : "AREA_") + area;
+    // The SQL registry accepts existing keys only. Whole-request rejection excludes legacy executed FMI,
+    // and an approved equipment area has never reserved an equipment rejection.
+    String key = "SOLICITUD".equals(area) ? "AREAS"
+        : "DEVOLUCION".equals(status) ? "RECHAZO_EQUIPO" : (rejected ? "RECHAZO_" : "AREA_") + area;
     if (
       !requests.reserveMail(
         detail.getIdSolicitud(),
@@ -56,7 +59,7 @@ public class ApprovalAreaNotifier {
     ) return null;
     String result = "FALLIDO";
     try {
-      EventoNotificacion event = rejected
+      EventoNotificacion event = "DEVOLUCION".equals(status) ? EventoNotificacion.SOLICITUD_EQUIPO : rejected
         ? EventoNotificacion.APROBACION_GESTORES
         : switch (detail.getTipoSolicitud()) {
             case "INGRESO", "CREDENCIALES" -> EventoNotificacion.INGRESO;

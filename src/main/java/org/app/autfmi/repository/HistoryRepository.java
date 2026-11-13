@@ -547,7 +547,7 @@ public class HistoryRepository {
         List<Map<String, Object>> softwareList = (List<Map<String, Object>>) rs.get("#result-set-4");
         AtomicInteger index = new AtomicInteger(1);
 
-        List<SolicitudSoftwareRequest> software = softwareList.stream()
+        List<SolicitudSoftwareRequest> software = (softwareList == null ? List.<Map<String, Object>>of() : softwareList).stream()
                 .map(row -> {
                     SolicitudSoftwareRequest item = new SolicitudSoftwareRequest();
                     item.setIdItem(index.getAndIncrement());

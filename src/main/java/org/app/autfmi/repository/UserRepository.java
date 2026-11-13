@@ -85,6 +85,14 @@ public class UserRepository {
    * reutilizando el SP_USUARIOS_SEL existente (mismo procedimiento usado en
    * AuthRepository y en el backend hermano BancoTalentos).
    */
+  public String getActiveEmail(Integer userId, Integer companyId) {
+    return jdbcTemplate.query("""
+        SELECT EMAIL FROM dbo.USUARIOS
+        WHERE ID_USUARIO=? AND ID_EMPRESA=? AND ID_ESTADO_REGISTRO=1
+        """, (row, index) -> row.getString("EMAIL"), userId, companyId)
+        .stream().filter(java.util.Objects::nonNull).findFirst().orElse(null);
+  }
+
   public UserContactInfoDTO getUserContactInfo(BaseRequest baseRequest) {
 
     var simpleJdbcCall = new SimpleJdbcCall(jdbcTemplate)

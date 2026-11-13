@@ -72,6 +72,37 @@ public class ApprovalAreaRepository {
       );
   }
 
+  public String equipmentType(int id) {
+    return jdbc.queryForList("""
+      SELECT STRING1 FROM dbo.PARAMETROS
+      WHERE ID_MAESTRO=21 AND NUM1=? AND ID_ESTADO_REGISTRO=1
+      """, String.class, id).stream().filter(Objects::nonNull).findFirst().orElse(null);
+  }
+
+  public void syncEquipment(Integer id, boolean applies) {
+    jdbc.update("""
+      UPDATE dbo.FMI_SOLICITUD_APROBACION_AREA SET ESTADO=?
+      WHERE ID_SOLICITUD=? AND AREA='EQUIPO' AND ESTADO IN ('PENDIENTE', 'NO_APLICA')
+      """, applies ? "PENDIENTE" : "NO_APLICA", id);
+  }
+
+  public List<org.app.autfmi.model.request.SolicitudSoftwareRequest> defaultSoftware() {
+    return jdbc.query("""
+      SELECT STRING1, STRING2 FROM dbo.PARAMETROS
+      WHERE ID_MAESTRO=23 AND ID_ESTADO_REGISTRO=1 AND NULLIF(LTRIM(RTRIM(STRING1)), '') IS NOT NULL
+      ORDER BY NUM1
+      """, (row, index) -> new org.app.autfmi.model.request.SolicitudSoftwareRequest(
+        index + 1, row.getString("STRING1"), row.getString("STRING2")));
+  }
+
+  public void rejectAll(Integer id, UserDTO user, String reason) {
+    jdbc.update("""
+      UPDATE dbo.FMI_SOLICITUD_APROBACION_AREA SET ESTADO='RECHAZADA', USUARIO=?, FCHRESOLUCION=GETDATE()
+      WHERE ID_SOLICITUD=? AND ESTADO IN ('PENDIENTE','APROBADA')
+      """, user.getUsuario(), id);
+    audit(id, "AREA_RECHAZADA", null, "RECHAZADA", "Desaprobación total: " + reason, user);
+  }
+
   public void resolve(
     Integer id,
     String area,
@@ -125,6 +156,16 @@ public class ApprovalAreaRepository {
       user
     );
     return new ApprovalDecisionDTO(id, state, lock(id));
+  }
+
+  public ApprovalDecisionDTO cancel(Integer id, UserDTO user, String reason) {
+    int changed = jdbc.update("""
+      UPDATE dbo.FMI_SOLICITUD_APROBACION SET ESTADO='ANULADA', USUMOD=?, FCHMOD=GETDATE()
+      WHERE ID_SOLICITUD=? AND ESTADO='PENDIENTE'
+      """, user.getUsuario(), id);
+    if (changed != 1) throw new IllegalStateException("La solicitud ya no está pendiente.");
+    audit(id, "RESUELTA", "PENDIENTE", "ANULADA", reason, user);
+    return new ApprovalDecisionDTO(id, "ANULADA", lock(id));
   }
 
   public void update(Integer id, String json, UserDTO user, String area) {

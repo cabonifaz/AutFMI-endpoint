@@ -54,6 +54,11 @@ public class MailUtils {
     
     public boolean sendRequirementPostulantMailSync(EventoNotificacion evento, GestorRqDTO gestor, String asunto,
             List<PostulantDTO> lstPostulantes, List<String> lstEmails, List<FileDTO> attachments) {
+        return sendRequirementPostulantMailSync(evento, gestor, asunto, lstPostulantes, lstEmails, attachments, null);
+    }
+
+    public boolean sendRequirementPostulantMailSync(EventoNotificacion evento, GestorRqDTO gestor, String asunto,
+            List<PostulantDTO> lstPostulantes, List<String> lstEmails, List<FileDTO> attachments, String enlace) {
         if (!correoSwitch.permitido(evento)) {
             return false;
         }
@@ -79,7 +84,10 @@ public class MailUtils {
                 indice++;
             }
 
-            String mensajeCorreo = replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, listaTalentosRQ);
+            boolean equipo = lstPostulantes.stream().anyMatch(postulante ->
+                    "No".equalsIgnoreCase(SafeValues.safeString(postulante.getTieneEquipo()).trim()));
+            String mensajeCorreo = FormularioCorreoUtils.conEnlaceAprobacion(
+                    replaceDataToHtmlBody(Constante.CUERPO_CORREO, gestor, listaTalentosRQ, equipo), enlace);
             String asuntoCorreo = asunto + " | " + gestor.getCodigoRQ() + " | " + gestor.getCliente();
 
             // El destinatario principal es el usuario que ejecutó la acción; sin un
@@ -141,7 +149,7 @@ public class MailUtils {
         mailSender.send(message);
     }
 
-    private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos) {
+    private static String replaceDataToHtmlBody(String cuerpoCorreo, GestorRqDTO gestor, List<String> talentos, boolean equipo) {
 
         var tipoFormulario = gestor.getTipoFormulario() != null ? gestor.getTipoFormulario() : "Ingreso";
 
@@ -150,6 +158,10 @@ public class MailUtils {
                 .replace("[TIPO_FORMULARIO]", tipoFormulario)
                 .replace("{{requisitosIngreso}}", FormularioCorreoUtils.requisitosIngresoHtml(
                         gestor.getEmo(), gestor.getSctr(), gestor.getAsignacionLaptop()))
+                .replace("{{formulariosIngreso}}", "<p><strong>Formularios a completar</strong></p><ul>"
+                        + "<li>Formulario de ingreso (FMI)</li><li>Solicitud de creación de usuario</li>"
+                        + (equipo ? "<li>Solicitud de equipo para quienes no cuentan con equipo propio</li>" : "")
+                        + "</ul>")
                 .replace("{{listaTalentos}}", String.join("\n", talentos));
     }
 
@@ -200,6 +212,11 @@ public class MailUtils {
     
     public boolean sendTemplateEmailSync(EventoNotificacion evento, String to, List<String> cc, String subject,
             String templateName, Map<String, Object> variables) {
+        return sendTemplateEmailSync(evento, to, cc, subject, templateName, variables, null);
+    }
+
+    public boolean sendTemplateEmailSync(EventoNotificacion evento, String to, List<String> cc, String subject,
+            String templateName, Map<String, Object> variables, String pdfName) {
         if (!correoSwitch.permitido(evento)) {
             return false;
         }
@@ -212,14 +229,19 @@ public class MailUtils {
             Context context = new Context();
             context.setVariables(variables);
             String htmlBody = templateEngine.process(templateName, context);
+            List<FileDTO> attachments = null;
+            if (pdfName != null) {
+                var pdf = org.app.autfmi.util.builders.BaseReportBuilder.renderPdfFromHtml(htmlBody);
+                attachments = List.of(new FileDTO(pdfName, null, pdf));
+            }
             List<String> cleanCc = EmailUtils.sanitizeRecipients(cc, destino);
             try {
-                enviarMensajeHtml(destino, cleanCc, subject, htmlBody, null);
+                enviarMensajeHtml(destino, cleanCc, subject, htmlBody, attachments);
                 logger.info("Correo '{}' enviado a: {} (cc: {})", subject, destino, cleanCc.size());
             } catch (MessagingException e) {
                 logger.error("Falló el envío de '{}' con CC ({}); reintentando solo al destinatario",
                         subject, e.getMessage());
-                enviarMensajeHtml(destino, List.of(), subject, htmlBody, null);
+                enviarMensajeHtml(destino, List.of(), subject, htmlBody, attachments);
                 logger.info("Correo '{}' enviado a: {} (sin CC tras reintento)", subject, destino);
             }
             return true;

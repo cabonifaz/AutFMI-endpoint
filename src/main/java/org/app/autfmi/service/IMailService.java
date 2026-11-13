@@ -25,6 +25,7 @@ public interface IMailService {
 
 	/** Versión síncrona: {@code true} si el correo salió. */
 	boolean sendCeseReportNotificationSync(CeseReport report);
+  boolean sendCeseReportNotificationSync(CeseReport report, String enlace);
 
 	/**
 	 * Envía los correos del ingreso: Formulario de Ingreso (maestro 52) y Solicitud
@@ -35,11 +36,13 @@ public interface IMailService {
 
 	/** Versión síncrona: {@code true} si salieron los dos correos. */
 	boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento);
+  boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento, String enlace);
 
 	void sendMovementReportNotification(MovementReport report);
 
 	/** Versión síncrona: {@code true} si el correo salió. */
 	boolean sendMovementReportNotificationSync(MovementReport report);
+  boolean sendMovementReportNotificationSync(MovementReport report, String enlace);
 
 	void sendEquipmentRequestNotification(SolicitudEquipoReport report, Integer idTalento);
 

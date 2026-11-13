@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.app.autfmi.model.dto.UserContactInfoDTO;
 import org.app.autfmi.model.dto.UserDTO;
 import org.app.autfmi.model.dto.aprobacion.ApprovalGestorDTO;
 import org.app.autfmi.model.report.CeseReport;
 import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.model.report.IReport;
 import org.app.autfmi.model.report.MovementReport;
-import org.app.autfmi.model.request.BaseRequest;
 import org.app.autfmi.repository.ApprovalRepository;
 import org.app.autfmi.repository.UserRepository;
 import org.app.autfmi.service.IMailService;
 import org.app.autfmi.util.ApprovalFormPolicy;
+import org.app.autfmi.util.ApprovalAreaPolicy;
 import org.app.autfmi.util.EmailUtils;
 import org.app.autfmi.util.EventoNotificacion;
 import org.app.autfmi.util.MailUtils;
@@ -77,7 +77,11 @@ public class ApprovalNotifier {
 
   /** Enlace directo a la solicitud en la bandeja (HashRouter). */
   String enlace(Integer idSolicitud) {
-    return frontendUrl + "/#/bandejaAprobaciones/" + idSolicitud;
+    return approvalLink(frontendUrl, idSolicitud);
+  }
+
+  static String approvalLink(String frontendUrl, Integer idSolicitud) {
+    return frontendUrl.replaceFirst("/+$", "") + "/#/bandejaAprobaciones/" + idSolicitud;
   }
 
   @Async("notificationExecutor")
@@ -111,7 +115,9 @@ public class ApprovalNotifier {
           String subject = "Solicitud de aprobación N° " + n.idSolicitud() + " - " + etiquetaTipo(n.tipo()) + ": "
               + SafeValues.safeString(n.cliente()) + " - " + SafeValues.safeString(n.nombreTalento());
           boolean ok = mailUtils.sendTemplateEmailSync(EventoNotificacion.APROBACION_GESTORES, to, cc, subject,
-              "aprobacion-gestores", variablesGestores(n));
+              "aprobacion-gestores", variablesGestores(n),
+              Set.of("INGRESO", "MOVIMIENTO", "CESE").contains(n.tipo())
+                  ? "Solicitud pendiente " + n.idSolicitud() + " - " + etiquetaTipo(n.tipo()) : null);
           estado = ok ? ENVIADO : FALLIDO;
           detalle = (ok ? "enviado a " : "no se pudo enviar a ") + correos.size()
               + (correos.size() == 1 ? " gestor" : " gestores");
@@ -167,12 +173,12 @@ public class ApprovalNotifier {
         if (report instanceof org.app.autfmi.model.report.SelectionEntryReport selection) {
           var result = selection.getResult();
           ok = notificationService.sendRequirementNotificationsSync(result.getGestorRq(), result.getCcList(),
-              result.getPostulantes(), result.getReportesIngreso(), result.getReportesSolicitudEquipo(), selection.getActor());
+              result.getPostulantes(), result.getReportesIngreso(), result.getReportesSolicitudEquipo(), selection.getActor(), enlace(idSolicitud));
         } else {
           ok = switch (tipo) {
-          case "INGRESO" -> mailService.sendEntryReportNotificationSync((EntryReport) report, idTalento);
-          case "MOVIMIENTO" -> mailService.sendMovementReportNotificationSync((MovementReport) report);
-          default -> mailService.sendCeseReportNotificationSync((CeseReport) report);
+          case "INGRESO" -> mailService.sendEntryReportNotificationSync((EntryReport) report, idTalento, enlace(idSolicitud));
+          case "MOVIMIENTO" -> mailService.sendMovementReportNotificationSync((MovementReport) report, enlace(idSolicitud));
+          default -> mailService.sendCeseReportNotificationSync((CeseReport) report, enlace(idSolicitud));
         };
         }
         estado = ok ? ENVIADO : FALLIDO;
@@ -200,10 +206,9 @@ public class ApprovalNotifier {
     for (ApprovalGestorDTO gestor : gestores) {
       try {
         // Mismo SP que usa el resto del backend para el contacto de un usuario.
-        UserContactInfoDTO contacto = userRepository.getUserContactInfo(
-            new BaseRequest(gestor.idUsuario(), gestor.usuario(), idEmpresa, gestor.idTipoRol(), ""));
-        if (contacto != null && EmailUtils.isValidEmail(contacto.email())) {
-          correos.add(contacto.email().trim());
+        String email = userRepository.getActiveEmail(gestor.idUsuario(), idEmpresa);
+        if (EmailUtils.isValidEmail(email)) {
+          correos.add(email.trim());
         } else {
           logger.warn("El gestor {} no tiene correo válido registrado.", gestor.idUsuario());
         }
@@ -221,10 +226,30 @@ public class ApprovalNotifier {
     variables.put("cliente", SafeValues.safeString(n.cliente()));
     variables.put("talento", SafeValues.safeString(n.nombreTalento()));
     variables.put("resumen", SafeValues.safeString(n.resumen()));
-    variables.put("solicitante", SafeValues.safeString(n.solicitante().getUsuario()));
+    String solicitante = (SafeValues.safeString(n.solicitante().getNombres()).trim() + " "
+        + SafeValues.safeString(n.solicitante().getApellidos()).trim()).trim();
+    variables.put("solicitante", solicitante.isEmpty() ? "El solicitante" : solicitante);
     variables.put("filas", ApprovalFormPolicy.resumenFormulario(objectMapper, n.datosFormulario()));
+    variables.put("formularios", formulariosGestores(n.tipo(), n.datosFormulario()));
     variables.put("enlace", enlace(n.idSolicitud()));
     return variables;
+  }
+
+  private List<String> formulariosGestores(String tipo, String json) {
+    var formularios = new ArrayList<String>();
+    try {
+      var form = objectMapper.readTree(json);
+      if (form == null) return formularios;
+      if (ApprovalAreaPolicy.applies(tipo, form, "FMI"))
+        formularios.add("Formulario FMI de " + etiquetaTipo(tipo).toLowerCase(Locale.ROOT));
+      if (ApprovalAreaPolicy.applies(tipo, form, "EQUIPO"))
+        formularios.add("CESE".equals(tipo) ? "Devolución de equipo" : "Solicitud de equipo");
+      if (ApprovalAreaPolicy.applies(tipo, form, "CREDENCIALES"))
+        formularios.add("CESE".equals(tipo) ? "Baja de credenciales" : "Solicitud de credenciales");
+    } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+      logger.warn("No se pudo determinar la lista de formularios del correo de aprobación.");
+    }
+    return formularios;
   }
 
   static String etiquetaTipo(String tipo) {

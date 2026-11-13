@@ -306,6 +306,12 @@ public class RequirementRepository {
 					List<RequirementTalentDTO> lstRqTalents = new ArrayList<>();
 
 					if (resultSet3 != null && !resultSet3.isEmpty()) {
+                        var pending = new java.util.HashSet<>(jdbcTemplate.queryForList("""
+                            SELECT DISTINCT ID_TALENTO FROM dbo.FMI_SOLICITUD_APROBACION
+                            WHERE TIPO_SOLICITUD='INGRESO' AND ESTADO='PENDIENTE'
+                              AND ID_ESTADO_REGISTRO=1
+                              AND TRY_CONVERT(INT, JSON_VALUE(CASE WHEN ISJSON(DATOS_FORMULARIO)=1 THEN DATOS_FORMULARIO ELSE '{}' END, '$.idRequerimiento'))=?
+                            """, Integer.class, idRequerimiento));
 						for (Map<String, Object> rqTalentRow : resultSet3) {
 							// Se asigna por setters y no por el constructor de Lombok:
 							// con la pretensión salarial serían 32 argumentos
@@ -337,6 +343,8 @@ public class RequirementRepository {
 							itemRqTalento.setIdCVEs((Integer) rqTalentRow.get("ID_CV_FILE_ES"));
 							itemRqTalento.setIdCVEn((Integer) rqTalentRow.get("ID_CV_FILE_EN"));
 							itemRqTalento.setIngreso((Integer) rqTalentRow.get("INGRESO"));
+                            if (!Integer.valueOf(1).equals(itemRqTalento.getIngreso()) && pending.contains(itemRqTalento.getIdTalento()))
+                                itemRqTalento.setEstado("Pendiente de aprobación");
 
 							// Pretensión salarial (modal "Ver Riesgo").
 							itemRqTalento.setMontoInicialPlanilla((BigDecimal) rqTalentRow.get("MONTO_INICIAL_PLANILLA"));

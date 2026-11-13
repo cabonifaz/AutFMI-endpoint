@@ -72,6 +72,14 @@ public class NotificationService {
       List<RequirementTalentsResult.ReporteSolicitudEquipo> solicitudesEquipo,
       BaseRequest baseRequest
     ) {
+    return sendRequirementNotificationsSync(gestorRq, ccList, postulantes, entryReportsIds, solicitudesEquipo, baseRequest, null);
+  }
+
+  public boolean sendRequirementNotificationsSync(
+      GestorRqDTO gestorRq, List<String> ccList, List<PostulantDTO> postulantes,
+      List<RequirementTalentsResult.ReporteIngreso> entryReportsIds,
+      List<RequirementTalentsResult.ReporteSolicitudEquipo> solicitudesEquipo,
+      BaseRequest baseRequest, String enlace) {
 
     boolean todoEnviado = true;
 
@@ -142,7 +150,7 @@ public class NotificationService {
             "Ingreso de nuevo talento",
             postulantes != null ? postulantes : Collections.emptyList(),
             ccIngreso,
-            ingresoFiles);
+            ingresoFiles, enlace);
         this.logger.info("Correo 'Ingreso de nuevo talento' procesado (adjuntos de ingreso: {})", ingresoFiles.size());
       }
 
@@ -151,7 +159,7 @@ public class NotificationService {
       if (!usuarioFiles.isEmpty()) {
         todoEnviado &= sendBundleToMaestro(usuarioFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
             "Solicitud de creación de usuario: " + cliente + " - " + codigoRQ,
-            FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", contactos(postulantes, null)));
+            FormularioCorreoUtils.conEnlaceAprobacion(FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", contactos(postulantes, null)), enlace));
       }
 
       /* 3. Solicitudes de equipo -> maestro 51 (bundle de todos los talentos). */
@@ -169,7 +177,7 @@ public class NotificationService {
           solicitudesEquipo.forEach(sol -> conEquipo.add(sol.getIdTalento()));
           todoEnviado &= sendBundleToMaestro(equipoFiles, Constante.MAESTRO_CORREO_SOPORTE, baseCc, gestorRqEmail,
               "Solicitud de equipo: " + cliente + " - " + codigoRQ,
-              FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", contactos(postulantes, conEquipo)));
+              FormularioCorreoUtils.conEnlaceAprobacion(FormularioCorreoUtils.cuerpoSolicitudHtml("equipo", contactos(postulantes, conEquipo)), enlace));
         }
       }
 

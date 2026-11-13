@@ -102,7 +102,15 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     return this;
   }
 
+  public ReportIngresoBuilder withModifyUser(String requestedAccount) {
+    return userForm(true, requestedAccount);
+  }
+
   public ReportIngresoBuilder withCreateUser() {
+    return userForm(false, "");
+  }
+
+  private ReportIngresoBuilder userForm(boolean modify, String requestedAccount) {
 
     var context = new Context();
     var logoBase64 = imageToBase64("assets/logo-fractal-2.png");
@@ -115,11 +123,18 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
     context.setVariable("fechaSolicitud", report.getFechaHistorial());
     context.setVariable("anexoSolicitud", report.getUnidad());
 
+    context.setVariable("soloCreacion", !modify);
+
     // Creación de usuario
-    context.setVariable("nombresUsuario", report.getNombres() + " " + report.getApellidos());
-    context.setVariable("usernameIngreso", report.getUsernameEmpleado());
-    context.setVariable("emailUsuario", report.getEmailEmpleado());
-    context.setVariable("areaUsuario", report.getUnidad());
+    context.setVariable("nombresUsuario", modify ? null : report.getNombres() + " " + report.getApellidos());
+    if (modify) {
+      context.setVariable("username", report.getUsernameEmpleado());
+      context.setVariable("correoActual", report.getEmailEmpleado());
+      context.setVariable("cuentaSolicitada", requestedAccount);
+    }
+    context.setVariable("usernameIngreso", modify ? null : report.getUsernameEmpleado());
+    context.setVariable("emailUsuario", modify ? null : report.getEmailEmpleado());
+    context.setVariable("areaUsuario", modify ? null : report.getUnidad());
 
     if (report.getFirma() != null && !report.getFirma().isBlank()) {
 
@@ -142,7 +157,7 @@ public class ReportIngresoBuilder extends BaseReportBuilder<EntryReport> {
 
     // Filename
     var filename = this.buildFilename(report.getNombres(), report.getApellidos(),
-        "FT-GS-01 Solicitud de Creación de Usuarios");
+        modify ? "FT-GS-01 Solicitud de Modificación de Usuarios" : "FT-GS-01 Solicitud de Creación de Usuarios");
 
     this.files.add(new FileDTO(filename, htmlContent, pdfBytes));
     return this;

@@ -16,6 +16,12 @@ public class EmployeeEntryRequest {
     // Employee record
     private Integer idTalento;
     private String nombres;
+    private String correoPersonal;
+    private String celularPersonal;
+    private String tipoIngreso;
+    private String fechaIngresoAnterior;
+    private String clienteAnterior;
+    private String cargoAnterior;
     private String apellidoPaterno;
     private String apellidoMaterno;
     private String area;

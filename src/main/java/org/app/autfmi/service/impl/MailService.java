@@ -4,6 +4,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.app.autfmi.model.dto.InicioOutsourcingDTO;
@@ -11,6 +12,13 @@ import org.app.autfmi.model.dto.ContactoTalentoDTO;
 import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.ParametrosDTO;
 import org.app.autfmi.repository.EmployeeRepository;
+import org.app.autfmi.repository.ApprovalRepository;
+import org.app.autfmi.model.dto.aprobacion.ApprovalDetailDTO;
+import org.app.autfmi.util.ApprovalAreaPolicy;
+import org.app.autfmi.util.ApprovalFormPolicy;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.app.autfmi.service.IParametrosService;
 import org.app.autfmi.util.Constante;
 import org.app.autfmi.util.EventoNotificacion;
@@ -28,6 +36,7 @@ import org.app.autfmi.util.builders.ReportPDFBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -55,6 +64,18 @@ public class MailService implements IMailService {
   @Autowired
   private NotificacionCorreoSwitch correoSwitch;
 
+  @Autowired
+  private SpringTemplateEngine emailTemplates;
+
+  @Autowired
+  private ObjectMapper objectMapper;
+
+  @Autowired
+  private ApprovalRepository approvalRepository;
+
+  @Value("${approval.frontend.url:http://localhost:3000}")
+  private String approvalFrontendUrl;
+
   private static final Logger logger = LoggerFactory.getLogger(MailService.class);
 
   public List<String> approvalRecipients(String area) {
@@ -62,10 +83,11 @@ public class MailService implements IMailService {
   }
   public List<String> approvalSelectionRecipients(){return resolveMaestroEmails(Constante.MAESTRO_CORREO_SELECCION);}
 
-  public boolean sendApprovalArea(EventoNotificacion event, org.app.autfmi.model.dto.aprobacion.ApprovalDetailDTO detail,
+  public boolean sendApprovalArea(EventoNotificacion event, ApprovalDetailDTO detail,
       String area,String status,String reason,Object report,List<String> to,List<String> cc) throws Exception {
     if(to==null||to.isEmpty())return false;
     boolean rejected="RECHAZADA".equals(status);
+    boolean returnEquipment = "DEVOLUCION".equals(status);
     List<FileDTO> files=new ArrayList<>();
     if(!rejected&&"FMI".equals(area)) {
       if(report instanceof EntryReport entry)files=reportPDFBuilder.forIngreso(entry).withFormulario().build();
@@ -73,22 +95,219 @@ public class MailService implements IMailService {
       else if(report instanceof CeseReport cese)files=reportPDFBuilder.forCese(cese).withFormularioCese().build();
     }
     if(!rejected&&"EQUIPO".equals(area)&&report instanceof SolicitudEquipoReport equipo)files=reportPDFBuilder.fEquipoReport(equipo).withFormulario().build();
-    String action=rejected?"Desaprobada":"Aprobada";
-    String subject=action+" · "+area+" · Solicitud N° "+detail.getIdSolicitud()+" · "+SafeValues.safeString(detail.getNombreTalento());
-    java.util.function.Function<String,String> escape=v->org.springframework.web.util.HtmlUtils.htmlEscape(SafeValues.safeString(v));
-    String body="<p>"+action+" la solicitud del área <strong>"+escape.apply(area)+"</strong>.</p>"
-      +"<p>Talento: "+escape.apply(detail.getNombreTalento())+"<br>Cliente: "+escape.apply(detail.getCliente())+"</p>";
-    if(rejected)body+="<p>Motivo: "+escape.apply(reason)+"</p>";
-    else {
-      if("CESE".equals(detail.getTipoSolicitud())&&!"FMI".equals(area))body+="<p>Favor atender la "+("EQUIPO".equals(area)?"devolución de equipo":"baja de credenciales")+".</p>";
-      var values=org.app.autfmi.util.ApprovalAreaPolicy.data(new com.fasterxml.jackson.databind.ObjectMapper(),detail.getTipoSolicitud(),new com.fasterxml.jackson.databind.ObjectMapper().readTree(detail.getDatosFormulario()),area);
-      var labels=org.app.autfmi.util.ApprovalAreaPolicy.fields(detail.getTipoSolicitud(),area).stream().collect(java.util.stream.Collectors.toMap(org.app.autfmi.model.dto.aprobacion.ApprovalEditableFieldDTO::campo,org.app.autfmi.model.dto.aprobacion.ApprovalEditableFieldDTO::etiqueta));
-      body+="<table>";for(var field:values.entrySet())body+="<tr><th>"+escape.apply(labels.getOrDefault(field.getKey(),org.app.autfmi.util.ApprovalFormPolicy.etiqueta(field.getKey())))+"</th><td>"+escape.apply(String.valueOf(field.getValue()))+"</td></tr>";body+="</table>";
+    if (!rejected && "CREDENCIALES".equals(area)) {
+      files = credentialForm(detail, reason);
     }
+    if (returnEquipment) {
+      files = reportPDFBuilder.fEquipoReport(equipmentReturnReport(detail)).withDevolucion(reason).build();
+    }
+    String action=returnEquipment ? "Solicitud de devolución de equipo" : rejected ? "Desaprobada" : "Aprobada";
+    String subject=action+" · "+area+" · Solicitud N° "+detail.getIdSolicitud()+" · "+SafeValues.safeString(detail.getNombreTalento());
+    String body = renderApprovalNotice(detail, area, rejected, reason, report, files, returnEquipment);
     String target=to.get(0);List<String> copies=rejected?List.of():new ArrayList<>(cc);
     if(!rejected&&to.size()>1)copies.addAll(to.subList(1,to.size()));
     copies=rejected?new ArrayList<>():deduplicateEmailList(copies);copies.removeIf(v->v.equalsIgnoreCase(target));
     return pdfUtils.enviarCorreoConPDF(event,files,target,copies,subject,body,true);
+  }
+
+  private SolicitudEquipoReport equipmentReturnReport(ApprovalDetailDTO detail) throws Exception {
+    var form = objectMapper.readTree(detail.getDatosFormulario());
+    var equipment = ApprovalAreaPolicy.source(detail.getTipoSolicitud(), form, "EQUIPO");
+    var report = new SolicitudEquipoReport();
+    report.setNombreEmpleado(detail.getNombreTalento());
+    report.setApellidosEmpleado("");
+    report.setCliente(detail.getCliente());
+    report.setArea(form.path("area").asText(""));
+    report.setPuesto(form.path("cargo").asText(form.path("puesto").asText("")));
+    report.setFechaSolicitud(java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
+    report.setFechaEntrega(form.path("fchDevolucionEquipo").asText(""));
+    report.setIdTipoEquipo(equipment.path("idTipoEquipo").asInt());
+    report.setProcesador(equipment.path("procesador").asText(""));
+    report.setRam(equipment.path("ram").asText(""));
+    report.setHd(equipment.path("hd").asText(""));
+    report.setMarca(equipment.path("marca").asText(""));
+    report.setAccesorios(equipment.path("accesorios").asText(""));
+    report.setNombreApellidoGestor(detail.getUsuarioSolicitante());
+    report.setCelularTalento(form.path("celularPersonal").asText(form.path("seleccion").path("celular").asText("")));
+    return report;
+  }
+
+  private List<FileDTO> credentialForm(ApprovalDetailDTO detail, String reason) throws Exception {
+    var form = detail.getDatosFormulario() == null ? objectMapper.createObjectNode()
+        : objectMapper.readTree(detail.getDatosFormulario());
+    var account = approvalRepository.getCorporateCredentials(detail.getIdTalento());
+    var fields = ApprovalAreaPolicy.source(detail.getTipoSolicitud(), form, "CREDENCIALES");
+    String date = fields.path("fecha").asText(form.path("fchInicioContrato").asText(detail.getFechaSolicitud()));
+    String area = form.path("area").asText("");
+    if ("CESE".equals(detail.getTipoSolicitud())) {
+      var report = new CeseReport();
+      report.setNombres(detail.getNombreTalento());
+      report.setApellidos("");
+      report.setUnidad(area);
+      report.setFirmante(detail.getUsuarioSolicitante());
+      report.setFechaHistorial(date);
+      report.setMotivo(fields.path("detalle").asText(reason));
+      report.setUsernameEmpleado(account.username());
+      report.setEmailEmpleado(account.email());
+      return reportPDFBuilder.forCese(report).withDeactivateRequest().build();
+    }
+    var report = new EntryReport();
+    report.setNombres(detail.getNombreTalento());
+    report.setApellidos("");
+    report.setUnidad(area);
+    report.setFirmante(detail.getUsuarioSolicitante());
+    report.setFechaHistorial(date);
+    report.setUsernameEmpleado(account.username());
+    report.setEmailEmpleado(account.email());
+    if ("CAMBIO".equals(form.path("accion").asText())) {
+      return reportPDFBuilder.forIngreso(report).withModifyUser(fields.path("usuario").asText("")).build();
+    }
+    return reportPDFBuilder.forIngreso(report).withCreateUser().build();
+  }
+
+  String renderApprovalNotice(ApprovalDetailDTO detail, String area, boolean rejected,
+      String reason, Object report, List<FileDTO> files) throws Exception {
+    return renderApprovalNotice(detail, area, rejected, reason, report, files, false);
+  }
+
+  private String renderApprovalNotice(ApprovalDetailDTO detail, String area, boolean rejected,
+      String reason, Object report, List<FileDTO> files, boolean returnEquipment) throws Exception {
+    var context = new Context(java.util.Locale.forLanguageTag("es-PE"));
+    context.setVariable("idSolicitud", detail.getIdSolicitud());
+    context.setVariable("enlace", ApprovalNotifier.approvalLink(approvalFrontendUrl, detail.getIdSolicitud()));
+    context.setVariable("area", switch (area) {
+      case "EQUIPO" -> "Equipo";
+      case "CREDENCIALES" -> "Credenciales";
+      default -> area;
+    });
+    boolean fmi = "FMI".equals(area);
+    var form = (!rejected || fmi) && detail.getDatosFormulario() != null
+        ? objectMapper.readTree(detail.getDatosFormulario()) : objectMapper.createObjectNode();
+    String talent = fmi
+        ? (form.path("nombres").asText("").trim() + " " + form.path("apellidoPaterno").asText("").trim()).trim()
+        : detail.getNombreTalento();
+    context.setVariable("talento", talent);
+    context.setVariable("cliente", detail.getCliente());
+    context.setVariable("rechazada", rejected);
+    context.setVariable("devolucion", returnEquipment);
+    context.setVariable("motivo", reason);
+    var fields = new LinkedHashMap<String, String>();
+    var forms = new ArrayList<String>();
+    var requirements = new LinkedHashMap<String, String>();
+    if (!rejected) {
+      String type = detail.getTipoSolicitud();
+
+      var labels = ApprovalAreaPolicy.fields(type, area).stream().collect(java.util.stream.Collectors.toMap(
+          org.app.autfmi.model.dto.aprobacion.ApprovalEditableFieldDTO::campo,
+          org.app.autfmi.model.dto.aprobacion.ApprovalEditableFieldDTO::etiqueta));
+      var values = ApprovalAreaPolicy.data(objectMapper, type, form, area);
+      values.forEach((key, value) -> {
+        if (value == null || value.toString().isBlank() || key.equals("idTipoEquipo")) return;
+        if (fmi && !labels.containsKey(key) && !key.equals("nombres") && !key.equals("apellidoPaterno")) return;
+        String label = switch (key) {
+          case "accion" -> "Acción";
+          case "tipoIngreso" -> "Tipo de ingreso";
+          case "fechaIngresoAnterior" -> "Fecha del último ingreso";
+          case "clienteAnterior" -> "Cliente anterior";
+          case "cargoAnterior" -> "Cargo anterior";
+          case "bonoEquipo" -> "Bono de equipo";
+          default -> labels.getOrDefault(key, ApprovalFormPolicy.etiqueta(key));
+        };
+        String display = value instanceof Boolean flag ? (flag ? "Sí" : "No") : value.toString();
+        if (key.equals("declararSunat") && value instanceof Number number) {
+          display = number.intValue() == 1 ? "Sí" : "No";
+        }
+        fields.putIfAbsent(label, display);
+      });
+      if ("CREDENCIALES".equals(area)) {
+        var account = approvalRepository.getCorporateCredentials(detail.getIdTalento());
+        if (!account.username().isBlank()) fields.put("Usuario corporativo", account.username());
+        if (!account.email().isBlank()) fields.put("Correo corporativo", account.email());
+      }
+      if ("FMI".equals(area) && !"INGRESO".equals(type)) {
+        context.setVariable("instruccion", "Favor atender la solicitud de " + operationName(type) + ".");
+      } else if (!"FMI".equals(area)) {
+        String task = returnEquipment ? "Solicitud de devolución de equipo" : areaFormName(type, area, form.path("accion").asText());
+        String email = form.path("correoPersonal").asText(form.path("seleccion").path("email").asText(""));
+        String phone = form.path("celularPersonal").asText(form.path("seleccion").path("celular").asText(""));
+        var contact = new ContactoTalentoDTO(
+            form.path("nombres").asText(detail.getNombreTalento()),
+            String.join(" ", form.path("apellidoPaterno").asText(""), form.path("apellidoMaterno").asText("")).trim(),
+            email, phone);
+        context.setVariable("instruccion", "Favor atender la " + task.toLowerCase(java.util.Locale.ROOT) + ".");
+        context.setVariable("tablaContacto", FormularioCorreoUtils.tablaContactoHtml(List.of(contact)));
+      }
+      if ("INGRESO".equals(type) && "FMI".equals(area)) {
+        var summary = new LinkedHashMap<String, String>();
+        summary.put("Talento", talent);
+        summary.put("Celular", fields.remove("Número de celular"));
+        summary.put("Correo personal", fields.remove("Correo personal"));
+        summary.put("Inicio de labores", fields.remove("Inicio de contrato"));
+        summary.put("Cargo", fields.remove("Cargo"));
+        summary.put("Remuneración", fields.remove("Remuneración"));
+        if (report instanceof EntryReport entry) summary.put("Modalidad", entry.getModalidad());
+        int ownEquipment = form.path("tieneEquipo").asInt(-1);
+        if (ownEquipment >= 0) {
+          fields.remove("Equipo propio");
+          summary.put("Equipo propio", ownEquipment == 1 ? "Sí" : "No");
+        }
+        summary.values().removeIf(value -> value == null || value.isBlank());
+        context.setVariable("resumenIngreso", summary);
+        int requirement = form.path("idRequerimiento").asInt();
+        if (requirement > 0) {
+          try {
+            var rq = approvalRepository.getEntryRequirements(requirement, detail.getIdCliente());
+            context.setVariable("codigoRq", rq.get("CODIGO_RQ"));
+            if (!rq.isEmpty()) {
+              requirements.put("EMO", requirementMark(rq.get("EMO")));
+              requirements.put("SCTR", requirementMark(rq.get("SCTR")));
+              requirements.put("Asignación de laptop", requirementMark(rq.get("ASIGNACION_LAPTOP")));
+            }
+          } catch (org.springframework.dao.DataAccessException e) {
+            logger.warn("No se pudieron consultar los requisitos del RQ {} para el correo.", requirement, e);
+          }
+        }
+      }
+      if (!files.isEmpty() && fmi) {
+        for (FileDTO file : files) {
+          String filename = SafeValues.safeString(file.getNombreArchivo());
+          int code = filename.lastIndexOf(" - FT-");
+          String title = code >= 0 ? filename.substring(code + 3)
+              : filename.startsWith("FT-") ? filename : areaFormName(type, area, "");
+          forms.add((talent.isBlank() ? "" : talent + " - ") + title + " (PDF adjunto)");
+        }
+      }
+      else if (!files.isEmpty()) files.forEach(file -> forms.add(file.getNombreArchivo() + " (PDF adjunto)"));
+      else forms.add(areaFormName(type, area, form.path("accion").asText()));
+    }
+    context.setVariable("campos", fields);
+    context.setVariable("formularios", forms);
+    context.setVariable("requisitos", requirements);
+    return emailTemplates.process("aprobacion-area", context);
+  }
+
+  private static String operationName(String type) {
+    return switch (type) {
+      case "INGRESO" -> "ingreso";
+      case "MOVIMIENTO" -> "movimiento";
+      case "CESE" -> "cese";
+      default -> "aprobación";
+    };
+  }
+
+  private static String areaFormName(String type, String area, String action) {
+    return switch (area) {
+      case "EQUIPO" -> "CESE".equals(type) ? "Solicitud de devolución de equipo" : "Solicitud de equipo";
+      case "CREDENCIALES" -> "CESE".equals(type) ? "Solicitud de baja de credenciales"
+          : "CAMBIO".equals(action) || "MOVIMIENTO".equals(type) ? "Solicitud de cambio de credenciales"
+          : "Solicitud de creación de credenciales";
+      default -> "Formulario de " + operationName(type);
+    };
+  }
+
+  private static String requirementMark(Object value) {
+    if (value == null) return "Sin información";
+    return Boolean.TRUE.equals(value) || value instanceof Number number && number.intValue() == 1 ? "☑" : "☐";
   }
 
   @Async("notificationExecutor")
@@ -392,6 +611,13 @@ public class MailService implements IMailService {
     return "Solicitud de " + accion + ": " + SafeValues.safeString(cliente) + " - " + SafeValues.safeString(nombre);
   }
 
+  private String formularioBodyConEnlace(String accion, String enlace) {
+    if (enlace == null) return buildFormularioBody(accion);
+    return FormularioCorreoUtils.conEnlaceAprobacion(
+        "<div style='font-family:Arial,sans-serif'><p>Estimados,</p><p>Favor atender la solicitud de "
+            + org.springframework.web.util.HtmlUtils.htmlEscape(accion) + ".</p><p>Saludos,</p></div>", enlace);
+  }
+
   private String buildFormularioBody(String accion) {
     return "Estimados,\n\nFavor atender la solicitud de " + accion + ".\nSlds";
   }
@@ -408,13 +634,18 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento) {
+    return sendEntryReportNotificationSync(report, idTalento, null);
+  }
+
+  @Override
+  public boolean sendEntryReportNotificationSync(EntryReport report, Integer idTalento, String enlace) {
     // Una sola consulta para los dos correos; sin permiso no se generan los PDFs.
     try (var decision = correoSwitch.decision(EventoNotificacion.INGRESO)) {
-      return decision.habilitado() && enviarFormulariosIngreso(report, idTalento);
+      return decision.habilitado() && enviarFormulariosIngreso(report, idTalento, enlace);
     }
   }
 
-  private boolean enviarFormulariosIngreso(EntryReport report, Integer idTalento) {
+  private boolean enviarFormulariosIngreso(EntryReport report, Integer idTalento, String enlace) {
     String fullname = report.getNombres() + " " + report.getApellidos();
     String cliente = report.getCliente();
     String gestores = report.getGestoresCliente();
@@ -424,7 +655,7 @@ public class MailService implements IMailService {
         this.reportPDFBuilder.forIngreso(report).withFormulario().build(),
         Constante.MAESTRO_CORREO_TALENTO, report.getCorreoGestor(), gestores,
         buildFormularioSubject("ingreso", cliente, fullname),
-        buildFormularioBody("ingreso"));
+        formularioBodyConEnlace("ingreso", enlace), enlace != null);
 
     // Correo 2: Solicitud de Creación de Usuario -> maestro 51 (soporte), con la
     // tabla de contacto del talento en el cuerpo.
@@ -433,7 +664,7 @@ public class MailService implements IMailService {
         this.reportPDFBuilder.forIngreso(report).withCreateUser().build(),
         Constante.MAESTRO_CORREO_SOPORTE, report.getCorreoGestor(), gestores,
         buildFormularioSubject("creación de usuario", cliente, fullname),
-        FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", List.of(contacto)), true);
+        FormularioCorreoUtils.conEnlaceAprobacion(FormularioCorreoUtils.cuerpoSolicitudHtml("creación de usuario", List.of(contacto)), enlace), true);
 
     return ingreso && usuario;
   }
@@ -446,6 +677,11 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendCeseReportNotificationSync(CeseReport report) {
+    return sendCeseReportNotificationSync(report, null);
+  }
+
+  @Override
+  public boolean sendCeseReportNotificationSync(CeseReport report, String enlace) {
     try (var decision = correoSwitch.decision(EventoNotificacion.CESE)) {
       if (!decision.habilitado()) {
         return false;
@@ -463,7 +699,7 @@ public class MailService implements IMailService {
       return sendFormularioEmail(EventoNotificacion.CESE, attachments, Constante.MAESTRO_CORREO_TALENTO,
           report.getCorreoGestor(), report.getGestoresCliente(),
           buildFormularioSubject("cese", report.getCliente(), fullname),
-          buildFormularioBody("cese"));
+          formularioBodyConEnlace("cese", enlace), enlace != null);
     }
   }
 
@@ -474,6 +710,11 @@ public class MailService implements IMailService {
 
   @Override
   public boolean sendMovementReportNotificationSync(MovementReport report) {
+    return sendMovementReportNotificationSync(report, null);
+  }
+
+  @Override
+  public boolean sendMovementReportNotificationSync(MovementReport report, String enlace) {
     try (var decision = correoSwitch.decision(EventoNotificacion.MOVIMIENTO)) {
       if (!decision.habilitado()) {
         return false;
@@ -489,7 +730,7 @@ public class MailService implements IMailService {
       return sendFormularioEmail(EventoNotificacion.MOVIMIENTO, attachments, Constante.MAESTRO_CORREO_TALENTO,
           report.getCorreoGestor(), report.getGestoresCliente(),
           buildFormularioSubject("movimiento", report.getCliente(), fullname),
-          buildFormularioBody("movimiento"));
+          formularioBodyConEnlace("movimiento", enlace), enlace != null);
     }
   }
 

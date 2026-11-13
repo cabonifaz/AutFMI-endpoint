@@ -40,6 +40,39 @@ public class ApprovalRepository {
   private final Logger logger = LoggerFactory.getLogger(ApprovalRepository.class);
 
   /** Solo para completar datos de presentación de una solicitud ya autorizada. */
+  public record CorporateCredentials(String username, String email) {}
+
+  public CorporateCredentials getCorporateCredentials(Integer talentId) {
+    if (talentId == null) return new CorporateCredentials("", "");
+    return jdbcTemplate.query("""
+        SELECT TOP (1) LTRIM(RTRIM(CORREO)) AS CORREO
+        FROM dbo.BT_TALENTO_CORREO
+        WHERE ID_TALENTO=? AND ID_TIPO_CORREO=1 AND ID_ESTADO_REGISTRO=1
+          AND NULLIF(LTRIM(RTRIM(CORREO)), '') IS NOT NULL
+        ORDER BY ID_CORREO DESC
+        """, (row, index) -> row.getString("CORREO"), talentId).stream()
+        .findFirst().map(email -> {
+          int at = email.indexOf('@');
+          return new CorporateCredentials(at > 0 ? email.substring(0, at) : email, email);
+        }).orElseGet(() -> new CorporateCredentials("", ""));
+  }
+
+  public Map<String, Object> getEntryRequirements(int requirement, Integer client) {
+    var rows = jdbcTemplate.queryForList("""
+        SELECT CODIGO_RQ, EMO, SCTR, ASIGNACION_LAPTOP
+        FROM dbo.REQUERIMIENTO WHERE ID_REQUERIMIENTO=? AND ID_CLIENTE=?
+        """, requirement, client);
+    return rows.isEmpty() ? Map.of() : rows.get(0);
+  }
+
+  public boolean hasPreviousEntry(Integer talent) {
+    return Boolean.TRUE.equals(jdbcTemplate.queryForObject("""
+        SELECT CAST(CASE WHEN EXISTS(
+          SELECT 1 FROM dbo.HISTORIAL WHERE ID_TALENTO=? AND ID_TIPO_HISTORIAL=1 AND ID_ESTADO_REGISTRO=1
+        ) THEN 1 ELSE 0 END AS BIT)
+        """, Boolean.class, talent));
+  }
+
   public Map<String, Object> getTalentGeneral(Integer talent, Integer area) {
     var rows = jdbcTemplate.queryForList("""
         SELECT T.NOMBRES AS nombres, T.APELLIDO_PATERNO AS apellidoPaterno,

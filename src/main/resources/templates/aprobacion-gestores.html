@@ -14,7 +14,7 @@
     <!-- Header -->
     <div style="padding: 20px 24px; background-color: #2D5294;">
       <h1 style="margin: 0; font-size: 20px; font-weight: bold; color: #ffffff;"
-        th:text="|Solicitud de aprobación N° ${idSolicitud} - ${tipo}|">
+        th:text="|Solicitud pendiente de aprobación N° ${idSolicitud} - ${tipo}|">
         Solicitud de aprobación
       </h1>
     </div>
@@ -61,6 +61,12 @@
           <td style="border: 1px solid #e5e7eb;" th:text="${fila.valor}">Valor</td>
         </tr>
       </table>
+
+      <div th:if="${!#lists.isEmpty(formularios)}">
+        <p><strong>Formularios para revisar en FMI</strong></p>
+        <ul><li th:each="formulario : ${formularios}" th:text="${formulario}">Formulario</li></ul>
+        <p>Los datos disponibles están precargados y se pueden editar antes de enviarlos.</p>
+      </div>
 
       <p style="margin: 24px 0; text-align: center;">
         <a th:href="${enlace}"

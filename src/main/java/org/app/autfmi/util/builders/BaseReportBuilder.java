@@ -35,7 +35,7 @@ public abstract class BaseReportBuilder<T> {
    * @param html
    * @return
    */
-  public byte[] renderPdfFromHtml(String html) {
+  public static byte[] renderPdfFromHtml(String html) {
     try (var os = new ByteArrayOutputStream()) {
 
       var document = Jsoup.parse(html);

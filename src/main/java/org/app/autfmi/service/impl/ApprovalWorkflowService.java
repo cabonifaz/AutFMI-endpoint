@@ -22,6 +22,8 @@ import org.app.autfmi.model.response.OperationResult;
 import org.app.autfmi.repository.ApprovalRepository;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.InicioPreferenceRepository;
+import org.app.autfmi.repository.HistoryRepository;
+import org.app.autfmi.model.report.EntryReport;
 import org.app.autfmi.util.ApprovalFormPolicy;
 import org.app.autfmi.util.Common;
 import org.app.autfmi.util.Constante;
@@ -46,10 +48,12 @@ public class ApprovalWorkflowService {
   private final ObjectMapper objectMapper;
   private final boolean flujoActivo;
   private final InicioPreferenceRepository inicioPreferenceRepository;
+  private final HistoryRepository historyRepository;
 
   public ApprovalWorkflowService(ApprovalRepository approvalRepository, ApprovalService approvalService,
       EmployeeOperationExecutor operationExecutor, ApprovalNotifier notifier, EmployeeRepository employeeRepository,
-      ObjectMapper objectMapper, InicioPreferenceRepository inicioPreferenceRepository, @Value("${approval.flow.enabled:true}") boolean flujoActivo) {
+      ObjectMapper objectMapper, InicioPreferenceRepository inicioPreferenceRepository,
+      HistoryRepository historyRepository, @Value("${approval.flow.enabled:true}") boolean flujoActivo) {
     this.approvalRepository = approvalRepository;
     this.approvalService = approvalService;
     this.operationExecutor = operationExecutor;
@@ -57,6 +61,7 @@ public class ApprovalWorkflowService {
     this.employeeRepository = employeeRepository;
     this.objectMapper = objectMapper;
     this.inicioPreferenceRepository = inicioPreferenceRepository;
+    this.historyRepository = historyRepository;
     this.flujoActivo = flujoActivo;
     logger.info("Flujo de aprobaciones FTBO-1124 {}.", flujoActivo ? "ACTIVO" : "desactivado");
   }
@@ -77,7 +82,31 @@ public class ApprovalWorkflowService {
     return flujoActivo;
   }
 
+  void populatePreviousEntry(UserDTO user, EmployeeEntryRequest request) {
+    if (request.getIdTalento() == null) return;
+    if (!approvalRepository.hasPreviousEntry(request.getIdTalento())) {
+      request.setTipoIngreso("Ingreso nuevo");
+      return;
+    }
+    request.setTipoIngreso("Reingreso");
+    var actor = Common.createBaseRequest(user, Constante.OBTENER_ULTIMO_REGISTRO_HISTORIAL);
+    if (historyRepository.getHistoryReport(actor, request.getIdTalento(),
+        Constante.TIPO_REPORTE_INGRESO, null, true) instanceof EntryReport previous) {
+      request.setFechaIngresoAnterior(previous.getFechaHistorial());
+      request.setClienteAnterior(previous.getCliente());
+      request.setCargoAnterior(previous.getCargo());
+    }
+  }
+
   public BaseResponse submitEntry(UserDTO user, EmployeeEntryRequest request) {
+    populatePreviousEntry(user, request);
+    var contact = employeeRepository.getContactoTalento(request.getIdTalento());
+    if (contact != null) {
+      if (request.getCorreoPersonal() == null || request.getCorreoPersonal().isBlank())
+        request.setCorreoPersonal(contact.getCorreo());
+      if (request.getCelularPersonal() == null || request.getCelularPersonal().isBlank())
+        request.setCelularPersonal(contact.getCelular());
+    }
     var general = approvalRepository.getTalentGeneral(request.getIdTalento(), request.getIdArea());
     request.setNombres((String) general.get("nombres"));
     request.setApellidoPaterno((String) general.get("apellidoPaterno"));

@@ -34,3 +34,7 @@ spring:
           connectiontimeout: 10000
           timeout: 15000
           writetimeout: 15000
+
+approval:
+  frontend:
+    url: https://salmon-rock-06416070f.2.azurestaticapps.net

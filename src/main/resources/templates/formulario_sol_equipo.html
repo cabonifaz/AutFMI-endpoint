@@ -116,7 +116,8 @@
         <img th:src="${fractalLogo}" alt="Logo Fractal" style="height: 0.55in; width: 2.16in;" />
       </td>
       <td rowspan="3" class="header-title" style="width: 45%; font-size: 10pt; border: 1px solid #1083C6;">
-        SOLICITUD DE INSTALACION DE<br />SOFTWARE Y HARDWARE
+        <span th:if="${devolucion}">SOLICITUD DE DEVOLUCIÓN DE EQUIPO</span>
+        <span th:unless="${devolucion}">SOLICITUD DE INSTALACION DE<br />SOFTWARE Y HARDWARE</span>
       </td>
       <td style="width: 10%; font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">Código:</td>
       <td style="width: 20%; font-size: 8pt; font-weight: normal; border: 1px solid #1083C6;">FT-GS-03
@@ -165,7 +166,7 @@
       <td style="border: none; font-size: 9pt; padding: 5px 0; font-weight: bold;">
         Fecha de Solicitud: <span th:text="${fechaSolicitud}">__/__/____</span>
         &nbsp;&nbsp;&nbsp;&nbsp;
-        Fecha de Entrega: <span th:text="${fechaEntrega}">__/__/____</span>
+        <span th:text="${devolucion} ? 'Fecha de devolución:' : 'Fecha de entrega:'"></span> <span th:text="${fechaEntrega}">__/__/____</span>
       </td>
     </tr>
     <tr>
@@ -279,6 +280,9 @@
     </p>
   </div>
 
+  <p th:if="${devolucion}" style="font-size:10pt">
+    <strong>Motivo de devolución:</strong> <span th:text="${motivoDevolucion}"></span>
+  </p>
 </body>
 
 </html>

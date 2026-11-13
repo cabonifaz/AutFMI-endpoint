@@ -18,7 +18,17 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
   }
 
   public ReportEquipoBuilder withFormulario() {
+    return formulario(false, null);
+  }
+
+  public ReportEquipoBuilder withDevolucion(String motivo) {
+    return formulario(true, motivo);
+  }
+
+  private ReportEquipoBuilder formulario(boolean devolucion, String motivo) {
     var context = new Context();
+    context.setVariable("devolucion", devolucion);
+    context.setVariable("motivoDevolucion", motivo);
 
     // Logo
     context.setVariable("fractalLogo", this.imageToBase64("assets/logo-fractal-2.png"));
@@ -38,16 +48,16 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     context.setVariable("fechaEntrega", Common.parseDateToFormDate(report.getFechaEntrega()));
 
     // Hardware – tipo (booleanos, el template decide si pone X o no)
-    context.setVariable("tipoPC", report.getIdTipoEquipo() == 1);
-    context.setVariable("tipoLaptop", report.getIdTipoEquipo() == 2);
+    context.setVariable("tipoPC", Integer.valueOf(1).equals(report.getIdTipoEquipo()));
+    context.setVariable("tipoLaptop", Integer.valueOf(2).equals(report.getIdTipoEquipo()));
     context.setVariable("procesador", report.getProcesador());
     context.setVariable("ram", report.getRam());
     context.setVariable("hd", report.getHd());
     context.setVariable("marca", report.getMarca());
 
     // Comunicaciones
-    context.setVariable("anexoFijo", report.getIdAnexo() == 1);
-    context.setVariable("anexoSoftphone", report.getIdAnexo() == 2);
+    context.setVariable("anexoFijo", Integer.valueOf(1).equals(report.getIdAnexo()));
+    context.setVariable("anexoSoftphone", Integer.valueOf(2).equals(report.getIdAnexo()));
     context.setVariable("celularSi", Boolean.TRUE.equals(report.getCelular()));
     context.setVariable("celularNo", !Boolean.TRUE.equals(report.getCelular()));
     context.setVariable("internetMovilSi", Boolean.TRUE.equals(report.getInternetMovil()));
@@ -75,7 +85,8 @@ public class ReportEquipoBuilder extends BaseReportBuilder<SolicitudEquipoReport
     var htmlContent = templateEngine.process("formulario_sol_equipo", context);
 
     var filename = this.buildFilename(report.getNombreEmpleado(), report.getApellidosEmpleado(),
-        "FT-GS-03 Solicitud de Requerimiento de Hardware y Software");
+        devolucion ? "Solicitud de Devolución de Equipo"
+            : "FT-GS-03 Solicitud de Requerimiento de Hardware y Software");
 
     var pdfBytes = this.renderPdfFromHtml(htmlContent);
 

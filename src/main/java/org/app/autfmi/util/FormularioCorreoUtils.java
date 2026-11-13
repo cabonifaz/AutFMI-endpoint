@@ -89,6 +89,16 @@ public final class FormularioCorreoUtils {
                 + "</div>";
     }
 
+    public static String conEnlaceAprobacion(String html, String url) {
+        if (url == null || url.isBlank()) return html;
+        var document = org.jsoup.Jsoup.parse(html);
+        document.body().appendElement("p").attr("style", "margin:24px 0;text-align:center")
+                .appendElement("a").attr("href", url)
+                .attr("style", "display:inline-block;padding:12px 24px;background-color:#2D5294;color:white;text-decoration:none;border-radius:6px;font-weight:bold")
+                .text("Ver solicitud en la bandeja de aprobaciones");
+        return document.outerHtml();
+    }
+
     private static String siNo(Integer valor) {
         return Integer.valueOf(1).equals(valor) ? "Sí" : "No";
     }

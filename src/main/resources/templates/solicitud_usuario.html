@@ -87,8 +87,8 @@
             font-weight: bold;
             font-size: 10pt;
           ">
-        SOLICITUD DE CREACIÓN, MODIFICACIÓN O<br />
-        DESACTIVACIÓN DE USUARIOS
+        <span th:if="${soloCreacion == true}">SOLICITUD DE CREACIÓN DE USUARIOS</span>
+        <span th:unless="${soloCreacion == true}">SOLICITUD DE CREACIÓN, MODIFICACIÓN O<br />DESACTIVACIÓN DE USUARIOS</span>
       </td>
 
       <td style="width: 10%; font-size: 8pt; border-bottom: 1px solid #1083C6">
@@ -203,7 +203,7 @@
     </tr>
   </table>
 
-  <table style="margin: 20px 0px; width: 100%; border-collapse: collapse">
+  <table th:unless="${soloCreacion == true}" style="margin: 20px 0px; width: 100%; border-collapse: collapse">
     <tr>
       <td colspan="4" class="header-bg" style="text-align: center">
         MODIFICACIÓN DE USUARIOS
@@ -225,7 +225,7 @@
 
     <tr>
       <td class="label">Modificar por:</td>
-      <td colspan="2" class="value" th:text="${username}">jmason</td>
+      <td colspan="2" class="value" th:text="${cuentaSolicitada}">jmason</td>
     </tr>
 
     <tr>
@@ -237,16 +237,16 @@
 
     <tr>
       <td class="label">Correo:</td>
-      <td colspan="2" class="value" th:text="${username}">jmason</td>
+      <td colspan="2" class="value" th:text="${correoActual}">jmason</td>
     </tr>
 
     <tr>
       <td class="label">Modificar por:</td>
-      <td colspan="2" class="value" th:text="${username}">jmason</td>
+      <td colspan="2" class="value" th:text="${cuentaSolicitada}">jmason</td>
     </tr>
   </table>
 
-  <table style="margin: 20px 0px">
+  <table th:unless="${soloCreacion == true}" style="margin: 20px 0px">
     <tr>
       <td colspan="2" class="header-bg">DESACTIVACIÓN DE USUARIOS</td>
     </tr>

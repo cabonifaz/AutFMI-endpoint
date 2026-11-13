@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;background-color:#ffffff;color:#242424;font-family:Arial,sans-serif;font-size:15px">
+  <div style="padding:0 24px 24px;line-height:1.5">
+    <p>Estimados,</p>
+    <p>
+      La solicitud <strong th:text="'N.º ' + ${idSolicitud}"></strong>
+      del área <strong th:text="${area}"></strong>
+      <span th:text="${rechazada or devolucion} ? 'fue desaprobada.' : 'fue aprobada.'"></span>
+    </p>
+    <p>
+      <strong>Talento:</strong> <span th:text="${talento}"></span><br>
+      <strong>Cliente:</strong> <span th:text="${cliente}"></span><br th:if="${codigoRq != null}">
+      <span th:if="${codigoRq != null}"><strong>Requerimiento:</strong> <span th:text="${codigoRq}"></span></span>
+    </p>
+    <p th:if="${rechazada or devolucion}"><strong>Motivo:</strong> <span th:text="${motivo}"></span></p>
+    <table th:unless="${requisitos.isEmpty()}" width="100%" cellspacing="0" cellpadding="6" border="1"
+           style="border-collapse:collapse;border:1px solid #b7c4d6;margin:16px 0">
+      <thead><tr><th colspan="2" bgcolor="#2D5294" style="background-color:#2D5294;color:#ffffff">Requisitos de ingreso</th></tr></thead>
+      <tbody><tr th:each="requisito : ${requisitos}">
+        <td th:text="${requisito.key}"></td><td align="center" th:text="${requisito.value}"></td>
+      </tr></tbody>
+    </table>
+    <div th:unless="${formularios.isEmpty()}">
+      <strong>Formularios de la solicitud</strong>
+      <ul><li th:each="formulario : ${formularios}" th:text="${formulario}"></li></ul>
+    </div>
+    <p th:if="${instruccion != null}" th:text="${instruccion}"></p>
+    <div th:if="${tablaContacto != null}" th:utext="${tablaContacto}"></div>
+    <table th:if="${resumenIngreso != null}" width="100%" cellspacing="0" cellpadding="6" border="1"
+           style="border-collapse:collapse;border:1px solid #b7c4d6;margin:16px 0">
+      <thead><tr bgcolor="#2D5294" style="background-color:#2D5294;color:#ffffff">
+        <th th:each="dato : ${resumenIngreso}" scope="col" th:text="${dato.key}"></th>
+      </tr></thead>
+      <tbody><tr><td th:each="dato : ${resumenIngreso}" th:text="${dato.value}"></td></tr></tbody>
+    </table>
+    <table th:unless="${campos.isEmpty()}" width="100%" cellspacing="0" cellpadding="6" border="1"
+           style="border-collapse:collapse;border:1px solid #b7c4d6;margin:16px 0">
+      <thead><tr bgcolor="#2D5294" style="background-color:#2D5294;color:#ffffff">
+        <th align="left" width="38%">Datos del formulario</th><th align="left">Detalle</th>
+      </tr></thead>
+      <tbody><tr th:each="campo : ${campos}">
+        <th scope="row" align="left" bgcolor="#edf2fa" th:text="${campo.key}"></th>
+        <td style="white-space:pre-wrap" th:text="${campo.value}"></td>
+      </tr></tbody>
+    </table>
+    <p style="margin:24px 0;text-align:center">
+      <a th:href="${enlace}" style="display:inline-block;padding:12px 24px;background-color:#2D5294;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:bold">
+        Ver solicitud en la bandeja de aprobaciones
+      </a>
+    </p>
+    <p style="font-size:12px;color:#555">Enlace directo: <span th:text="${enlace}"></span></p>
+    <p>Saludos,</p>
+  </div>
+</body>
+</html>

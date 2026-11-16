@@ -42,6 +42,16 @@ public class ApprovalRepository {
   /** Solo para completar datos de presentación de una solicitud ya autorizada. */
   public record CorporateCredentials(String username, String email) {}
 
+  public String getApplicantName(Integer requestId) {
+    return jdbcTemplate.query("""
+        SELECT CONCAT(U.NOMBRES, ' ', U.APELLIDOS) AS NOMBRE
+        FROM dbo.FMI_SOLICITUD_APROBACION S
+        JOIN dbo.USUARIOS U ON U.ID_USUARIO = S.ID_USUARIO_SOLICITANTE
+        WHERE S.ID_SOLICITUD = ?
+        """, (row, index) -> row.getString("NOMBRE").trim(), requestId)
+        .stream().findFirst().orElse("");
+  }
+
   public CorporateCredentials getCorporateCredentials(Integer talentId) {
     if (talentId == null) return new CorporateCredentials("", "");
     return jdbcTemplate.query("""

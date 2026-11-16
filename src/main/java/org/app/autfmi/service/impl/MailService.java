@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.app.autfmi.model.dto.InicioOutsourcingDTO;
 import org.app.autfmi.model.dto.ContactoTalentoDTO;
@@ -13,6 +14,9 @@ import org.app.autfmi.model.dto.FileDTO;
 import org.app.autfmi.model.dto.ParametrosDTO;
 import org.app.autfmi.repository.EmployeeRepository;
 import org.app.autfmi.repository.ApprovalRepository;
+import org.app.autfmi.repository.ApprovalAreaRepository;
+import org.app.autfmi.model.request.SolicitudSoftwareRequest;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.app.autfmi.model.dto.aprobacion.ApprovalDetailDTO;
 import org.app.autfmi.util.ApprovalAreaPolicy;
 import org.app.autfmi.util.ApprovalFormPolicy;
@@ -73,6 +77,9 @@ public class MailService implements IMailService {
   @Autowired
   private ApprovalRepository approvalRepository;
 
+  @Autowired
+  private ApprovalAreaRepository approvalAreaRepository;
+
   @Value("${approval.frontend.url:http://localhost:3000}")
   private String approvalFrontendUrl;
 
@@ -122,6 +129,12 @@ public class MailService implements IMailService {
     report.setFechaSolicitud(java.time.LocalDate.now(java.time.ZoneId.of("America/Lima")).toString());
     report.setFechaEntrega(form.path("fchDevolucionEquipo").asText(""));
     report.setIdTipoEquipo(equipment.path("idTipoEquipo").asInt());
+    var software = equipment.path("lstSoftware");
+    if (software.isArray()) {
+      report.setLstSoftware(objectMapper.readerForListOf(SolicitudSoftwareRequest.class).readValue(software));
+    } else if (Set.of(1, 2).contains(report.getIdTipoEquipo())) {
+      report.setLstSoftware(approvalAreaRepository.defaultSoftware());
+    }
     report.setProcesador(equipment.path("procesador").asText(""));
     report.setRam(equipment.path("ram").asText(""));
     report.setHd(equipment.path("hd").asText(""));
@@ -135,8 +148,9 @@ public class MailService implements IMailService {
   private List<FileDTO> credentialForm(ApprovalDetailDTO detail, String reason) throws Exception {
     var form = detail.getDatosFormulario() == null ? objectMapper.createObjectNode()
         : objectMapper.readTree(detail.getDatosFormulario());
-    var account = approvalRepository.getCorporateCredentials(detail.getIdTalento());
     var fields = ApprovalAreaPolicy.source(detail.getTipoSolicitud(), form, "CREDENCIALES");
+    var account = credentialAccount(detail, fields);
+    String applicant = approvalRepository.getApplicantName(detail.getIdSolicitud());
     String date = fields.path("fecha").asText(form.path("fchInicioContrato").asText(detail.getFechaSolicitud()));
     String area = form.path("area").asText("");
     if ("CESE".equals(detail.getTipoSolicitud())) {
@@ -144,7 +158,7 @@ public class MailService implements IMailService {
       report.setNombres(detail.getNombreTalento());
       report.setApellidos("");
       report.setUnidad(area);
-      report.setFirmante(detail.getUsuarioSolicitante());
+      report.setFirmante(applicant);
       report.setFechaHistorial(date);
       report.setMotivo(fields.path("detalle").asText(reason));
       report.setUsernameEmpleado(account.username());
@@ -155,7 +169,7 @@ public class MailService implements IMailService {
     report.setNombres(detail.getNombreTalento());
     report.setApellidos("");
     report.setUnidad(area);
-    report.setFirmante(detail.getUsuarioSolicitante());
+    report.setFirmante(applicant);
     report.setFechaHistorial(date);
     report.setUsernameEmpleado(account.username());
     report.setEmailEmpleado(account.email());
@@ -163,6 +177,16 @@ public class MailService implements IMailService {
       return reportPDFBuilder.forIngreso(report).withModifyUser(fields.path("usuario").asText("")).build();
     }
     return reportPDFBuilder.forIngreso(report).withCreateUser().build();
+  }
+
+  private ApprovalRepository.CorporateCredentials credentialAccount(ApprovalDetailDTO detail, JsonNode fields) {
+    var account = approvalRepository.getCorporateCredentials(detail.getIdTalento());
+    String requested = fields.path("usuario").asText("").trim();
+    if (!account.username().isBlank() || requested.isBlank()) return account;
+    int separator = requested.indexOf('@');
+    return separator > 0
+        ? new ApprovalRepository.CorporateCredentials(requested.substring(0, separator), requested)
+        : new ApprovalRepository.CorporateCredentials(requested, account.email());
   }
 
   String renderApprovalNotice(ApprovalDetailDTO detail, String area, boolean rejected,
@@ -220,7 +244,7 @@ public class MailService implements IMailService {
         fields.putIfAbsent(label, display);
       });
       if ("CREDENCIALES".equals(area)) {
-        var account = approvalRepository.getCorporateCredentials(detail.getIdTalento());
+        var account = credentialAccount(detail, ApprovalAreaPolicy.source(type, form, area));
         if (!account.username().isBlank()) fields.put("Usuario corporativo", account.username());
         if (!account.email().isBlank()) fields.put("Correo corporativo", account.email());
       }

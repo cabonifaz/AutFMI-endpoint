@@ -140,7 +140,7 @@ public class MailService implements IMailService {
     report.setHd(equipment.path("hd").asText(""));
     report.setMarca(equipment.path("marca").asText(""));
     report.setAccesorios(equipment.path("accesorios").asText(""));
-    report.setNombreApellidoGestor(detail.getUsuarioSolicitante());
+    report.setNombreApellidoGestor(approvalRepository.getApplicantName(detail.getIdSolicitud()));
     report.setCelularTalento(form.path("celularPersonal").asText(form.path("seleccion").path("celular").asText("")));
     return report;
   }

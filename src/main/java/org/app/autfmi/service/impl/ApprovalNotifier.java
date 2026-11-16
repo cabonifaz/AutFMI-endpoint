@@ -226,9 +226,12 @@ public class ApprovalNotifier {
     variables.put("cliente", SafeValues.safeString(n.cliente()));
     variables.put("talento", SafeValues.safeString(n.nombreTalento()));
     variables.put("resumen", SafeValues.safeString(n.resumen()));
-    String solicitante = (SafeValues.safeString(n.solicitante().getNombres()).trim() + " "
-        + SafeValues.safeString(n.solicitante().getApellidos()).trim()).trim();
-    variables.put("solicitante", solicitante.isEmpty() ? "El solicitante" : solicitante);
+    String solicitante = approvalRepository.getApplicantName(n.idSolicitud());
+    if (solicitante.isBlank()) {
+      solicitante = (SafeValues.safeString(n.solicitante().getNombres()).trim() + " "
+          + SafeValues.safeString(n.solicitante().getApellidos()).trim()).trim();
+    }
+    variables.put("solicitante", solicitante);
     variables.put("filas", ApprovalFormPolicy.resumenFormulario(objectMapper, n.datosFormulario()));
     variables.put("formularios", formulariosGestores(n.tipo(), n.datosFormulario()));
     variables.put("enlace", enlace(n.idSolicitud()));

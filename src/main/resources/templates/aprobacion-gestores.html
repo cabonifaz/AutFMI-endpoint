@@ -25,7 +25,8 @@
       <p style="margin: 0 0 16px 0; font-size: 15px;">Estimados,</p>
 
       <p style="margin: 0 0 16px 0; font-size: 15px;">
-        <strong th:text="${solicitante}">usuario</strong> registró una solicitud de
+        <strong th:unless="${#strings.isEmpty(solicitante)}" th:text="${solicitante}"></strong>
+        <span th:text="${#strings.isEmpty(solicitante)} ? 'Se registró' : 'registró'"></span> una solicitud de
         <strong th:text="${tipo}">tipo</strong> para <strong th:text="${talento}">Talento</strong>
         en <strong th:text="${cliente}">Cliente</strong>. Como gestores del cliente, revisen los
         formularios y, si todo es correcto, aprueben el flujo completo desde la bandeja de aprobaciones.

@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class SelectionEntryExecutor {
     private final RequirementRepository repository;
+    private final org.app.autfmi.repository.ApprovalRepository approvals;
     private final InicioPreferenceRepository preference;
     private final JdbcTemplate jdbc;
 
@@ -51,6 +52,15 @@ public class SelectionEntryExecutor {
         talent.setIngreso(0);
         var base = new BaseRequest(actor.getIdUsuario(), actor.getUsername(), actor.getIdEmpresa(),
                 actor.getIdRol(), Constante.GUARDAR_REQUERIMIENTO);
+        var credentials = form.getCredenciales();
+        if (credentials != null && credentials.containsKey("usuario")) {
+            try {
+                var account = approvals.validateCorporateUsername(form.getIdTalento(), actor.getIdEmpresa(), credentials.get("usuario"));
+                approvals.saveCorporateCredentials(form.getIdTalento(), account, actor.getUsername());
+            } catch (IllegalArgumentException e) {
+                return new EmployeeOperationExecutor.Execution(new BaseResponse(1, e.getMessage()), null);
+            }
+        }
         var result = repository.saveRequirementTalents(new RequirementTalentRequest(
                 form.getIdRequerimiento(), false, true, List.of(talent)), base);
         if (result.getBaseResponse().getIdTipoMensaje() != 2) {

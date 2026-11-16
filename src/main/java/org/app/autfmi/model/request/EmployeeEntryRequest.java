@@ -13,6 +13,7 @@ public class EmployeeEntryRequest {
     private Integer notificarProntoInicio;
     /** Instantánea de la selección; conserva perfil y solicitud de equipo. */
     private RequirementTalentRequestDTO seleccion;
+    private java.util.Map<String, String> credenciales;
     // Employee record
     private Integer idTalento;
     private String nombres;

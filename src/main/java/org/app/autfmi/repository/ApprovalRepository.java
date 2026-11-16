@@ -52,6 +52,63 @@ public class ApprovalRepository {
         .stream().findFirst().orElse("");
   }
 
+  public CorporateCredentials previewCorporateCredentials(Integer talentId, Integer companyId) {
+    var active = getCorporateCredentials(talentId);
+    if (!active.username().isBlank()) return active;
+    return jdbcTemplate.query("""
+        DECLARE @base varchar(255), @materno varchar(100), @dominio varchar(200);
+        SELECT @base = LOWER(REPLACE(dbo.fn_RemoveAccents(dbo.fn_PrimerBloque(NOMBRES)), ' ', '')
+            + '.' + REPLACE(dbo.fn_RemoveAccents(dbo.fn_PrimerBloque(APELLIDO_PATERNO)), ' ', '')),
+          @materno = LOWER(REPLACE(dbo.fn_RemoveAccents(dbo.fn_PrimerBloque(APELLIDO_MATERNO)), ' ', ''))
+        FROM dbo.BT_TALENTO WHERE ID_TALENTO=? AND ID_ESTADO_REGISTRO=1;
+        SELECT @dominio=DOMINIO_CORREO FROM dbo.EMPRESAS WHERE ID_EMPRESA=? AND ID_ESTADO_REGISTRO=1;
+        DECLARE @usuario varchar(255)=@base, @sufijo int=1;
+        IF EXISTS (SELECT 1 FROM dbo.BT_TALENTO_CORREO WHERE CORREO=@usuario+@dominio AND ID_ESTADO_REGISTRO=1)
+          AND NULLIF(@materno,'') IS NOT NULL SET @usuario=@base+'.'+@materno;
+        WHILE EXISTS (SELECT 1 FROM dbo.BT_TALENTO_CORREO WHERE CORREO=@usuario+@dominio AND ID_ESTADO_REGISTRO=1)
+        BEGIN
+          SET @usuario=CONCAT(@base,@sufijo);
+          SET @sufijo+=1;
+        END;
+        SELECT @usuario AS USUARIO, @usuario+@dominio AS CORREO
+        WHERE @usuario IS NOT NULL AND @dominio IS NOT NULL;
+        """, (row, index) -> new CorporateCredentials(row.getString("USUARIO"), row.getString("CORREO")),
+        talentId, companyId).stream().findFirst().orElse(new CorporateCredentials("", ""));
+  }
+
+  public CorporateCredentials validateCorporateUsername(Integer talentId, Integer companyId, String value) {
+    String username = value.trim().toLowerCase(java.util.Locale.ROOT);
+    var active = getCorporateCredentials(talentId);
+    if (username.equalsIgnoreCase(active.username()) && !username.isBlank()) return active;
+    if (!username.matches("[a-z0-9_-]+(?:\\.[a-z0-9_-]+)*") || username.length() > 64) {
+      throw new IllegalArgumentException("Ingrese un usuario corporativo válido, sin el dominio.");
+    }
+    String domain = jdbcTemplate.query("""
+        SELECT DOMINIO_CORREO FROM dbo.EMPRESAS WHERE ID_EMPRESA=? AND ID_ESTADO_REGISTRO=1
+        """, (row, index) -> row.getString(1), companyId).stream()
+        .filter(java.util.Objects::nonNull).findFirst().orElse("");
+    if (domain.isBlank()) throw new IllegalArgumentException("La empresa no tiene un dominio corporativo configurado.");
+    String email = username + domain;
+    Integer taken = jdbcTemplate.queryForObject("""
+        SELECT COUNT(*) FROM dbo.BT_TALENTO_CORREO
+        WHERE CORREO=? AND ID_ESTADO_REGISTRO=1 AND ID_TALENTO<>?
+        """, Integer.class, email, talentId);
+    if (taken != null && taken > 0) throw new IllegalArgumentException("Ese usuario corporativo ya está asignado.");
+    return new CorporateCredentials(username, email);
+  }
+
+  public void saveCorporateCredentials(Integer talentId, CorporateCredentials account, String actor) {
+    int updated = jdbcTemplate.update("""
+        UPDATE dbo.BT_TALENTO_CORREO SET CORREO=?
+        WHERE ID_CORREO=(SELECT TOP 1 ID_CORREO FROM dbo.BT_TALENTO_CORREO WITH (UPDLOCK,HOLDLOCK)
+            WHERE ID_TALENTO=? AND ID_TIPO_CORREO=1 AND ID_ESTADO_REGISTRO=1 ORDER BY ID_CORREO DESC)
+        """, account.email(), talentId);
+    if (updated == 0) jdbcTemplate.update("""
+        INSERT INTO dbo.BT_TALENTO_CORREO (ID_TALENTO,ID_TIPO_CORREO,CORREO,USUCRE,FCHCRE,ID_ESTADO_REGISTRO)
+        VALUES (?,1,?,?,GETDATE(),1)
+        """, talentId, account.email(), actor);
+  }
+
   public CorporateCredentials getCorporateCredentials(Integer talentId) {
     if (talentId == null) return new CorporateCredentials("", "");
     return jdbcTemplate.query("""

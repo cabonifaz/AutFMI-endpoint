@@ -145,7 +145,14 @@ public class ApprovalAreaService {
       }
       if (populateForm && applies && "CREDENCIALES".equals(name)) {
         var account = requests.getCorporateCredentials(c.detail.getIdTalento());
-        if (account != null) {
+        var savedCredentials = ApprovalAreaPolicy.source(c.detail.getTipoSolicitud(), c.form, name);
+        if ("INGRESO".equals(c.detail.getTipoSolicitud())) {
+          if ("PENDIENTE".equals(status) && account.username().isBlank() && !savedCredentials.hasNonNull("usuario")) {
+            account = requests.previewCorporateCredentials(c.detail.getIdTalento(), c.user.getIdEmpresa());
+          }
+          data.put("usuario", savedCredentials.path("usuario").asText(account.username()));
+          data.put("correoCorporativo", savedCredentials.path("correoCorporativo").asText(account.email()));
+        } else {
           data.put("usuarioCorporativo", account.username());
           data.put("correoCorporativo", account.email());
         }
@@ -324,6 +331,29 @@ public class ApprovalAreaService {
     String status = "APROBAR".equals(request.accion())
       ? "APROBADA"
       : "RECHAZADA";
+    if ("APROBADA".equals(status) && "INGRESO".equals(c.detail.getTipoSolicitud())
+        && (selected.contains("CREDENCIALES") || selected.contains("FMI"))) {
+      var credentials = ApprovalAreaPolicy.source("INGRESO", c.form, "CREDENCIALES");
+      String username = credentials.path("usuario").asText("");
+      if (username.isBlank()) {
+        var account = requests.previewCorporateCredentials(c.detail.getIdTalento(), c.user.getIdEmpresa());
+        if (!account.username().isBlank()) {
+          var form = (ObjectNode) c.form;
+          ObjectNode saved = credentials instanceof ObjectNode node ? node : form.putObject("credenciales");
+          saved.put("usuario", account.username());
+          saved.put("correoCorporativo", account.email());
+          String json = form.toString();
+          areas.update(id, json, c.user, "CREDENCIALES");
+          c.detail.setDatosFormulario(json);
+        }
+      } else {
+        try {
+          requests.validateCorporateUsername(c.detail.getIdTalento(), c.user.getIdEmpresa(), username);
+        } catch (IllegalArgumentException e) {
+          throw bad(e.getMessage());
+        }
+      }
+    }
     for (String area : ApprovalAreaPolicy.AREAS)
       if (selected.contains(area)) {
         Object report = "APROBADA".equals(status) ? execute(c, area) : null;
@@ -383,6 +413,14 @@ public class ApprovalAreaService {
         request.getCambios()
       );
       var form = (ObjectNode) mapper.readTree(updated);
+      if ("INGRESO".equals(c.detail.getTipoSolicitud()) && "CREDENCIALES".equals(area)
+          && request.getCambios().containsKey("usuario")) {
+        var credentials = (ObjectNode) ApprovalAreaPolicy.source("INGRESO", form, area);
+        var account = requests.validateCorporateUsername(c.detail.getIdTalento(), c.user.getIdEmpresa(),
+            credentials.path("usuario").asText(""));
+        credentials.put("usuario", account.username());
+        credentials.put("correoCorporativo", account.email());
+      }
       equipmentApplies = ApprovalAreaPolicy.needsEquipment(form);
       if ("FMI".equals(area) && "INGRESO".equals(c.detail.getTipoSolicitud())
           && request.getCambios().containsKey("tieneEquipo")
@@ -434,11 +472,19 @@ public class ApprovalAreaService {
         );
 
         ObjectNode clean = ((ObjectNode) c.form).deepCopy();
-        clean.remove(List.of("credenciales", "solicitudEquipo"));
+        clean.remove("solicitudEquipo");
+        if (!"INGRESO".equals(type)) clean.remove("credenciales");
         // El ingreso registra solo FMI. El equipo se registra al aprobar SU pestaña.
         if (
           clean.path("seleccion") instanceof ObjectNode selection
         ) selection.remove("solicitudEquipo");
+        if ("INGRESO".equals(type) && !clean.path("seleccion").isObject()) {
+          String username = clean.path("credenciales").path("usuario").asText("");
+          if (!username.isBlank()) {
+            var account = requests.validateCorporateUsername(c.detail.getIdTalento(), c.user.getIdEmpresa(), username);
+            requests.saveCorporateCredentials(c.detail.getIdTalento(), account, c.user.getUsuario());
+          }
+        }
         var result = switch (type) {
           case "INGRESO" -> executor.executeEntry(
             actor,

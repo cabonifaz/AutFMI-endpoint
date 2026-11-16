@@ -182,6 +182,10 @@ public class MailService implements IMailService {
   private ApprovalRepository.CorporateCredentials credentialAccount(ApprovalDetailDTO detail, JsonNode fields) {
     var account = approvalRepository.getCorporateCredentials(detail.getIdTalento());
     String requested = fields.path("usuario").asText("").trim();
+    String requestedEmail = fields.path("correoCorporativo").asText("");
+    if ("INGRESO".equals(detail.getTipoSolicitud()) && !requested.isBlank() && !requestedEmail.isBlank()) {
+      return new ApprovalRepository.CorporateCredentials(requested, requestedEmail);
+    }
     if (!account.username().isBlank() || requested.isBlank()) return account;
     int separator = requested.indexOf('@');
     return separator > 0

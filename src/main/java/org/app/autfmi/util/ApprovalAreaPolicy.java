@@ -178,7 +178,7 @@ public final class ApprovalAreaPolicy {
       );
     }
     return List.of(
-      f("usuario", "Usuario / correo", "TEXTO"),
+      f("usuario", "INGRESO".equals(type) ? "Usuario corporativo" : "Usuario / correo", "TEXTO"),
       f("detalle", "Detalle de la solicitud", "TEXTO"),
       f("fecha", "Fecha requerida", "FECHA")
     );

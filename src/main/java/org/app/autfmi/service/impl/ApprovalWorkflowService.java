@@ -112,6 +112,10 @@ public class ApprovalWorkflowService {
     request.setApellidoPaterno((String) general.get("apellidoPaterno"));
     request.setApellidoMaterno((String) general.get("apellidoMaterno"));
     request.setArea((String) general.get("area"));
+    var account = approvalRepository.previewCorporateCredentials(request.getIdTalento(), user.getIdEmpresa());
+    if (!account.username().isBlank()) {
+      request.setCredenciales(java.util.Map.of("usuario", account.username(), "correoCorporativo", account.email()));
+    }
     String resumen = "Ingreso: desde Selección (RQ " + request.getIdRequerimiento() + ")"
         + texto(", cargo ", request.getCargo()) + texto(", inicio ", request.getFchInicioContrato());
     return submit(user, "INGRESO", request.getIdCliente(), request.getIdTalento(),

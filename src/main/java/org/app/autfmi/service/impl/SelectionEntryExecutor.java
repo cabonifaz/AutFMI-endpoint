@@ -53,7 +53,7 @@ public class SelectionEntryExecutor {
         var base = new BaseRequest(actor.getIdUsuario(), actor.getUsername(), actor.getIdEmpresa(),
                 actor.getIdRol(), Constante.GUARDAR_REQUERIMIENTO);
         var credentials = form.getCredenciales();
-        if (credentials != null && credentials.containsKey("usuario")) {
+        if (credentials != null && "true".equals(credentials.get("usuarioEditado")) && credentials.get("usuario") != null) {
             try {
                 var account = approvals.validateCorporateUsername(form.getIdTalento(), actor.getIdEmpresa(), credentials.get("usuario"));
                 approvals.saveCorporateCredentials(form.getIdTalento(), account, actor.getUsername());

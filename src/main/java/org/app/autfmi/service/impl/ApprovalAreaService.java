@@ -346,7 +346,7 @@ public class ApprovalAreaService {
           areas.update(id, json, c.user, "CREDENCIALES");
           c.detail.setDatosFormulario(json);
         }
-      } else {
+      } else if (credentials.path("usuarioEditado").asBoolean(false)) {
         try {
           requests.validateCorporateUsername(c.detail.getIdTalento(), c.user.getIdEmpresa(), username);
         } catch (IllegalArgumentException e) {
@@ -420,6 +420,7 @@ public class ApprovalAreaService {
             credentials.path("usuario").asText(""));
         credentials.put("usuario", account.username());
         credentials.put("correoCorporativo", account.email());
+        credentials.put("usuarioEditado", "true");
       }
       equipmentApplies = ApprovalAreaPolicy.needsEquipment(form);
       if ("FMI".equals(area) && "INGRESO".equals(c.detail.getTipoSolicitud())
@@ -480,7 +481,7 @@ public class ApprovalAreaService {
         ) selection.remove("solicitudEquipo");
         if ("INGRESO".equals(type) && !clean.path("seleccion").isObject()) {
           String username = clean.path("credenciales").path("usuario").asText("");
-          if (!username.isBlank()) {
+          if (clean.path("credenciales").path("usuarioEditado").asBoolean(false) && !username.isBlank()) {
             var account = requests.validateCorporateUsername(c.detail.getIdTalento(), c.user.getIdEmpresa(), username);
             requests.saveCorporateCredentials(c.detail.getIdTalento(), account, c.user.getUsuario());
           }
